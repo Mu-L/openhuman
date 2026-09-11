@@ -688,3 +688,5 @@ pub fn set_cached_conn(conn: &Connection, cache_key: &str, body_json: &str) -> R
     Ok(())
 }
 
+#[cfg(test)]
+mod store_tests;

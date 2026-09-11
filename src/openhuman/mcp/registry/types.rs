@@ -433,3 +433,5 @@ pub struct ChatTurn {
     pub content: String,
 }
 
+#[cfg(test)]
+mod types_tests;
