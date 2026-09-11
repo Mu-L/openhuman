@@ -252,7 +252,7 @@ const CustomServersPanel = ({
             </div>
           }>
           <p id="mcp-custom-remove-body" className="text-xs text-content-secondary">
-              {t('mcp.custom.removeConfirm.body')}
+            {t('mcp.custom.removeConfirm.body')}
           </p>
         </ModalShell>
       )}
