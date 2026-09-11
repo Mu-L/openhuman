@@ -196,9 +196,7 @@ pub async fn mcp_clients_update_custom(
                 credential_scope(&current.transport) != credential_scope(&transport);
             let env = resolve_env_for_transport(
                 &input.env,
-                &stored_env
-                    .into_iter()
-                    .collect::<HashMap<String, String>>(),
+                &stored_env.into_iter().collect::<HashMap<String, String>>(),
                 &current.transport,
                 &transport,
             );
@@ -246,9 +244,7 @@ pub async fn mcp_clients_update_custom(
     // pins the server to the pre-edit command indefinitely — it stays healthy, so
     // no later tick reconnects it. `update_env` persists first for the same
     // reason.
-    reg.connections()
-        .disconnect(&server_id)
-        .await;
+    reg.connections().disconnect(&server_id).await;
 
     tracing::debug!("[mcp-custom] update ok server_id={}", server_id);
 
