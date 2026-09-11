@@ -248,8 +248,31 @@ compile_raw_coverage_target() {
 run_full() {
   log "running FULL instrumented suite (reason: $1)"
   llvm_cov clean --workspace
-  llvm_cov --no-report --no-fail-fast -p openhuman --lib
-  llvm_cov --no-report --no-fail-fast -p openhuman --bins
+  # Keep the aggregate unit-test process aligned with the canonical
+  # `test-rust-with-mock.sh` runner. A number of fixtures intentionally mutate
+  # process-global provider/config state, so libtest's default parallelism can
+  # make unrelated tests observe each other's temporary overrides. The five
+  # archivist tree tests also share a process-global recorder and therefore run
+  # in fresh processes below, exactly as they do in the canonical runner.
+  llvm_cov --no-report --no-fail-fast -p openhuman --lib --bins -- \
+    --test-threads=1 \
+    --skip phase2_no_per_turn_tree_write \
+    --skip phase2_exactly_one_tree_ingest_per_segment_close \
+    --skip phase2_provenance_stamped_on_leaf_and_source_id_is_constant \
+    --skip phase2_ingested_content_is_raw_prose_not_recap \
+    --skip phase2_flush_also_triggers_tree_ingest
+  local archivist_test
+  for archivist_test in \
+    phase2_no_per_turn_tree_write \
+    phase2_exactly_one_tree_ingest_per_segment_close \
+    phase2_provenance_stamped_on_leaf_and_source_id_is_constant \
+    phase2_ingested_content_is_raw_prose_not_recap \
+    phase2_flush_also_triggers_tree_ingest; do
+    log "running isolated archivist tree test: ${archivist_test}"
+    llvm_cov --no-report --no-fail-fast -p openhuman --lib \
+      "openhuman::agent::harness::archivist::tests::part_01_tests::${archivist_test}" \
+      -- --exact --test-threads=1
+  done
   llvm_cov_package --no-report --no-fail-fast -p openhuman-embed --all-targets
   llvm_cov_package --no-report --no-fail-fast -p openhuman-tui --all-targets
   while IFS= read -r target; do

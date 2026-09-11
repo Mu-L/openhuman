@@ -308,6 +308,18 @@ fn scan() -> BTreeSet<(String, String)> {
     let root = Path::new(env!("OPENHUMAN_REPOSITORY_ROOT"));
     let mut files = Vec::new();
     collect_rs_files(&root.join("src"), &mut files);
+    // The workspace split moved the CLI/runtime composition layer out of the
+    // historical root source tree. Those files contain deliberate bypasses
+    // listed in ALLOWED, so omitting this package would make valid entries look
+    // stale and, more importantly, let future wrapper-layer bypasses escape
+    // the ratchet entirely.
+    collect_rs_files(
+        &root
+            .join("crates")
+            .join("openhuman-core")
+            .join("src"),
+        &mut files,
+    );
     // The memory subsystem was extracted into `tinymemory-core`, and most of
     // the files this lint counts went with it. Scanning only this crate's `src`
     // would quietly drop them from the tally — which would read as "the
