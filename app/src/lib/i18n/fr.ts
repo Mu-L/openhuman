@@ -7497,6 +7497,197 @@ const messages: TranslationMap = {
   'mcp.custom.form.save': 'Enregistrer',
   'mcp.custom.form.add': 'Ajouter le serveur',
   'mcp.custom.form.saving': 'Enregistrement…',
+  'settings.mcpServer.tools.listSubagents': 'Liste les sous-agents disponibles',
+  'settings.mcpServer.tools.runSubagent': 'Exécute un sous-agent avec une consigne',
+  'settings.mcpServer.tools.memorySearch': 'Recherche dans la mémoire par requête sémantique',
+  'settings.mcpServer.tools.memoryRecall': 'Récupère des souvenirs spécifiques par ID',
+  'settings.mcpServer.tools.treeReadChunk': "Lit un fragment de l'arbre de mémoire",
+  'settings.mcpServer.tools.treeBrowse': "Parcourt la structure de l'arbre de mémoire",
+  'settings.mcpServer.tools.treeTopEntities':
+    "Obtient les principales entités de l'arbre de mémoire",
+  'settings.mcpServer.tools.treeListSources': "Liste les sources de l'arbre de mémoire",
+  'settings.notifications.category.messages.title': 'Messages',
+  'settings.notifications.category.messages.desc':
+    'Nouveaux messages provenant des comptes webview intégrés (Slack, WhatsApp, …).',
+  'settings.notifications.category.agents.title': 'Activité des agents',
+  'settings.notifications.category.agents.desc':
+    "Tâches d'agent terminées et réponses de longue durée.",
+  'settings.notifications.category.skills.title': 'Compétences',
+  'settings.notifications.category.skills.desc':
+    'Événements de synchronisation des compétences et changements de statut OAuth.',
+  'settings.notifications.category.system.title': 'Système',
+  'settings.notifications.category.system.desc':
+    'Problèmes de connexion, erreurs de processus en arrière-plan, mises à jour.',
+  'settings.notifications.category.meetings.title': 'Réunions',
+  'settings.notifications.category.meetings.desc':
+    'Réunions à venir et événements de calendrier détectés par le heartbeat.',
+  'settings.notifications.category.reminders.title': 'Rappels',
+  'settings.notifications.category.reminders.desc':
+    'Rappels à venir et tâches planifiées issues des tâches cron.',
+  'settings.notifications.category.important.title': 'Événements importants',
+  'settings.notifications.category.important.desc':
+    'Événements urgents ou sensibles au temps provenant de sources connectées.',
+  'settings.notifications.categoryToggleAria': 'Activer ou désactiver les notifications de {name}',
+  'settings.cron.jobs.runFinishedAt': '{status} à {time}',
+  'settings.cron.jobs.scheduleAt': 'à {time}',
+  'settings.gateway.binaryRequired': 'Indiquez le chemin vers openhuman-core sur cette machine.',
+  'settings.gateway.portInvalid': 'Le port SSH doit être un nombre.',
+  'devOptions.gateway': 'Emplacement',
+  'devOptions.provisionedCore': 'Cœur démarré par cette application',
+  'devOptions.gatewayId': 'Emplacement',
+  // S9 i18n audit fixes (hardcoded English in files that already hold useT()).
+  'settings.ai.picker.title': 'Choisir un fournisseur et un modèle',
+  'settings.ai.picker.subtitle':
+    'Recherchez parmi les fournisseurs configurés et les modèles disponibles.',
+  'settings.ai.picker.useThisModel': 'Utiliser ce modèle',
+  'settings.ai.picker.searchPlaceholder': 'Rechercher des fournisseurs et des modèles',
+  'settings.ai.picker.providersLabel': 'Fournisseurs',
+  'settings.ai.picker.modelIdPlaceholder': "Saisissez l'ID du modèle",
+  'settings.ai.picker.claudeCodeHint':
+    'Utilisez un alias de modèle Claude Code ou un ID de modèle.',
+  'settings.ai.loops.memoryTreeWorkers.name': "Workers de l'arbre de mémoire",
+  'settings.ai.loops.cadence.queue': "file d'attente",
+  'settings.ai.loops.memoryTreeWorkers.work':
+    'Extrait des fragments, scelle des branches, génère des synthèses quotidiennes et route les sujets.',
+  'settings.ai.loops.memoryTreeWorkers.risk':
+    "{workers} workers interrogent la file toutes les {seconds}s ; le LLM n'est appelé que lorsqu'elle contient des tâches d'extraction, de scellement, de synthèse ou de sujet.",
+  'settings.ai.loops.reflectionRebuild.name': 'Reconstruction de réflexion',
+  'settings.ai.loops.cadence.thirtyMin': '30 min',
+  'settings.ai.loops.reflectionRebuild.work':
+    "Actualise l'état de réflexion après une activité de mémoire.",
+  'settings.ai.loops.reflectionRebuild.risk':
+    '{count} réveils/semaine ; le LLM ne travaille que lorsque la reconstruction a besoin de réflexion.',
+  'settings.ai.loops.composioSync.name': 'Synchronisation Composio',
+  'settings.ai.loops.cadence.twentyMin': '20 min',
+  'settings.ai.loops.composioSync.route': "API d'intégration",
+  'settings.ai.loops.composioSync.work':
+    "Interroge les outils connectés lorsqu'une synchronisation avec le fournisseur est due.",
+  'settings.ai.loops.composioSync.risk':
+    '{count} réveils/semaine ; explore {active} connexion(s) active(s).',
+  'settings.ai.openaiOauthCompleteError':
+    'La connexion à ChatGPT n’a pas abouti. Vérifiez l’URL de redirection et réessayez.',
+  'settings.ai.openaiOauthCallbackRequired':
+    'Collez l’URL de redirection de votre navigateur après la connexion.',
+  'settings.ai.openaiOauthDisconnectError':
+    'Impossible de déconnecter ChatGPT. Veuillez réessayer.',
+  'memorySources.codingSessions.importAll': 'Importer toutes les sessions',
+  'memorySources.codingSessions.draining': 'Importation… passe {passes}',
+  'memorySources.codingSessions.stop': 'Arrêter',
+  'memorySources.codingSessions.progress':
+    '{processed} sessions importées · {observations} observations',
+  'memorySources.codingSessions.remaining': 'il reste environ {remaining}',
+  'memorySources.codingSessions.stopped': 'Importation en pause',
+  'memorySources.codingSessions.stoppedMessage':
+    '{processed} sessions importées. Relancez l’importation pour continuer avec les {remaining} restantes.',
+  'memorySources.codingSessions.stillRunning': 'Import toujours en cours',
+  'memorySources.codingSessions.stillRunningMessage':
+    "Sessions importées jusqu'ici : {processed}. L'import n'a pas abouti dans le temps imparti mais continue en arrière-plan ; revenez dans une minute plutôt que de le relancer.",
+  'sync.pipeline.vectorsPending':
+    'Segments en attente de vecteurs : {count}. La recherche sémantique les couvrira sous peu.',
+  'chat.sources.usedCount': '{n} sources utilisées',
+  // Gateways: cores this app provisions and runs elsewhere.
+  'settings.gateway.title': 'Exécuter le cœur ailleurs',
+  'settings.gateway.description':
+    'Le cœur peut s’exécuter dans un conteneur, sur une autre machine via SSH, ou dans un conteneur sur une autre machine. OpenHuman le démarre, s’y connecte et l’arrête quand vous changez d’emplacement.',
+  'settings.gateway.add': 'Ajouter un emplacement',
+  'settings.gateway.save': 'Enregistrer l’emplacement',
+  'settings.gateway.remove': 'Supprimer',
+  'settings.gateway.use': 'Utiliser celui-ci',
+  'settings.gateway.inUse': 'Utilisé',
+  'settings.gateway.activating': 'Connexion…',
+  'settings.gateway.activatingStep': 'Connexion : {step}',
+  'settings.gateway.connected': 'Connecté à {endpoint}',
+  'settings.gateway.failed': 'Connexion impossible : {reason}',
+  'settings.developerMenu.eventLog.workspaceScopeActive': 'Cet espace de travail',
+  'settings.developerMenu.eventLog.workspaceScopeAll': 'Tous les espaces de travail',
+  'settings.developerMenu.eventLog.waitingHint':
+    'Les événements apparaissent ici quand les agents, les outils et le système travaillent. Rien pour le moment.',
+  'settings.developerMenu.eventLog.notConnectedHint':
+    'Reconnectez-vous au core pour reprendre le flux.',
+  'settings.appearance.showChatMascot': 'Afficher Tiny sur la zone de message',
+  'settings.appearance.showChatMascotDesc':
+    "La mascotte reste posée sur le champ de saisie. Masquée, la discussion reste en texte seul jusqu'à ce que vous la réactiviez.",
+  'settings.mascot.customGifUpload': 'Importer une image',
+  'settings.mascot.customGifInvalidType':
+    'Type de fichier non pris en charge. Importez une image PNG, GIF, JPEG, WebP ou BMP.',
+  'settings.mascot.customGifTooLarge':
+    'L’image est trop volumineuse. Importez un fichier de 1,5 Mo maximum.',
+  'settings.mascot.customGifReadError': 'Impossible de lire cette image. Essayez un autre fichier.',
+  'walletBalances.colNetwork': 'Réseau',
+  'walletBalances.colAddress': 'Adresse',
+  'walletBalances.colBalance': 'Solde',
+  'walletBalances.colActions': 'Actions',
+  'settings.agents.editor.modelManaged': 'Modèles gérés',
+  'keyring.settings.mode.localEncryptedFile': 'Fichier chiffré',
+  'keyring.settings.mode.localPlaintextFile': 'Fichier non chiffré',
+  'memoryTree.status.statusBudgetExhausted': "En pause : budget d'embeddings atteint",
+  'composer.humanMode': 'Mode humain',
+  'userErrors.action.openConnections': 'Ouvrir les connexions',
+  'userErrors.integrationDegraded.title': 'Les connexions affichent un état obsolète',
+  'userErrors.integrationDegraded.body':
+    "Une intégration connectée renvoie des erreurs, l'état des connexions affiché dans l'application peut donc être obsolète.",
+  'userErrors.action.openEmbeddingsSettings': 'Configurer les embeddings',
+  'userErrors.localModelUnavailable.title': 'Modèle local indisponible',
+  'userErrors.localModelUnavailable.body':
+    "Ollama n'est pas joignable sur le point de terminaison configuré, ou le modèle requis n'y est pas installé. Lancez Ollama et téléchargez le modèle sur ce point de terminaison, ou basculez cette charge de travail vers un fournisseur cloud.",
+  'memorySources.repair.title': 'Réparer les souvenirs anciens ?',
+  'memorySources.repair.message':
+    "Jusqu'à {scanned} documents synchronisés ont été enregistrés avant la correction du classement dans l'arbre de mémoire et sont invisibles dans le graphe de mémoire. Les classer consomme des crédits d'embedding. Les documents déjà dans l'arbre sont ignorés.",
+  'memorySources.repair.confirm': 'Réparer',
+  'memorySources.repair.cancel': 'Pas maintenant',
+  'memorySources.repair.nothing':
+    "Rien à réparer. Aucun document synchronisé n'attend d'être classé.",
+  'memorySources.repair.success':
+    "{ingested} classés dans l'arbre de mémoire ({already} déjà présents, {skipped} ignorés).",
+  'memorySources.repair.morePending':
+    'Il en reste. Cliquez à nouveau sur Réparer les souvenirs anciens.',
+  'memorySources.repair.failed': 'Impossible de réparer les souvenirs anciens.',
+  'welcome.gatewaySessionErrorFallback':
+    'La connexion n’a pas pu être terminée pour le moment. Le stockage de session n’a pas répondu à temps (même après plusieurs tentatives). Redémarrez OpenHuman et réessayez.',
+  'composio.colApp': 'Application',
+  'composio.colStatus': 'Statut',
+  'composio.colAccounts': 'Comptes',
+  'conversations.composer.context.title': 'Fenêtre de contexte',
+  'conversations.composer.context.input': 'Entrée',
+  'conversations.composer.context.cached': 'Entrée en cache',
+  'conversations.composer.context.output': 'Sortie',
+  'conversations.composer.context.cost': 'Coût',
+  'conversations.composer.command.clear': 'Effacer la conversation',
+  'conversations.composer.command.goal': 'Définir ou modifier l’objectif du fil',
+  'conversations.subagent.awaitingTitle': 'En attente de votre réponse',
+  'conversations.subagent.answerPlaceholder': 'Saisissez votre réponse',
+  'conversations.subagent.answerSend': 'Envoyer la réponse',
+  'conversations.subagent.answerSent': 'Réponse envoyée',
+  'flows.canvas.description':
+    'Créez cette automatisation étape par étape, puis enregistrez-la et exécutez-la.',
+  'settings.ai.providers.groupCloud': 'Cloud',
+  'brain.refreshError':
+    'Impossible de rafraîchir votre cerveau. Les dernières données chargées sont affichées.',
+  'common.working': 'Traitement…',
+  'common.noResults': 'Aucun résultat',
+  'common.filter': 'Filtrer',
+  'skills.explorer.colSkill': 'Compétence',
+  'skills.explorer.colDescription': 'Description',
+  'skills.explorer.colProvider': 'Fournisseur',
+  'skills.explorer.colAction': 'Action',
+  'sync.status.partial': 'Récupéré, échec d’indexation mémoire',
+  'notices.title': 'Notifications',
+  'settings.clearAppDataIrreversible': 'Cette action est irréversible.',
+  'settings.clearAppDataAction': 'Effacer les données',
+  'chat.conversationsHeading': 'Conversations',
+  'chat.newWindowPrompt': "Comment puis-je t'aider aujourd'hui ?",
+  'skills.explorer.sourceFilterAria': 'Filtrer par source',
+  'memoryTree.status.storedItemsTile': 'Éléments stockés',
+  'memoryTree.status.retryFailed': 'Relancer les tâches en échec',
+  'memoryTree.status.retryFailedBusy': 'Nouvelle tentative...',
+  'memoryTree.status.retryFailedDone': 'Tâches en échec remises en file',
+  'memoryTree.status.retryFailedCount': "Tâches remises en file d'attente : {count}.",
+  'memoryTree.status.retryFailedError': 'Impossible de remettre en file les tâches en échec',
+  'settings.search.engineTavilyLabel': 'Tavily',
+  'settings.search.engineTavilyDesc':
+    'Recherche web, actualités et finance propulsée par Tavily. Nécessite votre propre clé API Tavily. Ajoute des outils de recherche et d’extraction de pages.',
+  'settings.search.tavilyKeyLabel': 'Clé API Tavily',
+  'settings.search.placeholderTavily': 'tvly-...',
 };
 
 export default messages;
