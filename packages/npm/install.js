@@ -2,7 +2,7 @@
 'use strict';
 
 // postinstall: downloads the correct pre-built binary for this platform/arch,
-// verifies the SHA-256 checksum, then places it at bin/openhuman-bin[.exe].
+// verifies the SHA-256 checksum, then installs the core and TUI executables.
 //
 // The binary is fetched from the GitHub release that matches package.json version.
 
@@ -98,11 +98,13 @@ async function main() {
   fs.mkdirSync(binDir, { recursive: true });
 
   const tmpTarball = path.join(binDir, tarball);
-  const binDest = path.join(binDir, isWin ? 'openhuman-bin.exe' : 'openhuman-bin');
+  const coreDest = path.join(binDir, isWin ? 'openhuman-bin.exe' : 'openhuman-bin');
+  const tuiDest = path.join(binDir, isWin ? 'openhuman-tui-bin.exe' : 'openhuman-tui-bin');
 
-  // Skip if binary already exists and is executable
-  if (fs.existsSync(binDest)) {
-    console.log('[openhuman] Binary already installed, skipping download.');
+  // Skip only when both commands are already installed. This lets an upgrade
+  // from a core-only package fetch the newly shipped TUI.
+  if (fs.existsSync(coreDest) && fs.existsSync(tuiDest)) {
+    console.log('[openhuman] Binaries already installed, skipping download.');
     return;
   }
 
@@ -139,25 +141,33 @@ async function main() {
       ],
       { stdio: 'inherit', env: { ...process.env, TC_SRC: tmpTarball, TC_DEST: binDir } }
     );
-    const extracted = path.join(binDir, 'openhuman-core.exe');
-    if (fs.existsSync(extracted)) fs.renameSync(extracted, binDest);
+    const extractedCore = path.join(binDir, 'openhuman-core.exe');
+    const extractedTui = path.join(binDir, 'openhuman-tui.exe');
+    if (fs.existsSync(extractedCore)) fs.renameSync(extractedCore, coreDest);
+    if (fs.existsSync(extractedTui)) fs.renameSync(extractedTui, tuiDest);
   } else {
     execFileSync('tar', ['-xzf', tmpTarball, '-C', binDir], { stdio: 'inherit' });
-    const extracted = path.join(binDir, 'openhuman-core');
-    if (fs.existsSync(extracted)) {
-      fs.renameSync(extracted, binDest);
-      fs.chmodSync(binDest, 0o755);
+    const extractedCore = path.join(binDir, 'openhuman-core');
+    const extractedTui = path.join(binDir, 'openhuman-tui');
+    if (fs.existsSync(extractedCore)) {
+      fs.renameSync(extractedCore, coreDest);
+      fs.chmodSync(coreDest, 0o755);
+    }
+    if (fs.existsSync(extractedTui)) {
+      fs.renameSync(extractedTui, tuiDest);
+      fs.chmodSync(tuiDest, 0o755);
     }
   }
 
   // Clean up archive
   fs.rmSync(tmpTarball, { force: true });
 
-  if (!fs.existsSync(binDest)) {
-    throw new Error('[openhuman] Extraction failed — binary not found after unpack.');
+  if (!fs.existsSync(coreDest) || !fs.existsSync(tuiDest)) {
+    throw new Error('[openhuman] Extraction failed — core or TUI binary not found after unpack.');
   }
 
-  console.log(`[openhuman] Installed at ${binDest}`);
+  console.log(`[openhuman] Installed core at ${coreDest}`);
+  console.log(`[openhuman] Installed TUI at ${tuiDest}`);
 }
 
 main().catch((err) => {
