@@ -4213,6 +4213,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "openhuman-embed"
+version = "0.63.25"
+dependencies = [
+ "openhuman",
+]
+
+[[package]]
 name = "openhuman-tui"
 version = "0.63.25"
 dependencies = [
