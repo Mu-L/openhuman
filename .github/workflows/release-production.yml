@@ -523,14 +523,16 @@ jobs:
             exit 1
           fi
           echo "OPENHUMAN_CORE_SENTRY_DSN is set (length=${#OPENHUMAN_CORE_SENTRY_DSN})"
-      - name: Build openhuman-core binary
+      - name: Build CLI binaries
         env:
           OPENHUMAN_CORE_SENTRY_DSN: ${{ vars.OPENHUMAN_CORE_SENTRY_DSN || vars.OPENHUMAN_SENTRY_DSN }}
           # Match the runtime release tag (`openhuman@<version>+<short_sha>`)
           # baked elsewhere — see prepare-build.outputs.short_sha comment.
           OPENHUMAN_BUILD_SHA: ${{ needs.prepare-build.outputs.short_sha }}
           OPENHUMAN_APP_ENV: production
-        run: bash scripts/ci-cancel-aware.sh cargo build --release --bin openhuman-core
+        run: |
+          bash scripts/ci-cancel-aware.sh cargo build --release -p openhuman --bin openhuman-core
+          bash scripts/ci-cancel-aware.sh cargo build --release -p openhuman-tui --bin openhuman-tui
       - name: Package and upload tarball to release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -540,6 +542,7 @@ jobs:
         run: |
           bash scripts/release/package-cli-tarball.sh \
             target/release/openhuman-core \
+            target/release/openhuman-tui \
             "$VERSION" \
             "$TARGET"
 
