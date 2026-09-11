@@ -15,6 +15,7 @@ Architecture: [overview](gitbooks/developing/architecture.md),
 | `app/src/` | Vite and React frontend |
 | `crates/openhuman-app/` | Thin desktop host |
 | `crates/openhuman-core/` | Core package wrappers, transport, dispatch, auth, and runtime composition |
+| `crates/openhuman-embed/` | Stable library facade for embedding the core in another product |
 | `crates/openhuman-tui/` | Standalone terminal frontend |
 | `src/openhuman/` | Business domains |
 | `crates/openhuman-core/src/main.rs` | `openhuman-core` CLI |

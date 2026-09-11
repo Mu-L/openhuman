@@ -4,7 +4,7 @@
 # resolve against their own roots.
 [workspace]
 resolver = "2"
-members = ["crates/openhuman-core", "crates/openhuman-tui"]
+members = ["crates/openhuman-core", "crates/openhuman-embed", "crates/openhuman-tui"]
 exclude = [
     "vendor",
     "worktrees",
