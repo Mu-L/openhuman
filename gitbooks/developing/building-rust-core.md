@@ -63,6 +63,9 @@ cargo check --manifest-path Cargo.toml
 # Debug build of the actual CLI / RPC binary
 cargo build --manifest-path Cargo.toml --bin openhuman-core
 
+# Check the stable host-facing embedding facade
+cargo check --manifest-path Cargo.toml -p openhuman-embed
+
 # Build the terminal frontend (embeds the core in-process)
 cargo build --manifest-path Cargo.toml -p openhuman-tui
 
