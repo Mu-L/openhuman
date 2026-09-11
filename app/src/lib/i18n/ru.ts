@@ -7391,6 +7391,190 @@ const messages: TranslationMap = {
   'mcp.custom.form.save': 'Сохранить',
   'mcp.custom.form.add': 'Добавить сервер',
   'mcp.custom.form.saving': 'Сохранение…',
+  'settings.mcpServer.tools.listSubagents': 'Выводит список доступных субагентов',
+  'settings.mcpServer.tools.runSubagent': 'Запускает субагента с промптом',
+  'settings.mcpServer.tools.memorySearch': 'Выполняет семантический поиск по памяти',
+  'settings.mcpServer.tools.memoryRecall': 'Извлекает конкретные воспоминания по ID',
+  'settings.mcpServer.tools.treeReadChunk': 'Читает фрагмент дерева памяти',
+  'settings.mcpServer.tools.treeBrowse': 'Просматривает структуру дерева памяти',
+  'settings.mcpServer.tools.treeTopEntities': 'Получает главные сущности из дерева памяти',
+  'settings.mcpServer.tools.treeListSources': 'Выводит список источников дерева памяти',
+  'settings.notifications.category.messages.title': 'Сообщения',
+  'settings.notifications.category.messages.desc':
+    'Новые сообщения из встроенных webview-аккаунтов (Slack, WhatsApp, …).',
+  'settings.notifications.category.agents.title': 'Активность агентов',
+  'settings.notifications.category.agents.desc': 'Завершённые задачи агентов и длительные ответы.',
+  'settings.notifications.category.skills.title': 'Навыки',
+  'settings.notifications.category.skills.desc':
+    'События синхронизации навыков и изменения статуса OAuth.',
+  'settings.notifications.category.system.title': 'Система',
+  'settings.notifications.category.system.desc':
+    'Проблемы соединения, ошибки фонового процесса, обновления.',
+  'settings.notifications.category.meetings.title': 'Встречи',
+  'settings.notifications.category.meetings.desc':
+    'Предстоящие встречи и события календаря, обнаруженные heartbeat.',
+  'settings.notifications.category.reminders.title': 'Напоминания',
+  'settings.notifications.category.reminders.desc':
+    'Предстоящие напоминания и запланированные задачи из cron-заданий.',
+  'settings.notifications.category.important.title': 'Важные события',
+  'settings.notifications.category.important.desc':
+    'Срочные или чувствительные ко времени события из подключённых источников.',
+  'settings.notifications.categoryToggleAria': 'Включить или выключить уведомления {name}',
+  'settings.cron.jobs.runFinishedAt': '{status} в {time}',
+  'settings.cron.jobs.scheduleAt': 'в {time}',
+  'settings.gateway.binaryRequired': 'Укажите путь к openhuman-core на этой машине.',
+  'settings.gateway.portInvalid': 'Порт SSH должен быть числом.',
+  'devOptions.gateway': 'Размещение',
+  'devOptions.provisionedCore': 'Ядро, запущенное этим приложением',
+  'devOptions.gatewayId': 'Размещение',
+  // S9 i18n audit fixes (hardcoded English in files that already hold useT()).
+  'settings.ai.picker.title': 'Выбор провайдера и модели',
+  'settings.ai.picker.subtitle': 'Поиск среди настроенных провайдеров и доступных моделей.',
+  'settings.ai.picker.useThisModel': 'Использовать эту модель',
+  'settings.ai.picker.searchPlaceholder': 'Поиск провайдеров и моделей',
+  'settings.ai.picker.providersLabel': 'Провайдеры',
+  'settings.ai.picker.modelIdPlaceholder': 'Введите ID модели',
+  'settings.ai.picker.claudeCodeHint': 'Используйте псевдоним модели Claude Code или ID модели.',
+  'settings.ai.loops.memoryTreeWorkers.name': 'Воркеры дерева памяти',
+  'settings.ai.loops.cadence.queue': 'очередь',
+  'settings.ai.loops.memoryTreeWorkers.work':
+    'Извлекает фрагменты, запечатывает ветви, формирует ежедневные сводки, направляет темы.',
+  'settings.ai.loops.memoryTreeWorkers.risk':
+    '{workers} воркеров опрашивают очередь каждые {seconds}с; LLM вызывается только когда в очереди есть задачи извлечения, запечатывания, сводки или темы.',
+  'settings.ai.loops.reflectionRebuild.name': 'Перестроение рефлексии',
+  'settings.ai.loops.cadence.thirtyMin': '30 мин',
+  'settings.ai.loops.reflectionRebuild.work':
+    'Обновляет состояние рефлексии после активности памяти.',
+  'settings.ai.loops.reflectionRebuild.risk':
+    '{count} пробуждений/неделю; LLM работает только когда перестроение требует рефлексии.',
+  'settings.ai.loops.composioSync.name': 'Синхронизация Composio',
+  'settings.ai.loops.cadence.twentyMin': '20 мин',
+  'settings.ai.loops.composioSync.route': 'API интеграций',
+  'settings.ai.loops.composioSync.work':
+    'Опрашивает подключённые инструменты, когда наступает срок синхронизации с провайдером.',
+  'settings.ai.loops.composioSync.risk':
+    '{count} пробуждений/неделю; сканирует {active} активных соединений.',
+  'settings.ai.openaiOauthCompleteError':
+    'Вход в ChatGPT не завершён. Проверьте URL перенаправления и повторите попытку.',
+  'settings.ai.openaiOauthCallbackRequired':
+    'После входа вставьте URL перенаправления из браузера.',
+  'settings.ai.openaiOauthDisconnectError': 'Не удалось отключить ChatGPT. Повторите попытку.',
+  'memorySources.codingSessions.importAll': 'Импортировать все сеансы',
+  'memorySources.codingSessions.draining': 'Импорт… проход {passes}',
+  'memorySources.codingSessions.stop': 'Остановить',
+  'memorySources.codingSessions.progress':
+    'Импортировано {processed} сеансов · {observations} наблюдений',
+  'memorySources.codingSessions.remaining': 'осталось около {remaining}',
+  'memorySources.codingSessions.stopped': 'Импорт приостановлен',
+  'memorySources.codingSessions.stoppedMessage':
+    'Импортировано {processed} сеансов. Запустите импорт снова, чтобы продолжить оставшиеся {remaining}.',
+  'memorySources.codingSessions.stillRunning': 'Импорт всё ещё выполняется',
+  'memorySources.codingSessions.stillRunningMessage':
+    'Импортировано сессий на данный момент: {processed}. Импорт не завершился в отведённое время, но продолжает выполняться в фоновом режиме; загляните через минуту, а не запускайте его заново.',
+  'sync.pipeline.vectorsPending':
+    'Блоков в ожидании векторов: {count}. Семантический поиск скоро охватит их.',
+  'chat.sources.usedCount': 'Использовано источников: {n}',
+  // Gateways: cores this app provisions and runs elsewhere.
+  'settings.gateway.title': 'Запустить ядро в другом месте',
+  'settings.gateway.description':
+    'Ядро может работать в контейнере, на другой машине по SSH или в контейнере на другой машине. OpenHuman запускает его, подключается к нему и останавливает, когда вы переключаетесь.',
+  'settings.gateway.add': 'Добавить размещение',
+  'settings.gateway.save': 'Сохранить размещение',
+  'settings.gateway.remove': 'Удалить',
+  'settings.gateway.use': 'Использовать',
+  'settings.gateway.inUse': 'Используется',
+  'settings.gateway.activating': 'Подключение…',
+  'settings.gateway.activatingStep': 'Подключение: {step}',
+  'settings.gateway.connected': 'Подключено к {endpoint}',
+  'settings.gateway.failed': 'Не удалось подключиться: {reason}',
+  'settings.developerMenu.eventLog.workspaceScopeActive': 'Текущее рабочее пространство',
+  'settings.developerMenu.eventLog.workspaceScopeAll': 'Все рабочие пространства',
+  'settings.developerMenu.eventLog.waitingHint':
+    'События появляются здесь по мере работы агентов, инструментов и системы. Пока ничего не произошло.',
+  'settings.developerMenu.eventLog.notConnectedHint':
+    'Подключитесь к ядру снова, чтобы возобновить поток.',
+  'settings.appearance.showChatMascot': 'Показывать Tiny на поле сообщения',
+  'settings.appearance.showChatMascotDesc':
+    'Маскот стоит на поле ввода. Если скрыть, чат останется только текстовым, пока вы не включите это снова.',
+  'settings.mascot.customGifUpload': 'Загрузить изображение',
+  'settings.mascot.customGifInvalidType':
+    'Неподдерживаемый тип файла. Загрузите изображение PNG, GIF, JPEG, WebP или BMP.',
+  'settings.mascot.customGifTooLarge': 'Изображение слишком большое. Загрузите файл до 1,5 МБ.',
+  'settings.mascot.customGifReadError': 'Не удалось прочитать изображение. Попробуйте другой файл.',
+  'walletBalances.colNetwork': 'Сеть',
+  'walletBalances.colAddress': 'Адрес',
+  'walletBalances.colBalance': 'Баланс',
+  'walletBalances.colActions': 'Действия',
+  'settings.agents.editor.modelManaged': 'Управляемые модели',
+  'keyring.settings.mode.localEncryptedFile': 'Зашифрованный файл',
+  'keyring.settings.mode.localPlaintextFile': 'Незашифрованный файл',
+  'memoryTree.status.statusBudgetExhausted': 'Приостановлено: бюджет эмбеддингов исчерпан',
+  'composer.humanMode': 'Режим человека',
+  'userErrors.action.openConnections': 'Открыть подключения',
+  'userErrors.integrationDegraded.title': 'Подключения показывают устаревший статус',
+  'userErrors.integrationDegraded.body':
+    'Подключенная интеграция возвращает ошибки, поэтому отображаемый статус подключений может быть неактуальным.',
+  'userErrors.action.openEmbeddingsSettings': 'Настроить эмбеддинги',
+  'userErrors.localModelUnavailable.title': 'Локальная модель недоступна',
+  'userErrors.localModelUnavailable.body':
+    'Ollama недоступен по настроенному адресу, либо нужная модель там не установлена. Запустите Ollama и загрузите модель по этому адресу или переведите эту работу на облачного провайдера.',
+  'memorySources.repair.title': 'Восстановить старые воспоминания?',
+  'memorySources.repair.message':
+    'До {scanned} синхронизированных документов были сохранены до исправления размещения в дереве памяти и не видны в графе памяти. Их размещение расходует кредиты на эмбеддинги. Документы, уже находящиеся в дереве, пропускаются.',
+  'memorySources.repair.confirm': 'Восстановить',
+  'memorySources.repair.cancel': 'Не сейчас',
+  'memorySources.repair.nothing':
+    'Нечего восстанавливать. Нет синхронизированных документов, ожидающих размещения.',
+  'memorySources.repair.success':
+    'Размещено в дереве памяти: {ingested} ({already} уже было, {skipped} пропущено).',
+  'memorySources.repair.morePending':
+    'Остались ещё. Нажмите «Восстановить старые воспоминания» снова.',
+  'memorySources.repair.failed': 'Не удалось восстановить старые воспоминания.',
+  'welcome.gatewaySessionErrorFallback':
+    'Не удалось завершить вход в систему. Хранилище сеанса не ответило вовремя (даже после повторной попытки). Перезапустите OpenHuman и попробуйте снова.',
+  'composio.colApp': 'Приложение',
+  'composio.colStatus': 'Статус',
+  'composio.colAccounts': 'Аккаунты',
+  'conversations.composer.context.title': 'Контекстное окно',
+  'conversations.composer.context.input': 'Ввод',
+  'conversations.composer.context.cached': 'Ввод из кэша',
+  'conversations.composer.context.output': 'Вывод',
+  'conversations.composer.context.cost': 'Стоимость',
+  'conversations.composer.command.clear': 'Очистить переписку',
+  'conversations.composer.command.goal': 'Задать или изменить цель обсуждения',
+  'conversations.subagent.awaitingTitle': 'Ожидание вашего ответа',
+  'conversations.subagent.answerPlaceholder': 'Введите ваш ответ',
+  'conversations.subagent.answerSend': 'Отправить ответ',
+  'conversations.subagent.answerSent': 'Ответ отправлен',
+  'flows.canvas.description':
+    'Соберите этот сценарий шаг за шагом, затем сохраните и запустите его.',
+  'settings.ai.providers.groupCloud': 'Облако',
+  'brain.refreshError': 'Не удалось обновить ваш мозг. Показаны последние загруженные данные.',
+  'common.working': 'Выполняется…',
+  'common.noResults': 'Нет результатов',
+  'common.filter': 'Фильтр',
+  'skills.explorer.colSkill': 'Навык',
+  'skills.explorer.colDescription': 'Описание',
+  'skills.explorer.colProvider': 'Поставщик',
+  'skills.explorer.colAction': 'Действие',
+  'sync.status.partial': 'Получено, но не записано в память',
+  'notices.title': 'Уведомления',
+  'settings.clearAppDataIrreversible': 'Это действие нельзя отменить.',
+  'settings.clearAppDataAction': 'Удалить данные',
+  'chat.conversationsHeading': 'Разговоры',
+  'chat.newWindowPrompt': 'Чем я могу помочь тебе сегодня?',
+  'skills.explorer.sourceFilterAria': 'Фильтр по источнику',
+  'memoryTree.status.storedItemsTile': 'Сохранённые элементы',
+  'memoryTree.status.retryFailed': 'Повторить неудавшиеся задачи',
+  'memoryTree.status.retryFailedBusy': 'Повторяем...',
+  'memoryTree.status.retryFailedDone': 'Неудавшиеся задачи снова в очереди',
+  'memoryTree.status.retryFailedCount': 'Задач в очереди на повторный запуск: {count}.',
+  'memoryTree.status.retryFailedError': 'Не удалось вернуть неудавшиеся задачи в очередь',
+  'settings.search.engineTavilyLabel': 'Tavily',
+  'settings.search.engineTavilyDesc':
+    'Веб-, новостной и финансовый поиск на базе Tavily. Требуется ваш собственный ключ API Tavily. Добавляет инструменты поиска и извлечения страниц.',
+  'settings.search.tavilyKeyLabel': 'Ключ API Tavily',
+  'settings.search.placeholderTavily': 'tvly-...',
 };
 
 export default messages;
