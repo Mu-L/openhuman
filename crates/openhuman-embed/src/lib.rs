@@ -27,9 +27,9 @@
 
 pub use openhuman_core::agent_progress;
 pub use openhuman_core::embed::*;
+pub use openhuman_core::openhuman::tools::toolpacks::{GroupMode, ToolGroups};
 pub use openhuman_core::{
     CoreBuilder, CoreRuntime, DaemonConfig, DomainSet, HostKind, ServiceSet, TokenSource,
 };
-pub use openhuman_core::openhuman::tools::toolpacks::{GroupMode, ToolGroups};
 
 pub use openhuman_core::api::{product_identity, set_product_identity, ProductIdentity};
