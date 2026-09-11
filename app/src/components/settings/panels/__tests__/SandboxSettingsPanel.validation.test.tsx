@@ -66,7 +66,10 @@ const mockIsTauri = vi.mocked(isTauri);
 async function renderLoaded(overrides: Partial<SandboxSettings> = {}) {
   mockGet.mockResolvedValue({ result: sandboxSettings(overrides), logs: [] });
   renderWithProviders(<SandboxSettingsPanel />);
-  await waitFor(() => expect(mockGet).toHaveBeenCalled());
+  // The RPC invocation is not a readiness signal: its resolved state update
+  // can still be queued. The image field is populated from that same response
+  // for every fixture in this file, so wait for it before querying the limits.
+  await screen.findByDisplayValue(overrides.docker_image ?? 'alpine:3.20');
 }
 
 /**
