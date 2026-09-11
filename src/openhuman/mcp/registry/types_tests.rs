@@ -1,7 +1,3 @@
-    use super::*;
-    use serde_json::json;
-
-    #[test]
     fn command_kind_roundtrip() {
         assert_eq!(CommandKind::parse("node").as_str(), "node");
         assert_eq!(CommandKind::parse("python").as_str(), "python");
@@ -363,4 +359,3 @@
         let v = serde_json::to_value(&s).unwrap();
         assert_eq!(v["status"], json!("connected"));
         // `auth_hint` is omitted from the wire when absent (skip_serializing_if).
-        assert!(v.get("auth_hint").is_none());

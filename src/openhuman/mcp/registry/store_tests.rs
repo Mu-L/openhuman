@@ -1,7 +1,3 @@
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use tempfile::NamedTempFile;
 
     fn open_test_conn() -> (NamedTempFile, Connection) {
         let f = NamedTempFile::new().unwrap();
@@ -575,4 +571,3 @@ mod tests {
             err.to_string()
                 .contains("Failed to add bogus column to mcp_servers"),
             "unexpected error: {err}"
-        );
