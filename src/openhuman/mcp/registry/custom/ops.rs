@@ -6,22 +6,26 @@
 
 use std::collections::HashMap;
 
-use crate::core::bus::BUS;
-use crate::core::events::DomainEvent;
 use serde_json::{json, Value};
+use tinymcp_bus::{InstalledServer, ServerProvenance};
 use uuid::Uuid;
 
+use crate::core::event_bus::{publish_global, DomainEvent};
 use crate::openhuman::config::Config;
 use crate::openhuman::mcp::host;
 use crate::rpc::RpcOutcome;
 
-use super::super::store;
-use super::super::types::{InstalledServer, ServerProvenance};
 use super::validate::{
     base_slug, build_custom_transport, clean_description, credential_scope, env_key_list,
     resolve_env, resolve_env_for_transport, validate_env,
 };
 use super::{CustomServerInput, CUSTOM_QUALIFIED_PREFIX, MAX_SLUG_ATTEMPTS};
+
+fn registry(config: &Config) -> Result<&tinymcp::McpRegistry, String> {
+    host::for_config(config)
+        .map(|service| service.dynamic())
+        .map_err(|error| format!("failed to open the MCP service: {error}"))
+}
 
 /// The dynamic registry for `config`'s workspace, or an error string.
 fn allocate_qualified_name(
@@ -39,7 +43,9 @@ fn allocate_qualified_name(
         } else {
             format!("{base}-{}", attempt + 1)
         };
-        let taken = store::find_server_by_qualified_name(config, &candidate)
+        let taken = registry(config)?
+            .store()
+            .find_server_by_qualified_name(&candidate)
             .map_err(|e| e.to_string())?
             .is_some();
         if !taken {
@@ -132,7 +138,7 @@ pub async fn mcp_clients_add_custom(
         server.qualified_name
     );
 
-    BUS.publish(DomainEvent::McpServerInstalled {
+    publish_global(DomainEvent::McpServerInstalled {
         server_id: server_id.clone(),
         qualified_name: server.qualified_name.clone(),
     });
@@ -175,7 +181,10 @@ pub async fn mcp_clients_update_custom(
     // `update_custom` could switch transport and store new-scope credentials —
     // and a stale snapshot could revert the token or mis-scope and carry the
     // new credentials across origins.
-    let updated = store::update_custom_server_rmw(config, &server_id, |current, stored_env| {
+    let reg = registry(config)?;
+    let store = reg.store();
+    let updated = store
+        .update_server_rmw(&server_id, |current, stored_env| {
         if current.provenance != ServerProvenance::Custom {
             return Err(tinymcp::Error::other(format!(
                 "server `{server_id}` was installed from a registry; its command and endpoint \
@@ -233,9 +242,7 @@ pub async fn mcp_clients_update_custom(
     // pins the server to the pre-edit command indefinitely — it stays healthy, so
     // no later tick reconnects it. `update_env` persists first for the same
     // reason.
-    if let Ok(service) = host::for_config(config) {
-        service.dynamic().connections().disconnect(&server_id).await;
-    }
+    reg.connections().disconnect(&server_id).await;
 
     tracing::debug!("[mcp-custom] update ok server_id={}", server_id);
 

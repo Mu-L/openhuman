@@ -3,9 +3,10 @@
 
 use std::collections::HashMap;
 
+use tinymcp_bus::{CommandKind, Transport};
+
 use super::CustomServerInput;
 use super::RESERVED_ENV_PREFIX;
-use crate::openhuman::mcp::registry::types::{CommandKind, Transport};
 
 // ── validation ───────────────────────────────────────────────────────────────
 
