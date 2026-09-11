@@ -1,10 +1,8 @@
-
 #[async_trait]
 impl Middleware<()> for ToolOutputMiddleware {
     fn name(&self) -> &str {
         "tool_output_budget"
     }
-
     async fn after_tool(
         &self,
         ctx: &mut RunContext<()>,
@@ -41,7 +39,6 @@ impl Middleware<()> for ToolOutputMiddleware {
                 "[tinyagents::mw] truncation-exempt: skipping per-tool char cap + shared byte-budget backstop"
             );
         }
-
         // 1. Semantic summarization (progressive disclosure) — swap the raw
         //    payload for a compressed summary when the summarizer opts in.
         //    Failures never break the tool call, but they are no longer
@@ -60,7 +57,6 @@ impl Middleware<()> for ToolOutputMiddleware {
         // tool's own output, which is what it is a contract about, rather than
         // openhuman's annotation about it.
         let mut pending_notice: Option<&'static str> = None;
-
         if !compaction_exempt {
             if let Some(ps) = &self.payload_summarizer {
                 match ps
@@ -106,7 +102,6 @@ impl Middleware<()> for ToolOutputMiddleware {
                     }
                 }
             }
-
             // 2. TokenJuice content-aware compaction. This mirrors the legacy
             //    `agent_tool_exec` stage that ran after semantic summarization and
             //    before the hard output caps.
@@ -127,7 +122,6 @@ impl Middleware<()> for ToolOutputMiddleware {
                 });
             }
         }
-
         // 3. Per-tool **char** cap — a tool that declares `max_result_size_chars`
         //    caps its own output in characters, with the tool-cap marker the model
         //    was taught to read (legacy engine parity). Distinct from the generic
@@ -155,7 +149,6 @@ impl Middleware<()> for ToolOutputMiddleware {
                 }
             }
         }
-
         // 4. Shared byte-cap backstop — truncate at a UTF-8 boundary with a marker.
         //    Only for tools with no cap of their own (a capped tool already bounded
         //    itself above; stacking the two markers would double-truncate), and
@@ -226,7 +219,6 @@ impl Middleware<()> for ToolOutputMiddleware {
             }
             result.content = capped;
         }
-
         // 5. The disclosure, last, so no cap above can eat it. The model has to
         //    be able to read *why* the payload is raw and that re-running will
         //    not summarize it — a half-truncated notice is worse than none,
@@ -234,11 +226,9 @@ impl Middleware<()> for ToolOutputMiddleware {
         if let Some(notice) = pending_notice {
             result.content = format!("{notice}\n\n{}", result.content);
         }
-
         Ok(())
     }
 }
-
 /// `wrap_tool`: route OpenHuman's human-in-the-loop **approval gate** through a
 /// named tinyagents tool middleware (issue #4249, Phase 1). A tool with an
 /// external effect intercepts through the global [`ApprovalGate`]; a denial
@@ -253,7 +243,6 @@ impl Middleware<()> for ToolOutputMiddleware {
 /// operation semantics the harness boundary can't reconstruct generically.
 const COMPOSIO_EXECUTE_TOOL: &str = "composio_execute";
 const INVALID_COMPOSIO_APPROVAL_NAME: &str = "composio_execute:<invalid-action>";
-
 /// Stable identity used by persistent approval grants.
 ///
 /// `composio_execute` multiplexes every Composio action through one outer tool
@@ -276,19 +265,16 @@ fn approval_tool_name<'a>(
         None => std::borrow::Cow::Borrowed(INVALID_COMPOSIO_APPROVAL_NAME),
     }
 }
-
 pub(super) struct ApprovalSecurityMiddleware {
     /// The same `Arc`-shared tool sets the runner registers, used to resolve a
     /// call's OpenHuman `Tool` by name so `external_effect_with_args` can gate.
     tool_sets: Vec<Arc<Vec<Box<dyn Tool>>>>,
 }
-
 impl ApprovalSecurityMiddleware {
     /// Build the middleware over the runner's shared tool sets.
     pub(super) fn new(tool_sets: Vec<Arc<Vec<Box<dyn Tool>>>>) -> Self {
         Self { tool_sets }
     }
-
     /// Whether the named tool declares an external effect for these args.
     fn has_external_effect(&self, name: &str, args: &serde_json::Value) -> bool {
         self.tool_sets
@@ -299,13 +285,11 @@ impl ApprovalSecurityMiddleware {
             .unwrap_or(false)
     }
 }
-
 #[async_trait]
 impl ToolMiddleware<()> for ApprovalSecurityMiddleware {
     fn name(&self) -> &str {
         "approval_security"
     }
-
     async fn wrap_tool(
         &self,
         ctx: &mut RunContext<()>,
@@ -359,9 +343,7 @@ impl ToolMiddleware<()> for ApprovalSecurityMiddleware {
                 );
             }
         }
-
         let outcome = next.run(ctx, state, call).await?;
-
         // Record the terminal audit row for an approved external-effect call
         // (idempotent; a no-op when the id is unknown).
         if let Some(id) = audit_id {
@@ -379,7 +361,6 @@ impl ToolMiddleware<()> for ApprovalSecurityMiddleware {
         Ok(outcome)
     }
 }
-
 /// `wrap_tool`: refuse a tool whose scope is
 /// [`ToolScope::CliRpcOnly`](crate::openhuman::tools::ToolScope) inside the
 /// autonomous agent loop (issue #4249). The in-house engine ran this gate in
@@ -390,12 +371,10 @@ impl ToolMiddleware<()> for ApprovalSecurityMiddleware {
 pub(super) struct CliRpcOnlyMiddleware {
     tool_sets: Vec<Arc<Vec<Box<dyn Tool>>>>,
 }
-
 impl CliRpcOnlyMiddleware {
     pub(super) fn new(tool_sets: Vec<Arc<Vec<Box<dyn Tool>>>>) -> Self {
         Self { tool_sets }
     }
-
     fn is_cli_rpc_only(&self, name: &str) -> bool {
         self.tool_sets
             .iter()
@@ -405,13 +384,11 @@ impl CliRpcOnlyMiddleware {
             .unwrap_or(false)
     }
 }
-
 #[async_trait]
 impl ToolMiddleware<()> for CliRpcOnlyMiddleware {
     fn name(&self) -> &str {
         "cli_rpc_only"
     }
-
     async fn wrap_tool(
         &self,
         ctx: &mut RunContext<()>,
@@ -440,7 +417,6 @@ impl ToolMiddleware<()> for CliRpcOnlyMiddleware {
         next.run(ctx, state, call).await
     }
 }
-
 /// `wrap_tool`: scrub credential-shaped secrets out of every tool result before
 /// it leaves the tool boundary (issue #4453). The legacy engine ran
 /// `scrub_credentials` over **every** tool output before it entered model
@@ -459,13 +435,11 @@ impl ToolMiddleware<()> for CliRpcOnlyMiddleware {
 /// `ToolCallOutcome` records by construction, since every path runs the same
 /// `assemble_turn_harness` seam.
 pub(super) struct CredentialScrubMiddleware;
-
 impl CredentialScrubMiddleware {
     pub(super) fn new() -> Self {
         Self
     }
 }
-
 #[async_trait]
 impl ToolMiddleware<()> for CredentialScrubMiddleware {
     fn name(&self) -> &str {
