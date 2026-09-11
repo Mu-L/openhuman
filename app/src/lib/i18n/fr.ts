@@ -7643,7 +7643,6 @@ const messages: TranslationMap = {
   'settings.search.tavilyKeyLabel': 'Clé API Tavily',
   'settings.search.placeholderTavily': 'tvly-...',
 
-
   'userErrors.memoryStoreCorrupt.title': 'Memory index was corrupted',
   'userErrors.memoryStoreCorrupt.body':
     'The database behind your memory tree was damaged. The damaged file was preserved next to your memory data, and an empty index was rebuilt. Re-sync your memory sources to fill it again.',
