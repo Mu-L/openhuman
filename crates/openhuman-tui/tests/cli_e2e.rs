@@ -45,7 +45,10 @@ fn inference_override_flags_are_parsed_before_starting_the_core() {
     ]);
     assert!(!output.status.success());
     let stderr = String::from_utf8_lossy(&output.stderr);
-    assert!(stderr.contains("unknown tui arg: --definitely-unknown"), "{stderr}");
+    assert!(
+        stderr.contains("unknown tui arg: --definitely-unknown"),
+        "{stderr}"
+    );
     assert!(!stderr.contains("unknown tui arg: --provider"), "{stderr}");
 }
 
@@ -53,9 +56,7 @@ fn inference_override_flags_are_parsed_before_starting_the_core() {
 fn inference_override_flags_require_values() {
     let output = run(&["--provider", "--help"]);
     assert!(!output.status.success());
-    assert!(
-        String::from_utf8_lossy(&output.stderr).contains("missing value for --provider")
-    );
+    assert!(String::from_utf8_lossy(&output.stderr).contains("missing value for --provider"));
 }
 
 #[test]
