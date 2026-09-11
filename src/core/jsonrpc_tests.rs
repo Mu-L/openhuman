@@ -7,7 +7,7 @@ use std::time::Duration;
 use tokio_util::sync::CancellationToken;
 
 use super::{
-    default_state, group_first_time, group_first_time_when_bus_ready, invoke_method,
+    default_state, group_first_time_when_bus_ready, invoke_method,
     is_session_expired_error, is_unconfirmed_unauthorized_error,
     learning_first_time_when_bus_ready, params_to_object, parse_json_params, type_name,
     DomainSubscriberPlan,
