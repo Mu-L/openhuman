@@ -191,7 +191,7 @@ function resolveBuiltAppPath(): string | null {
       'debug',
       'bundle',
       'macos',
-      'OpenHuman.app',
+      'OpenHuman.app'
     ),
     path.join(repoRoot, 'target', 'debug', 'bundle', 'macos', 'OpenHuman.app'),
   ];

@@ -37,7 +37,7 @@ function linuxAppPath(): string {
     'openhuman-app',
     'target',
     'debug',
-    'OpenHuman',
+    'OpenHuman'
   );
   if (fs.existsSync(candidate)) return candidate;
   return candidate;
