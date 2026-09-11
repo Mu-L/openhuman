@@ -314,10 +314,7 @@ fn scan() -> BTreeSet<(String, String)> {
     // stale and, more importantly, let future wrapper-layer bypasses escape
     // the ratchet entirely.
     collect_rs_files(
-        &root
-            .join("crates")
-            .join("openhuman-core")
-            .join("src"),
+        &root.join("crates").join("openhuman-core").join("src"),
         &mut files,
     );
     // The memory subsystem was extracted into `tinymemory-core`, and most of
