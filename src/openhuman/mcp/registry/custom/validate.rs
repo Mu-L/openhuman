@@ -286,7 +286,12 @@ pub(super) fn validate_env(
                 "env key `{key}` is reserved — keys starting with `{RESERVED_ENV_PREFIX}` hold internal connection state"
             ));
         }
-        if case_insensitive && !seen.insert(key.to_ascii_lowercase()) {
+        let identity = if case_insensitive {
+            key.to_ascii_lowercase()
+        } else {
+            key.to_string()
+        };
+        if !seen.insert(identity) {
             let kind = if is_http_remote {
                 "header"
             } else {

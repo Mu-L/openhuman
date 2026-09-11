@@ -298,6 +298,7 @@ const ConnectAuthModal = ({ server, onClose, onConnected }: ConnectAuthModalProp
           const mine = statuses.find(s => s.server_id === server.server_id);
           if (mine?.status === 'connected') {
             const result = await mcpClientsApi.connect(server.server_id);
+            if (oauthCancelled.current) return;
             onConnected(result.tools ?? []);
             onClose();
             return;

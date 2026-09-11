@@ -16,6 +16,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useT } from '../../../lib/i18n/I18nContext';
 import { type CustomServerParams, mcpClientsApi } from '../../../services/api/mcpClientsApi';
 import Button from '../../ui/Button';
+import ModalShell from '../../ui/ModalShell';
 import CustomServerFormModal from './CustomServerFormModal';
 import McpStatusBadge from './McpStatusBadge';
 import { type ConnStatus, type InstalledServer, isCustomServer, type ServerStatus } from './types';
@@ -57,18 +58,6 @@ const CustomServersPanel = ({
   const [confirmRemove, setConfirmRemove] = useState<InstalledServer | null>(null);
 
   const customServers = useMemo(() => servers.filter(isCustomServer), [servers]);
-
-  // Escape dismisses the removal confirmation WITHOUT removing — the standard
-  // dismiss affordance, matching the other MCP dialogs. Attached only while the
-  // dialog is open.
-  useEffect(() => {
-    if (!confirmRemove) return;
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setConfirmRemove(null);
-    };
-    document.addEventListener('keydown', onKeyDown);
-    return () => document.removeEventListener('keydown', onKeyDown);
-  }, [confirmRemove]);
 
   const statusFor = (serverId: string): ServerStatus =>
     statuses.find(s => s.server_id === serverId)?.status ?? 'disconnected';
@@ -241,20 +230,14 @@ const CustomServersPanel = ({
       ) : null}
 
       {confirmRemove && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="mcp-custom-remove-title"
-          aria-describedby="mcp-custom-remove-body"
-          data-testid="mcp-custom-remove-confirm"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
-          <div className="bg-surface rounded-xl shadow-xl max-w-sm w-full p-4">
-            <h2 id="mcp-custom-remove-title" className="text-sm font-semibold text-content mb-2">
-              {t('mcp.custom.removeConfirm.title').replace('{name}', confirmRemove.display_name)}
-            </h2>
-            <p id="mcp-custom-remove-body" className="text-xs text-content-secondary mb-4">
-              {t('mcp.custom.removeConfirm.body')}
-            </p>
+        <ModalShell
+          title={t('mcp.custom.removeConfirm.title').replace('{name}', confirmRemove.display_name)}
+          titleId="mcp-custom-remove-title"
+          describedBy="mcp-custom-remove-body"
+          onClose={() => setConfirmRemove(null)}
+          testId="mcp-custom-remove-confirm"
+          maxWidthClassName="max-w-sm"
+          footer={
             <div className="flex justify-end gap-2">
               <Button variant="secondary" size="sm" onClick={() => setConfirmRemove(null)}>
                 {t('mcp.custom.removeConfirm.cancel')}
@@ -267,8 +250,11 @@ const CustomServersPanel = ({
                 {t('mcp.custom.removeConfirm.confirm')}
               </Button>
             </div>
-          </div>
-        </div>
+          }>
+          <p id="mcp-custom-remove-body" className="text-xs text-content-secondary">
+              {t('mcp.custom.removeConfirm.body')}
+          </p>
+        </ModalShell>
       )}
     </section>
   );
