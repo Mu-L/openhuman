@@ -7311,6 +7311,37 @@ const messages: TranslationMap = {
   'mcp.custom.form.save': 'सहेजें',
   'mcp.custom.form.add': 'सर्वर जोड़ें',
   'mcp.custom.form.saving': 'सहेजा जा रहा है…',
+  'settings.mcpServer.tools.listSubagents': 'उपलब्ध सब-एजेंट सूचीबद्ध करता है',
+  'settings.mcpServer.tools.runSubagent': 'प्रॉम्प्ट के साथ सब-एजेंट चलाता है',
+  'settings.mcpServer.tools.memorySearch': 'सिमेंटिक क्वेरी से मेमोरी खोजता है',
+  'settings.mcpServer.tools.memoryRecall': 'आईडी से विशिष्ट यादें पुनः प्राप्त करता है',
+  'settings.mcpServer.tools.treeReadChunk': 'मेमोरी ट्री का अंश पढ़ता है',
+  'settings.mcpServer.tools.treeBrowse': 'मेमोरी ट्री की संरचना ब्राउज़ करता है',
+  'settings.mcpServer.tools.treeTopEntities': 'मेमोरी ट्री से शीर्ष एंटिटी प्राप्त करता है',
+  'settings.mcpServer.tools.treeListSources': 'मेमोरी ट्री के स्रोत सूचीबद्ध करता है',
+  'settings.notifications.category.messages.title': 'संदेश',
+  'settings.notifications.category.messages.desc':
+    'एम्बेडेड वेबव्यू खातों (Slack, WhatsApp, …) से नए संदेश।',
+  'settings.notifications.category.agents.title': 'एजेंट गतिविधि',
+  'settings.notifications.category.agents.desc':
+    'एजेंट कार्य पूर्णताएँ और लंबे समय तक चलने वाली प्रतिक्रियाएँ।',
+  'settings.notifications.category.skills.title': 'स्किल्स',
+  'settings.notifications.category.skills.desc': 'स्किल सिंक इवेंट और OAuth स्थिति में बदलाव।',
+  'settings.notifications.category.system.title': 'सिस्टम',
+  'settings.notifications.category.system.desc':
+    'कनेक्शन समस्याएँ, बैकग्राउंड प्रोसेस त्रुटियाँ, अपडेट।',
+  'settings.notifications.category.meetings.title': 'मीटिंग्स',
+  'settings.notifications.category.meetings.desc':
+    'आगामी मीटिंग्स और हार्टबीट द्वारा पहचाने गए कैलेंडर इवेंट।',
+  'settings.notifications.category.reminders.title': 'रिमाइंडर',
+  'settings.notifications.category.reminders.desc':
+    'आगामी रिमाइंडर और cron जॉब्स से शेड्यूल किए गए कार्य।',
+  'settings.notifications.category.important.title': 'महत्वपूर्ण इवेंट',
+  'settings.notifications.category.important.desc':
+    'जुड़े हुए स्रोतों से आपातकालीन या समय-संवेदनशील इवेंट।',
+  'settings.notifications.categoryToggleAria': '{name} सूचनाएँ चालू या बंद करें',
+  'settings.cron.jobs.runFinishedAt': '{time} पर {status}',
+  'settings.cron.jobs.scheduleAt': '{time} पर',
   'settings.gateway.binaryRequired': 'उस मशीन पर openhuman-core का पथ बताएँ।',
   'settings.gateway.portInvalid': 'SSH पोर्ट एक संख्या होनी चाहिए।',
   'devOptions.gateway': 'स्थान',
