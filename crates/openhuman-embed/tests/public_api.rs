@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
 use openhuman_embed::{
-    set_product_identity, Access, Core, CoreBuilder, CoreRuntime, DomainSet, Harness, HostKind,
-    ProductIdentity, Provider, ServiceSet, Workspace,
+    set_product_identity, Access, Core, CoreBuilder, CoreRuntime, DomainSet, GroupMode, Harness,
+    HostKind, ProductIdentity, Provider, ServiceSet, ToolGroups, Workspace,
 };
 
 #[test]
@@ -25,6 +25,7 @@ fn exposes_the_host_facing_embedding_contract() {
     let _ = DomainSet::embedded;
     let _ = ServiceSet::none;
     let _ = HostKind::Library;
+    let _ = ToolGroups::none().with("documents", GroupMode::Advertised);
     let _ = set_product_identity;
     assert!(ProductIdentity::new("opencompany").is_some());
 }
