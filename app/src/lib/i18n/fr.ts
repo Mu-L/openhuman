@@ -7549,10 +7549,6 @@ const messages: TranslationMap = {
   'settings.ai.loops.memoryTreeWorkers.risk':
     "{workers} workers interrogent la file toutes les {seconds}s ; le LLM n'est appelé que lorsqu'elle contient des tâches d'extraction, de scellement, de synthèse ou de sujet.",
   'settings.ai.loops.reflectionRebuild.name': 'Reconstruction de réflexion',
-    "Actualise l'état de réflexion après une activité de mémoire.",
-    '{count} réveils/semaine ; le LLM ne travaille que lorsque la reconstruction a besoin de réflexion.',
-    "Interroge les outils connectés lorsqu'une synchronisation avec le fournisseur est due.",
-    '{count} réveils/semaine ; explore {active} connexion(s) active(s).',
   'settings.ai.openaiOauthCompleteError':
     'La connexion à ChatGPT n’a pas abouti. Vérifiez l’URL de redirection et réessayez.',
   'settings.ai.openaiOauthCallbackRequired':
@@ -7571,7 +7567,6 @@ const messages: TranslationMap = {
   'memorySources.codingSessions.stillRunning': 'Import toujours en cours',
   'memorySources.codingSessions.stillRunningMessage':
     "Sessions importées jusqu'ici : {processed}. L'import n'a pas abouti dans le temps imparti mais continue en arrière-plan ; revenez dans une minute plutôt que de le relancer.",
-    'Segments en attente de vecteurs : {count}. La recherche sémantique les couvrira sous peu.',
   'chat.sources.usedCount': '{n} sources utilisées',
   // Gateways: cores this app provisions and runs elsewhere.
   'settings.gateway.title': 'Exécuter le cœur ailleurs',
@@ -7592,12 +7587,7 @@ const messages: TranslationMap = {
     'Les événements apparaissent ici quand les agents, les outils et le système travaillent. Rien pour le moment.',
   'settings.developerMenu.eventLog.notConnectedHint':
     'Reconnectez-vous au core pour reprendre le flux.',
-    "La mascotte reste posée sur le champ de saisie. Masquée, la discussion reste en texte seul jusqu'à ce que vous la réactiviez.",
-    'Type de fichier non pris en charge. Importez une image PNG, GIF, JPEG, WebP ou BMP.',
-    'L’image est trop volumineuse. Importez un fichier de 1,5 Mo maximum.',
   'memoryTree.status.statusBudgetExhausted': "En pause : budget d'embeddings atteint",
-    "Une intégration connectée renvoie des erreurs, l'état des connexions affiché dans l'application peut donc être obsolète.",
-    "Ollama n'est pas joignable sur le point de terminaison configuré, ou le modèle requis n'y est pas installé. Lancez Ollama et téléchargez le modèle sur ce point de terminaison, ou basculez cette charge de travail vers un fournisseur cloud.",
   'memorySources.repair.title': 'Réparer les souvenirs anciens ?',
   'memorySources.repair.message':
     "Jusqu'à {scanned} documents synchronisés ont été enregistrés avant la correction du classement dans l'arbre de mémoire et sont invisibles dans le graphe de mémoire. Les classer consomme des crédits d'embedding. Les documents déjà dans l'arbre sont ignorés.",
@@ -7625,7 +7615,6 @@ const messages: TranslationMap = {
   'conversations.subagent.awaitingTitle': 'En attente de votre réponse',
   'conversations.subagent.answerPlaceholder': 'Saisissez votre réponse',
   'conversations.subagent.answerSend': 'Envoyer la réponse',
-    'Créez cette automatisation étape par étape, puis enregistrez-la et exécutez-la.',
   'brain.refreshError':
     'Impossible de rafraîchir votre cerveau. Les dernières données chargées sont affichées.',
   'common.working': 'Traitement…',
@@ -7653,20 +7642,29 @@ const messages: TranslationMap = {
     'Recherche web, actualités et finance propulsée par Tavily. Nécessite votre propre clé API Tavily. Ajoute des outils de recherche et d’extraction de pages.',
   'settings.search.tavilyKeyLabel': 'Clé API Tavily',
   'settings.search.placeholderTavily': 'tvly-...',
+
+
   'userErrors.memoryStoreCorrupt.title': 'Memory index was corrupted',
   'userErrors.memoryStoreCorrupt.body':
+    'The database behind your memory tree was damaged. The damaged file was preserved next to your memory data, and an empty index was rebuilt. Re-sync your memory sources to fill it again.',
   'userErrors.action.openMemorySync': 'Re-sync memory',
   'userErrors.scope.workspace': 'Workspace',
   'userErrors.scope.memory': 'Memory',
+
+  // Memory embedding budget banners (#5324)
   'memoryBudget.approachingTitle': 'Memory is approaching its embedding limit',
   'memoryBudget.approachingMessage':
+    "You've used {pct}% of your embedding budget. Set up local embeddings or add your own API key to keep building memory without interruption.",
   'memoryBudget.exhaustedTitle': 'Memory has stopped growing',
   'memoryBudget.exhaustedMessage':
+    'Your embedding budget is used up, so new content is no longer being added to memory. Set up local embeddings or add your own API key to resume.',
   'memoryBudget.cta': 'Set up embeddings',
   'settings.ai.apiReadsFormula': 'background API reads/week / remaining = {reads} / {remaining}',
   'settings.ai.needUsageToEstimate': 'Need usage response to estimate.',
   'settings.ai.composioSyncScansDetail':
+    '{count} active integration connection(s) scanned every 20 min',
   'settings.ai.totalApiReadBudgetDetail':
+    'calendar planner reads + periodic integration scans; excludes user-initiated chat tools',
   'settings.ai.memoryWorkerPollsDetail': '4 workers * 5s poll; LLM calls only for queued jobs',
   'settings.ai.managedSourceLabel': 'Managed by OpenHuman',
   'settings.ai.managedSourceDetail': 'Automatic model selection',
@@ -7677,15 +7675,19 @@ const messages: TranslationMap = {
   'settings.mcpServer.tools.toolInstructions': 'Get usage instructions for a tool',
   'settings.ai.openaiOauthTitle': 'Sign in with ChatGPT',
   'settings.ai.openaiOauthDescription':
+    'Sign in with your ChatGPT account to use OpenAI models without an API key.',
   'settings.ai.openaiOauthConnect': 'Sign in with ChatGPT',
   'settings.ai.openaiOauthConnected': 'Connected with ChatGPT',
   'settings.ai.openaiOauthOpening': 'Opening sign-in…',
   'settings.ai.openaiOauthCallbackHint':
+    'After signing in, paste the full redirect URL from your browser (starts with http://127.0.0.1:1455/).',
   'settings.ai.openaiOauthCallbackPlaceholder':
+    'http://127.0.0.1:1455/auth/callback?code=...&state=...',
   'settings.ai.openaiOauthFinish': 'Finish ChatGPT sign-in',
   'settings.ai.openaiOauthDisconnect': 'Disconnect ChatGPT',
   'settings.ai.openaiOauthDesktopOnly': 'ChatGPT sign-in is only available in the desktop app.',
   'settings.ai.openaiOauthStartError':
+    'Could not start ChatGPT sign-in. Try again or use an API key.',
   'memorySources.allIn.allFailed': 'No sync could start. Check each source for the reason.',
   'memorySources.allIn.partial': 'Syncs started: {triggered}. Could not start: {failed}.',
   'memorySources.repair.button': 'Repair older memories',

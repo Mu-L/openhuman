@@ -7481,10 +7481,6 @@ const messages: TranslationMap = {
   'settings.ai.loops.memoryTreeWorkers.risk':
     '{workers} workers consultam a fila a cada {seconds}s; o LLM só é chamado quando a fila tem tarefas de extração/selamento/resumo/tópico.',
   'settings.ai.loops.reflectionRebuild.name': 'Reconstrução de reflexão',
-    'Atualiza o estado de reflexão após atividade de memória.',
-    '{count} ativações/semana; o LLM só trabalha quando a reconstrução precisa de reflexão.',
-    'Consulta as ferramentas conectadas quando uma sincronização com o provedor está pendente.',
-    '{count} ativações/semana; verifica {active} conexão(ões) ativa(s).',
   'settings.ai.openaiOauthCompleteError':
     'O login no ChatGPT não foi concluído. Verifique a URL de redirecionamento e tente novamente.',
   'settings.ai.openaiOauthCallbackRequired':
@@ -7503,7 +7499,6 @@ const messages: TranslationMap = {
   'memorySources.codingSessions.stillRunning': 'Importação ainda em andamento',
   'memorySources.codingSessions.stillRunningMessage':
     'Sessões importadas até agora: {processed}. A importação não terminou dentro do tempo previsto, mas continua a ser executada em segundo plano; verifique novamente daqui a um minuto em vez de iniciá-la outra vez.',
-    'Blocos a aguardar vetores: {count}. A pesquisa semântica irá abrangê-los em breve.',
   'chat.sources.usedCount': '{n} fontes utilizadas',
   // Gateways: cores this app provisions and runs elsewhere.
   'settings.gateway.title': 'Executar o núcleo em outro lugar',
@@ -7523,11 +7518,7 @@ const messages: TranslationMap = {
   'settings.developerMenu.eventLog.waitingHint':
     'Os eventos aparecem aqui conforme os agentes, as ferramentas e o sistema trabalham. Ainda não aconteceu nada.',
   'settings.developerMenu.eventLog.notConnectedHint': 'Reconecte ao core para retomar o fluxo.',
-    'O mascote fica em pé sobre o campo de escrita. Oculto, a conversa fica apenas em texto até você ativar de novo.',
-    'Tipo de arquivo não suportado. Envie uma imagem PNG, GIF, JPEG, WebP ou BMP.',
   'memoryTree.status.statusBudgetExhausted': 'Em pausa: limite de embeddings atingido',
-    'Uma integração conectada está retornando erros, então o status de conexão exibido no app pode estar desatualizado.',
-    'O Ollama não está acessível no endpoint configurado, ou o modelo necessário não está instalado nele. Inicie o Ollama e baixe o modelo nesse endpoint, ou mude este trabalho para um provedor na nuvem.',
   'memorySources.repair.title': 'Reparar memórias antigas?',
   'memorySources.repair.message':
     'Até {scanned} documentos sincronizados foram salvos antes da correção do arquivamento na árvore de memória e não aparecem no grafo de memória. Arquivá-los consome créditos de embedding. Documentos já na árvore são ignorados.',
@@ -7582,20 +7573,29 @@ const messages: TranslationMap = {
     'Busca web, notícias e finanças com tecnologia Tavily. Requer sua própria chave de API do Tavily. Adiciona ferramentas de busca e extração de conteúdo de páginas.',
   'settings.search.tavilyKeyLabel': 'Chave de API do Tavily',
   'settings.search.placeholderTavily': 'tvly-...',
+
+
   'userErrors.memoryStoreCorrupt.title': 'Memory index was corrupted',
   'userErrors.memoryStoreCorrupt.body':
+    'The database behind your memory tree was damaged. The damaged file was preserved next to your memory data, and an empty index was rebuilt. Re-sync your memory sources to fill it again.',
   'userErrors.action.openMemorySync': 'Re-sync memory',
   'userErrors.scope.workspace': 'Workspace',
   'userErrors.scope.memory': 'Memory',
+
+  // Memory embedding budget banners (#5324)
   'memoryBudget.approachingTitle': 'Memory is approaching its embedding limit',
   'memoryBudget.approachingMessage':
+    "You've used {pct}% of your embedding budget. Set up local embeddings or add your own API key to keep building memory without interruption.",
   'memoryBudget.exhaustedTitle': 'Memory has stopped growing',
   'memoryBudget.exhaustedMessage':
+    'Your embedding budget is used up, so new content is no longer being added to memory. Set up local embeddings or add your own API key to resume.',
   'memoryBudget.cta': 'Set up embeddings',
   'settings.ai.apiReadsFormula': 'background API reads/week / remaining = {reads} / {remaining}',
   'settings.ai.needUsageToEstimate': 'Need usage response to estimate.',
   'settings.ai.composioSyncScansDetail':
+    '{count} active integration connection(s) scanned every 20 min',
   'settings.ai.totalApiReadBudgetDetail':
+    'calendar planner reads + periodic integration scans; excludes user-initiated chat tools',
   'settings.ai.memoryWorkerPollsDetail': '4 workers * 5s poll; LLM calls only for queued jobs',
   'settings.ai.managedSourceLabel': 'Managed by OpenHuman',
   'settings.ai.managedSourceDetail': 'Automatic model selection',
@@ -7606,15 +7606,19 @@ const messages: TranslationMap = {
   'settings.mcpServer.tools.toolInstructions': 'Get usage instructions for a tool',
   'settings.ai.openaiOauthTitle': 'Sign in with ChatGPT',
   'settings.ai.openaiOauthDescription':
+    'Sign in with your ChatGPT account to use OpenAI models without an API key.',
   'settings.ai.openaiOauthConnect': 'Sign in with ChatGPT',
   'settings.ai.openaiOauthConnected': 'Connected with ChatGPT',
   'settings.ai.openaiOauthOpening': 'Opening sign-in…',
   'settings.ai.openaiOauthCallbackHint':
+    'After signing in, paste the full redirect URL from your browser (starts with http://127.0.0.1:1455/).',
   'settings.ai.openaiOauthCallbackPlaceholder':
+    'http://127.0.0.1:1455/auth/callback?code=...&state=...',
   'settings.ai.openaiOauthFinish': 'Finish ChatGPT sign-in',
   'settings.ai.openaiOauthDisconnect': 'Disconnect ChatGPT',
   'settings.ai.openaiOauthDesktopOnly': 'ChatGPT sign-in is only available in the desktop app.',
   'settings.ai.openaiOauthStartError':
+    'Could not start ChatGPT sign-in. Try again or use an API key.',
   'memorySources.allIn.allFailed': 'No sync could start. Check each source for the reason.',
   'memorySources.allIn.partial': 'Syncs started: {triggered}. Could not start: {failed}.',
   'memorySources.repair.button': 'Repair older memories',

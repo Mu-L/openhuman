@@ -6961,7 +6961,6 @@ const messages: TranslationMap = {
   'settings.ai.loops.memoryTreeWorkers.risk':
     '{workers} 个工作进程每 {seconds} 秒轮询一次；仅当队列中有提取/封存/摘要/主题任务时才会调用大模型。',
   'settings.ai.loops.reflectionRebuild.name': '反思重建',
-    '每周唤醒 {count} 次；仅当重建需要反思时大模型才会工作。',
   'settings.ai.openaiOauthCompleteError': 'ChatGPT 登录未完成。请检查重定向 URL 后重试。',
   'settings.ai.openaiOauthCallbackRequired': '登录后，请粘贴浏览器中的重定向 URL。',
   'settings.ai.openaiOauthDisconnectError': '无法断开 ChatGPT 连接，请重试。',
@@ -6995,11 +6994,7 @@ const messages: TranslationMap = {
   'settings.developerMenu.eventLog.waitingHint':
     '当智能体、工具和系统开始工作时，事件会显示在这里。目前还没有任何事件。',
   'settings.developerMenu.eventLog.notConnectedHint': '重新连接到核心以恢复事件流。',
-    '吉祥物会站在输入框上。隐藏后，聊天将只保留文字，直到你重新开启。',
-    '不支持的文件类型。请上传 PNG、GIF、JPEG、WebP 或 BMP 图片。',
   'memoryTree.status.statusBudgetExhausted': '已暂停：嵌入额度已用尽',
-    '某个已连接的集成正在返回错误，因此应用中显示的连接状态可能不是最新的。',
-    '无法在配置的端点连接 Ollama，或所需模型未安装在该端点。请启动 Ollama 并在该端点拉取模型，或将此工作切换到云端提供商。',
   'memorySources.repair.title': '要修复较早的记忆吗？',
   'memorySources.repair.message':
     '最多 {scanned} 个已同步的文档在记忆树摄取修复之前保存，因此不会显示在记忆图谱中。摄取它们会消耗嵌入额度。已在记忆树中的文档会被跳过。',
@@ -7051,20 +7046,29 @@ const messages: TranslationMap = {
     '由 Tavily 提供支持的网页、新闻和财经搜索。需要你自己的 Tavily API 密钥。新增搜索和网页提取工具。',
   'settings.search.tavilyKeyLabel': 'Tavily API 密钥',
   'settings.search.placeholderTavily': 'tvly-...',
+
+
   'userErrors.memoryStoreCorrupt.title': 'Memory index was corrupted',
   'userErrors.memoryStoreCorrupt.body':
+    'The database behind your memory tree was damaged. The damaged file was preserved next to your memory data, and an empty index was rebuilt. Re-sync your memory sources to fill it again.',
   'userErrors.action.openMemorySync': 'Re-sync memory',
   'userErrors.scope.workspace': 'Workspace',
   'userErrors.scope.memory': 'Memory',
+
+  // Memory embedding budget banners (#5324)
   'memoryBudget.approachingTitle': 'Memory is approaching its embedding limit',
   'memoryBudget.approachingMessage':
+    "You've used {pct}% of your embedding budget. Set up local embeddings or add your own API key to keep building memory without interruption.",
   'memoryBudget.exhaustedTitle': 'Memory has stopped growing',
   'memoryBudget.exhaustedMessage':
+    'Your embedding budget is used up, so new content is no longer being added to memory. Set up local embeddings or add your own API key to resume.',
   'memoryBudget.cta': 'Set up embeddings',
   'settings.ai.apiReadsFormula': 'background API reads/week / remaining = {reads} / {remaining}',
   'settings.ai.needUsageToEstimate': 'Need usage response to estimate.',
   'settings.ai.composioSyncScansDetail':
+    '{count} active integration connection(s) scanned every 20 min',
   'settings.ai.totalApiReadBudgetDetail':
+    'calendar planner reads + periodic integration scans; excludes user-initiated chat tools',
   'settings.ai.memoryWorkerPollsDetail': '4 workers * 5s poll; LLM calls only for queued jobs',
   'settings.ai.managedSourceLabel': 'Managed by OpenHuman',
   'settings.ai.managedSourceDetail': 'Automatic model selection',
@@ -7075,15 +7079,19 @@ const messages: TranslationMap = {
   'settings.mcpServer.tools.toolInstructions': 'Get usage instructions for a tool',
   'settings.ai.openaiOauthTitle': 'Sign in with ChatGPT',
   'settings.ai.openaiOauthDescription':
+    'Sign in with your ChatGPT account to use OpenAI models without an API key.',
   'settings.ai.openaiOauthConnect': 'Sign in with ChatGPT',
   'settings.ai.openaiOauthConnected': 'Connected with ChatGPT',
   'settings.ai.openaiOauthOpening': 'Opening sign-in…',
   'settings.ai.openaiOauthCallbackHint':
+    'After signing in, paste the full redirect URL from your browser (starts with http://127.0.0.1:1455/).',
   'settings.ai.openaiOauthCallbackPlaceholder':
+    'http://127.0.0.1:1455/auth/callback?code=...&state=...',
   'settings.ai.openaiOauthFinish': 'Finish ChatGPT sign-in',
   'settings.ai.openaiOauthDisconnect': 'Disconnect ChatGPT',
   'settings.ai.openaiOauthDesktopOnly': 'ChatGPT sign-in is only available in the desktop app.',
   'settings.ai.openaiOauthStartError':
+    'Could not start ChatGPT sign-in. Try again or use an API key.',
   'memorySources.allIn.allFailed': 'No sync could start. Check each source for the reason.',
   'memorySources.allIn.partial': 'Syncs started: {triggered}. Could not start: {failed}.',
   'memorySources.repair.button': 'Repair older memories',

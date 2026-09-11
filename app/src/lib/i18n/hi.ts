@@ -7359,9 +7359,6 @@ const messages: TranslationMap = {
   'settings.ai.loops.memoryTreeWorkers.risk':
     '{workers} वर्कर हर {seconds} सेकंड में कतार जाँचते हैं; LLM तभी कॉल होता है जब कतार में extract/seal/digest/topic कार्य हों।',
   'settings.ai.loops.reflectionRebuild.name': 'रिफ्लेक्शन पुनर्निर्माण',
-    'मेमोरी गतिविधि के बाद रिफ्लेक्शन स्थिति को ताज़ा करता है।',
-    '{count} जागरण/सप्ताह; LLM तभी काम करता है जब पुनर्निर्माण को रिफ्लेक्शन की ज़रूरत हो।',
-    '{count} जागरण/सप्ताह; {active} सक्रिय कनेक्शन(स) स्कैन करता है।',
   'settings.ai.openaiOauthCompleteError':
     'ChatGPT साइन-इन पूरा नहीं हुआ। रीडायरेक्ट URL जाँचें और फिर कोशिश करें।',
   'settings.ai.openaiOauthCallbackRequired':
@@ -7378,7 +7375,6 @@ const messages: TranslationMap = {
   'memorySources.codingSessions.stillRunning': 'आयात अब भी चल रहा है',
   'memorySources.codingSessions.stillRunningMessage':
     'अब तक आयात किए गए सत्र: {processed}. आयात अपनी समय सीमा में पूरा नहीं हुआ, लेकिन पृष्ठभूमि में चल रहा है; इसे दोबारा शुरू करने के बजाय एक मिनट बाद देखें।',
-    'वेक्टर की प्रतीक्षा में चंक्स: {count}। सिमेंटिक खोज जल्द ही उन्हें शामिल करेगी।',
   'chat.sources.usedCount': '{n} स्रोतों का उपयोग किया',
   // Gateways: cores this app provisions and runs elsewhere.
   'settings.gateway.title': 'कोर को कहीं और चलाएँ',
@@ -7399,11 +7395,7 @@ const messages: TranslationMap = {
     'जब एजेंट, टूल और सिस्टम काम करते हैं तो घटनाएँ यहाँ दिखती हैं। अभी तक कुछ नहीं हुआ है।',
   'settings.developerMenu.eventLog.notConnectedHint':
     'स्ट्रीम फिर से शुरू करने के लिए कोर से दोबारा कनेक्ट करें।',
-    'मैस्कॉट लिखने के बॉक्स पर खड़ा रहता है। छिपाने पर चैट सिर्फ़ टेक्स्ट रहेगी, जब तक आप इसे दोबारा चालू न करें।',
-    'असमर्थित फ़ाइल प्रकार। PNG, GIF, JPEG, WebP, या BMP इमेज अपलोड करें।',
   'memoryTree.status.statusBudgetExhausted': 'रुका हुआ: एम्बेडिंग बजट समाप्त',
-    'एक जुड़ा हुआ इंटीग्रेशन त्रुटियां लौटा रहा है, इसलिए ऐप में दिख रही कनेक्शन स्थिति पुरानी हो सकती है।',
-    'कॉन्फ़िगर किए गए एंडपॉइंट पर Ollama तक पहुँच नहीं है, या ज़रूरी मॉडल वहाँ इंस्टॉल नहीं है। Ollama शुरू करके उसी एंडपॉइंट पर मॉडल पुल करें, या इस काम को किसी क्लाउड प्रोवाइडर पर ले जाएँ।',
   'memorySources.repair.title': 'पुरानी यादें सुधारें?',
   'memorySources.repair.message':
     'मेमोरी ट्री में फाइलिंग ठीक होने से पहले सहेजे गए अधिकतम {scanned} सिंक किए गए दस्तावेज़ मेमोरी ग्राफ़ में दिखाई नहीं देते। उन्हें फाइल करने में एम्बेडिंग क्रेडिट लगते हैं। जो दस्तावेज़ पहले से ट्री में हैं, उन्हें छोड़ दिया जाता है।',
@@ -7456,20 +7448,29 @@ const messages: TranslationMap = {
     'Tavily द्वारा संचालित वेब, समाचार और वित्त खोज। इसके लिए आपकी अपनी Tavily API key आवश्यक है। सर्च और पेज सामग्री निकालने के टूल जोड़ता है।',
   'settings.search.tavilyKeyLabel': 'Tavily API कुंजी',
   'settings.search.placeholderTavily': 'tvly-...',
+
+
   'userErrors.memoryStoreCorrupt.title': 'Memory index was corrupted',
   'userErrors.memoryStoreCorrupt.body':
+    'The database behind your memory tree was damaged. The damaged file was preserved next to your memory data, and an empty index was rebuilt. Re-sync your memory sources to fill it again.',
   'userErrors.action.openMemorySync': 'Re-sync memory',
   'userErrors.scope.workspace': 'Workspace',
   'userErrors.scope.memory': 'Memory',
+
+  // Memory embedding budget banners (#5324)
   'memoryBudget.approachingTitle': 'Memory is approaching its embedding limit',
   'memoryBudget.approachingMessage':
+    "You've used {pct}% of your embedding budget. Set up local embeddings or add your own API key to keep building memory without interruption.",
   'memoryBudget.exhaustedTitle': 'Memory has stopped growing',
   'memoryBudget.exhaustedMessage':
+    'Your embedding budget is used up, so new content is no longer being added to memory. Set up local embeddings or add your own API key to resume.',
   'memoryBudget.cta': 'Set up embeddings',
   'settings.ai.apiReadsFormula': 'background API reads/week / remaining = {reads} / {remaining}',
   'settings.ai.needUsageToEstimate': 'Need usage response to estimate.',
   'settings.ai.composioSyncScansDetail':
+    '{count} active integration connection(s) scanned every 20 min',
   'settings.ai.totalApiReadBudgetDetail':
+    'calendar planner reads + periodic integration scans; excludes user-initiated chat tools',
   'settings.ai.memoryWorkerPollsDetail': '4 workers * 5s poll; LLM calls only for queued jobs',
   'settings.ai.managedSourceLabel': 'Managed by OpenHuman',
   'settings.ai.managedSourceDetail': 'Automatic model selection',
@@ -7480,15 +7481,19 @@ const messages: TranslationMap = {
   'settings.mcpServer.tools.toolInstructions': 'Get usage instructions for a tool',
   'settings.ai.openaiOauthTitle': 'Sign in with ChatGPT',
   'settings.ai.openaiOauthDescription':
+    'Sign in with your ChatGPT account to use OpenAI models without an API key.',
   'settings.ai.openaiOauthConnect': 'Sign in with ChatGPT',
   'settings.ai.openaiOauthConnected': 'Connected with ChatGPT',
   'settings.ai.openaiOauthOpening': 'Opening sign-in…',
   'settings.ai.openaiOauthCallbackHint':
+    'After signing in, paste the full redirect URL from your browser (starts with http://127.0.0.1:1455/).',
   'settings.ai.openaiOauthCallbackPlaceholder':
+    'http://127.0.0.1:1455/auth/callback?code=...&state=...',
   'settings.ai.openaiOauthFinish': 'Finish ChatGPT sign-in',
   'settings.ai.openaiOauthDisconnect': 'Disconnect ChatGPT',
   'settings.ai.openaiOauthDesktopOnly': 'ChatGPT sign-in is only available in the desktop app.',
   'settings.ai.openaiOauthStartError':
+    'Could not start ChatGPT sign-in. Try again or use an API key.',
   'memorySources.allIn.allFailed': 'No sync could start. Check each source for the reason.',
   'memorySources.allIn.partial': 'Syncs started: {triggered}. Could not start: {failed}.',
   'memorySources.repair.button': 'Repair older memories',
