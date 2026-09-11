@@ -49,8 +49,8 @@ describe('AgentMessageBubble markdown links', () => {
     );
 
     const link = screen.getByRole('link');
-    expect(link.className).toContain('wrap-anywhere');
-    expect(link.className).toContain('wrap-break-word');
+    expect(link.className).toContain('[overflow-wrap:anywhere]');
+    expect(link.className).toContain('break-words');
   });
 
   test('opens workspace links through the Tauri workspace path command', async () => {

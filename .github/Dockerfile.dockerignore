@@ -1,10 +1,12 @@
 # BuildKit prefers <dockerfile>.dockerignore over root .dockerignore when
 # building this specific Dockerfile. The root .dockerignore excludes `app/`
-# (sized for the openhuman-core image).
+# (sized for the openhuman-core image), but the CI image needs the vendored
+# tauri-cef submodule to compile the CEF-aware tauri-cli.
 
 # Build artifacts
 target/
 app/src-tauri/target/
+app/src-tauri/vendor/tauri-cef/target/
 
 # Node / frontend (not needed for CI image)
 node_modules/

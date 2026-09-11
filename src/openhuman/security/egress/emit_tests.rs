@@ -5,34 +5,36 @@
 
 use super::super::{DataKind, EgressDescriptor, EgressReason, IdentificationRisk};
 use super::*;
-use crate::core::bus::BUS;
-use crate::core::events::DomainEvent;
+use crate::core::event_bus::{init_global, publish_global, DomainEvent, DEFAULT_CAPACITY};
 use crate::openhuman::security::approval::{ApprovalChatContext, APPROVAL_CHAT_CONTEXT};
 
 /// Drain `rx` until an `ExternalTransferPending` whose descriptor `service`
 /// matches `marker` arrives, returning it. Tolerates unrelated events and
 /// broadcast lag (the bus is process-wide and other tests publish on it).
 async fn find_pending(
-    rx: &mut tinybus::events::EventReceiver<DomainEvent>,
+    rx: &mut tokio::sync::broadcast::Receiver<DomainEvent>,
     marker: &str,
 ) -> (EgressDescriptor, Option<String>, Option<String>) {
     loop {
         match rx.recv().await {
-            Some(DomainEvent::ExternalTransferPending {
+            Ok(DomainEvent::ExternalTransferPending {
                 descriptor,
                 thread_id,
                 client_id,
             }) if descriptor.service == marker => return (descriptor, thread_id, client_id),
-            Some(_) => continue,
-            None => panic!("the bus closed before the expected event arrived"),
+            Ok(_) => continue,
+            Err(tokio::sync::broadcast::error::RecvError::Lagged(_)) => continue,
+            Err(tokio::sync::broadcast::error::RecvError::Closed) => {
+                panic!("event bus closed before ExternalTransferPending arrived")
+            }
         }
     }
 }
 
 #[tokio::test]
 async fn external_transfer_publishes_pending_event() {
-    crate::core::bus::init().await.expect("bus init");
-    let mut rx = crate::core::bus::BUS.get().unwrap().receiver();
+    init_global(DEFAULT_CAPACITY);
+    let mut rx = crate::core::event_bus::global().unwrap().raw_receiver();
 
     let marker = "svc-external-emit-test";
     emit_external_transfer(EgressDescriptor::inference("openai", marker, true));
@@ -49,8 +51,8 @@ async fn external_transfer_publishes_pending_event() {
 
 #[tokio::test]
 async fn local_transfer_does_not_publish() {
-    crate::core::bus::init().await.expect("bus init");
-    let mut rx = crate::core::bus::BUS.get().unwrap().receiver();
+    init_global(DEFAULT_CAPACITY);
+    let mut rx = crate::core::event_bus::global().unwrap().raw_receiver();
 
     let local_marker = "svc-local-emit-test";
     let sentinel_marker = "svc-sentinel-emit-test";
@@ -62,7 +64,7 @@ async fn local_transfer_does_not_publish() {
 
     loop {
         match rx.recv().await {
-            Some(DomainEvent::ExternalTransferPending { descriptor, .. }) => {
+            Ok(DomainEvent::ExternalTransferPending { descriptor, .. }) => {
                 assert_ne!(
                     descriptor.service, local_marker,
                     "local (non-external) transfer must not publish ExternalTransferPending"
@@ -71,16 +73,19 @@ async fn local_transfer_does_not_publish() {
                     break; // reached the sentinel without seeing the local marker
                 }
             }
-            Some(_) => continue,
-            None => panic!("the bus closed before the expected event arrived"),
+            Ok(_) => continue,
+            Err(tokio::sync::broadcast::error::RecvError::Lagged(_)) => continue,
+            Err(tokio::sync::broadcast::error::RecvError::Closed) => {
+                panic!("bus closed before sentinel arrived")
+            }
         }
     }
 }
 
 #[tokio::test]
 async fn attaches_ambient_chat_context() {
-    crate::core::bus::init().await.expect("bus init");
-    let mut rx = crate::core::bus::BUS.get().unwrap().receiver();
+    init_global(DEFAULT_CAPACITY);
+    let mut rx = crate::core::event_bus::global().unwrap().raw_receiver();
 
     let marker = "svc-chat-context-emit-test";
     APPROVAL_CHAT_CONTEXT
@@ -106,8 +111,8 @@ async fn attaches_ambient_chat_context() {
 /// destination still publishes — the managed-turn fan-out fix (codex P2, #4812).
 #[tokio::test]
 async fn dedup_turn_scope_collapses_repeat_destination() {
-    crate::core::bus::init().await.expect("bus init");
-    let mut rx = crate::core::bus::BUS.get().unwrap().receiver();
+    init_global(DEFAULT_CAPACITY);
+    let mut rx = crate::core::event_bus::global().unwrap().raw_receiver();
 
     let dup = "svc-dedup-dup-test";
     let distinct = "svc-dedup-distinct-test";
@@ -126,7 +131,7 @@ async fn dedup_turn_scope_collapses_repeat_destination() {
     let mut distinct_seen = false;
     loop {
         match rx.recv().await {
-            Some(DomainEvent::ExternalTransferPending { descriptor, .. }) => {
+            Ok(DomainEvent::ExternalTransferPending { descriptor, .. }) => {
                 if descriptor.service == dup {
                     dup_count += 1;
                 }
@@ -137,8 +142,11 @@ async fn dedup_turn_scope_collapses_repeat_destination() {
                     break;
                 }
             }
-            Some(_) => continue,
-            None => panic!("the bus closed before the expected event arrived"),
+            Ok(_) => continue,
+            Err(tokio::sync::broadcast::error::RecvError::Lagged(_)) => continue,
+            Err(tokio::sync::broadcast::error::RecvError::Closed) => {
+                panic!("bus closed before sentinel arrived")
+            }
         }
     }
     assert_eq!(
@@ -156,8 +164,8 @@ async fn dedup_turn_scope_collapses_repeat_destination() {
 /// across unrelated calls.
 #[tokio::test]
 async fn dedup_absent_outside_scope_publishes_each_time() {
-    crate::core::bus::init().await.expect("bus init");
-    let mut rx = crate::core::bus::BUS.get().unwrap().receiver();
+    init_global(DEFAULT_CAPACITY);
+    let mut rx = crate::core::event_bus::global().unwrap().raw_receiver();
 
     let marker = "svc-nodedup-test";
     let sentinel = "svc-nodedup-sentinel-test";
@@ -168,7 +176,7 @@ async fn dedup_absent_outside_scope_publishes_each_time() {
     let mut count = 0;
     loop {
         match rx.recv().await {
-            Some(DomainEvent::ExternalTransferPending { descriptor, .. }) => {
+            Ok(DomainEvent::ExternalTransferPending { descriptor, .. }) => {
                 if descriptor.service == marker {
                     count += 1;
                 }
@@ -176,8 +184,11 @@ async fn dedup_absent_outside_scope_publishes_each_time() {
                     break;
                 }
             }
-            Some(_) => continue,
-            None => panic!("the bus closed before the expected event arrived"),
+            Ok(_) => continue,
+            Err(tokio::sync::broadcast::error::RecvError::Lagged(_)) => continue,
+            Err(tokio::sync::broadcast::error::RecvError::Closed) => {
+                panic!("bus closed before sentinel arrived")
+            }
         }
     }
     assert_eq!(
@@ -190,11 +201,11 @@ async fn dedup_absent_outside_scope_publishes_each_time() {
 /// attach a risk level without reshaping the event.
 #[tokio::test]
 async fn carries_risk_fields_when_present() {
-    crate::core::bus::init().await.expect("bus init");
-    let mut rx = crate::core::bus::BUS.get().unwrap().receiver();
+    init_global(DEFAULT_CAPACITY);
+    let mut rx = crate::core::event_bus::global().unwrap().raw_receiver();
 
     let marker = "svc-risk-emit-test";
-    BUS.publish(DomainEvent::ExternalTransferPending {
+    publish_global(DomainEvent::ExternalTransferPending {
         descriptor: EgressDescriptor::composio(marker)
             .with_risk(IdentificationRisk::High, vec!["email".to_string()]),
         thread_id: None,

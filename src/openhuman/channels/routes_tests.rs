@@ -1,5 +1,5 @@
 use super::*;
-use crate::core::events::DomainEvent;
+use crate::core::event_bus::{DomainEvent, EventHandler};
 use crate::openhuman::agent::messages::ChatMessage;
 use crate::openhuman::channels::context::{
     ChannelRuntimeContext, RouteSelectionMap, TurnModelSourceCacheMap,
@@ -12,7 +12,6 @@ use async_trait::async_trait;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
-use tinybus::EventHandler;
 
 struct DummyMemory;
 
@@ -117,8 +116,8 @@ impl Channel for RecordingChannel {
 }
 
 fn runtime_context(workspace_dir: PathBuf) -> ChannelRuntimeContext {
-    let model: Arc<dyn tinyinference::model::ChatModel<()>> =
-        Arc::new(tinyagents_harness::testkit::ScriptedModel::replies(vec![
+    let model: Arc<dyn tinyagents::harness::model::ChatModel<()>> =
+        Arc::new(tinyagents::harness::testkit::ScriptedModel::replies(vec![
             "ok",
         ]));
     ChannelRuntimeContext {
@@ -127,9 +126,9 @@ fn runtime_context(workspace_dir: PathBuf) -> ChannelRuntimeContext {
             crate::openhuman::agent::tinyagents::TurnModelSource::from_model(model),
         ),
         default_provider: Arc::new("openai".into()),
-        memory: crate::openhuman::memory::guard::in_memory::FixedRecallProvider::guarded(Vec::new()),
+        memory: Arc::new(DummyMemory),
         tools_registry: Arc::new(vec![Box::new(DummyTool) as Box<dyn Tool>]),
-        system_prompt: crate::openhuman::channels::ChannelSystemPrompt::fixed("prompt"),
+        system_prompt: Arc::new("prompt".into()),
         model: Arc::new("reasoning-v1".into()),
         temperature: 0.0,
         auto_save_memory: false,

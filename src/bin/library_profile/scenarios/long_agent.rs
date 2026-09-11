@@ -4,6 +4,7 @@
 //! a per-turn checkpoint so the plateau/leak curve is visible.
 
 use anyhow::Result;
+use openhuman_core::core::event_bus::init_global;
 use openhuman_core::openhuman::agent::harness::AgentDefinitionRegistry;
 use openhuman_core::openhuman::agent::Agent;
 use openhuman_core::openhuman::inference::provider::factory::test_provider_override;
@@ -29,7 +30,7 @@ pub async fn run() -> Result<ProfileResult> {
         .unwrap_or(DEFAULT_TURNS);
 
     let fixture = fixture()?;
-    openhuman_core::core::bus::init().await.expect("bus init");
+    let _ = init_global(256);
     openhuman_core::openhuman::agent::bus::register_agent_handlers();
     let _ = AgentDefinitionRegistry::init_global_builtins();
     let mock = PlainTextMock::new("Phoenix migration is healthy; no action needed.");

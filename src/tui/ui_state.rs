@@ -2,9 +2,6 @@
 
 use zeroize::Zeroize;
 
-use super::cockpit::{Overlay, PendingApproval, PendingPlanReview};
-use super::composer::Composer;
-
 /// Top-level terminal pages. The order is part of the CLI UX contract.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum AppTab {
@@ -85,7 +82,7 @@ impl SettingsAction {
 /// UI-only state owned by the event loop and read by the renderer.
 pub struct UiState {
     pub active_tab: AppTab,
-    pub composer: Composer,
+    pub input: String,
     pub scroll_from_bottom: u16,
     pub spinner_tick: usize,
     pub thread_id: String,
@@ -101,20 +98,13 @@ pub struct UiState {
     pub logout_confirm: bool,
     pub settings_status: String,
     pub identity_changed: bool,
-    pub overlay: Option<Overlay>,
-    pub pending_approvals: Vec<PendingApproval>,
-    pub pending_plan_review: Option<PendingPlanReview>,
-    pub model_override: Option<String>,
-    pub profile_id: Option<String>,
-    pub action_dir: String,
-    pub queue_status: String,
 }
 
 impl UiState {
     pub fn new(thread_id: String, _client_id: String) -> Self {
         Self {
-            active_tab: AppTab::Chat,
-            composer: Composer::default(),
+            active_tab: AppTab::Logs,
+            input: String::new(),
             scroll_from_bottom: 0,
             spinner_tick: 0,
             thread_id,
@@ -156,21 +146,11 @@ impl UiState {
             logout_confirm: false,
             settings_status: "Select an account action and press Enter.".to_string(),
             identity_changed: false,
-            overlay: None,
-            pending_approvals: Vec::new(),
-            pending_plan_review: None,
-            model_override: None,
-            profile_id: None,
-            action_dir: String::new(),
-            queue_status: String::new(),
         }
     }
 
     pub fn is_editing(&self) -> bool {
-        self.overlay.is_some()
-            || self.config_edit.is_some()
-            || self.login_token.is_some()
-            || self.logout_confirm
+        self.config_edit.is_some() || self.login_token.is_some() || self.logout_confirm
     }
 }
 
@@ -187,9 +167,9 @@ mod tests {
     use super::*;
 
     #[test]
-    fn ui_starts_on_chat_and_tabs_wrap_in_product_order() {
+    fn ui_starts_on_logs_and_tabs_wrap_in_product_order() {
         let ui = UiState::new("thread".into(), "client".into());
-        assert_eq!(ui.active_tab, AppTab::Chat);
+        assert_eq!(ui.active_tab, AppTab::Logs);
         assert_eq!(AppTab::Logs.next(), AppTab::Chat);
         assert_eq!(AppTab::Chat.next(), AppTab::Config);
         assert_eq!(AppTab::Config.next(), AppTab::Settings);

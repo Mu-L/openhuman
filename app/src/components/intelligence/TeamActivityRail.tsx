@@ -18,10 +18,6 @@ import { LuSend } from 'react-icons/lu';
 
 import { useT } from '../../lib/i18n/I18nContext';
 import type { AgentTeamMember, TeamMessage } from '../../services/api/agentTeamApi';
-import { AvatarFallback, AvatarRoot } from '../ui/Avatar';
-import Button from '../ui/Button';
-import NativeSelect from '../ui/NativeSelect';
-import TextField from '../ui/TextField';
 import { memberColor } from './memberColors';
 
 interface TeamActivityRailProps {
@@ -85,20 +81,18 @@ export function TeamActivityRail({ messages, members, onSend, sending }: TeamAct
             const color = memberColor(message.payload.from);
             return (
               <div key={`${message.runId}-${message.sequence}`} className="flex gap-2">
-                <AvatarRoot className="mt-0.5 h-5 w-5 flex-none">
-                  <AvatarFallback
-                    className="text-[9px] font-semibold text-content-inverted"
-                    style={{ backgroundColor: color }}>
-                    {fromName.charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </AvatarRoot>
+                <span
+                  className="mt-0.5 inline-flex h-5 w-5 flex-none items-center justify-center rounded-full text-[9px] font-semibold text-white"
+                  style={{ backgroundColor: color }}>
+                  {fromName.charAt(0).toUpperCase()}
+                </span>
                 <div className="min-w-0">
                   <div className="text-[10px] text-content-faint">
                     <b className="text-content-secondary">{fromName}</b>
                     {' → '}
                     {nameFor(message.payload.to)}
                   </div>
-                  <p className="wrap-break-word text-[11px] leading-snug text-content-secondary">
+                  <p className="break-words text-[11px] leading-snug text-content-secondary">
                     {message.payload.content}
                   </p>
                 </div>
@@ -111,22 +105,20 @@ export function TeamActivityRail({ messages, members, onSend, sending }: TeamAct
       {onSend && (
         <div className="mt-3 border-t border-line-subtle pt-2">
           <div className="flex items-center gap-1.5">
-            <NativeSelect
-              inputSize="sm"
+            <select
               value={recipient}
               onChange={e => setRecipient(e.target.value)}
               aria-label={t('intelligence.teams.composer.recipient')}
-              className="max-w-[40%] flex-none text-[11px] text-content-secondary">
+              className="max-w-[40%] flex-none rounded-md border border-line bg-surface px-1.5 py-1 text-[11px] text-content-secondary">
               <option value="">{t('intelligence.teams.composer.toTeam')}</option>
               {members.map(m => (
                 <option key={m.id} value={m.id}>
                   {m.name}
                 </option>
               ))}
-            </NativeSelect>
-            <TextField
+            </select>
+            <input
               type="text"
-              inputSize="sm"
               value={draft}
               disabled={sending}
               onChange={e => setDraft(e.target.value)}
@@ -137,19 +129,17 @@ export function TeamActivityRail({ messages, members, onSend, sending }: TeamAct
                 }
               }}
               placeholder={t('intelligence.teams.composer.placeholder')}
-              className="min-w-0 flex-1 text-[11px] text-content-secondary"
+              className="min-w-0 flex-1 rounded-md border border-line px-2 py-1 text-[11px] text-content-secondary placeholder:text-stone-400 disabled:opacity-50 dark:bg-surface"
             />
-            <Button
-              variant="primary"
-              iconOnly
-              size="xs"
+            <button
+              type="button"
               disabled={sending || draft.trim() === ''}
               onClick={submit}
               aria-label={t('intelligence.teams.composer.send')}
               title={t('intelligence.teams.composer.send')}
-              className="h-6 w-6 min-w-0 flex-none bg-primary-500 hover:bg-primary-600">
+              className="inline-flex h-6 w-6 flex-none items-center justify-center rounded-md bg-ocean-500 text-white hover:bg-ocean-600 disabled:opacity-40">
               <LuSend className="h-3 w-3" />
-            </Button>
+            </button>
           </div>
         </div>
       )}

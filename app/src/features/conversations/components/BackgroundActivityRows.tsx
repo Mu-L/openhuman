@@ -1,8 +1,7 @@
-import Badge, { type BadgeVariant } from '../../../components/ui/Badge';
 import { useT } from '../../../lib/i18n/I18nContext';
 import type { CoreCronJob, CoreCronSchedule } from '../../../utils/tauriCommands/cron';
 import type { MemorySyncStatusRow } from '../../../utils/tauriCommands/memoryTree';
-import type { MemorySyncSummary } from '../hooks/useBackgroundActivity';
+import type { MemorySyncSummary, SubconsciousSummary } from '../hooks/useBackgroundActivity';
 import { formatRelativeTime, formatResetTime } from '../utils/format';
 
 /** Small, grey section divider shared across the background-activity sections. */
@@ -56,11 +55,9 @@ export function CronJobRow({ job }: { job: CoreCronJob }) {
     (job.command && job.command.trim()) ||
     t('conversations.backgroundTasks.cronUnnamed');
 
-  // `coral`, not a raw `red-*` scale: a raw palette value does not follow a
-  // user's custom theme, and every other failure surface here is coral.
   const lastDot =
     job.last_status === 'error'
-      ? 'bg-coral-500'
+      ? 'bg-red-500'
       : job.last_status === 'ok'
         ? 'bg-sage-500'
         : 'bg-surface-strong';
@@ -92,15 +89,72 @@ export function CronJobRow({ job }: { job: CoreCronJob }) {
                 : ''}
             </span>
           ) : (
-            <Badge className="shrink-0 rounded-full">
+            <span className="shrink-0 text-[11px] font-medium text-content-muted">
               {t('conversations.backgroundTasks.cronPaused')}
-            </Badge>
+            </span>
           )}
         </div>
         <span className="mt-0.5 block truncate text-[12px] text-content-muted">
           {scheduleLabel(job.schedule, t)}
         </span>
         <span className="mt-0.5 block text-[11px] text-content-faint">{lastLabel}</span>
+      </div>
+    </div>
+  );
+}
+
+/** Single status row for the subconscious / background-thinking loop. */
+export function SubconsciousRow({ summary }: { summary: SubconsciousSummary }) {
+  const { t } = useT();
+  const off = !summary.enabled || summary.mode === 'off';
+
+  let dot: string;
+  let pill: string;
+  let pillClass: string;
+  if (off) {
+    dot = 'bg-surface-strong';
+    pill = t('conversations.backgroundTasks.subOff');
+    pillClass = 'text-content-faint';
+  } else if (summary.working) {
+    dot = 'bg-amber-500 animate-pulse';
+    pill = t('conversations.backgroundTasks.subWorking');
+    pillClass = 'text-amber-700 dark:text-amber-300';
+  } else {
+    dot = 'bg-sage-500';
+    pill = t('conversations.backgroundTasks.subIdle');
+    pillClass = 'text-sage-700 dark:text-sage-300';
+  }
+
+  const lastLabel =
+    summary.lastTickAt != null
+      ? t('conversations.backgroundTasks.subLastRan').replace(
+          '{time}',
+          // last_tick_at is epoch *seconds*; formatRelativeTime wants a date string.
+          formatRelativeTime(new Date(summary.lastTickAt * 1000).toISOString())
+        )
+      : t('conversations.backgroundTasks.subNeverRan');
+
+  const meta = [
+    lastLabel,
+    t('conversations.backgroundTasks.subTicks').replace('{count}', String(summary.totalTicks)),
+    summary.queueDepth && summary.queueDepth > 0
+      ? t('conversations.backgroundTasks.subQueued').replace('{count}', String(summary.queueDepth))
+      : null,
+  ].filter(Boolean);
+
+  return (
+    <div
+      data-testid="background-subconscious-row"
+      className={`mb-1 flex items-start gap-2.5 rounded-lg px-2.5 py-2 ${off ? 'opacity-60' : ''}`}>
+      <Dot className={dot} />
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center justify-between gap-2">
+          <span className="truncate text-sm font-medium text-content">
+            {t('conversations.backgroundTasks.sectionSubconscious')}
+          </span>
+          <span className={`shrink-0 text-[11px] font-medium ${pillClass}`}>{pill}</span>
+        </div>
+        <span className="mt-0.5 block text-[11px] text-content-faint">{meta.join(' · ')}</span>
       </div>
     </div>
   );
@@ -116,25 +170,25 @@ export function CronJobRow({ job }: { job: CoreCronJob }) {
 function providerFreshnessLabel(
   row: MemorySyncStatusRow,
   t: ReturnType<typeof useT>['t']
-): { dot: string; label: string; variant: BadgeVariant } {
+): { dot: string; label: string; pillClass: string } {
   if (row.freshness === 'active') {
     return {
       dot: 'bg-amber-500 animate-pulse',
       label: t('conversations.backgroundTasks.memProviderActive'),
-      variant: 'warning',
+      pillClass: 'text-amber-700 dark:text-amber-300',
     };
   }
   if (row.freshness === 'recent') {
     return {
       dot: 'bg-sage-500',
       label: t('conversations.backgroundTasks.memProviderRecent'),
-      variant: 'success',
+      pillClass: 'text-sage-700 dark:text-sage-300',
     };
   }
   return {
     dot: 'bg-surface-strong',
     label: t('conversations.backgroundTasks.memProviderIdle'),
-    variant: 'neutral',
+    pillClass: 'text-content-faint',
   };
 }
 
@@ -199,9 +253,7 @@ export function MemorySection({ memory }: { memory: MemorySyncSummary }) {
                 <span className="truncate text-sm font-medium capitalize text-content">
                   {row.provider}
                 </span>
-                <Badge variant={f.variant} className="shrink-0 rounded-full">
-                  {f.label}
-                </Badge>
+                <span className={`shrink-0 text-[11px] font-medium ${f.pillClass}`}>{f.label}</span>
               </div>
               {backlog ? (
                 <span className="mt-0.5 block text-[11px] text-content-faint">{backlog}</span>

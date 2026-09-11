@@ -62,5 +62,4 @@ pub fn build_provider_context(config: &Config, http_client: reqwest::Client) -> 
 }
 
 #[cfg(test)]
-#[path = "host_tests.rs"]
 mod tests;

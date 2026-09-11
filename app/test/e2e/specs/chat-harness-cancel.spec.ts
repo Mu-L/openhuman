@@ -72,7 +72,7 @@ let cancelAttempted = false;
 async function clickComposerCancel(): Promise<boolean> {
   return (await browser.execute(() => {
     const stop = document.querySelector<HTMLButtonElement>(
-      '[data-testid="stop-generation-button"], button[aria-label="Stop generating"]'
+      '[data-testid="stop-generation-button"]'
     );
     if (stop) {
       stop.click();
@@ -159,14 +159,9 @@ describe('Chat harness — mid-stream cancel', () => {
           browser.execute(() => {
             const stop = document.querySelector('[data-testid="stop-generation-button"]');
             const ta = document.querySelector(
-              'textarea[placeholder="Send a message..."], [contenteditable="true"][role="textbox"][aria-label="Message input"]'
-            ) as HTMLTextAreaElement | HTMLElement | null;
-            return (
-              !stop &&
-              !!ta &&
-              !(ta as HTMLTextAreaElement).disabled &&
-              ta.getAttribute('aria-disabled') !== 'true'
-            );
+              'textarea[placeholder="How can I help you today?"]'
+            ) as HTMLTextAreaElement | null;
+            return !stop && !!ta && !ta.disabled;
           }),
         { timeout: 20_000, timeoutMsg: 'composer did not settle after uncancellable turn' }
       );
@@ -214,11 +209,9 @@ describe('Chat harness — mid-stream cancel', () => {
     // The textarea must be re-enabled.
     const composerEnabled = await browser.execute(() => {
       const ta = document.querySelector(
-        'textarea[placeholder="Send a message..."], [contenteditable="true"][role="textbox"][aria-label="Message input"]'
-      ) as HTMLTextAreaElement | HTMLElement | null;
-      return (
-        !!ta && !(ta as HTMLTextAreaElement).disabled && ta.getAttribute('aria-disabled') !== 'true'
-      );
+        'textarea[placeholder="How can I help you today?"]'
+      ) as HTMLTextAreaElement | null;
+      return !!ta && !ta.disabled;
     });
     expect(composerEnabled).toBe(true);
 

@@ -159,5 +159,16 @@ pub(crate) fn run_check_silent(cmd: &mut Command) -> bool {
 }
 
 #[cfg(test)]
-#[path = "common_tests.rs"]
-mod tests;
+mod tests {
+    use super::*;
+
+    #[test]
+    fn xml_escape_replaces_entities() {
+        let raw = "<tag>\"&'";
+        let escaped = xml_escape(raw);
+        assert!(escaped.contains("&lt;tag&gt;"));
+        assert!(escaped.contains("&quot;"));
+        assert!(escaped.contains("&amp;"));
+        assert!(escaped.contains("&apos;"));
+    }
+}

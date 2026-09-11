@@ -29,11 +29,10 @@ describe('Skill discovery (UI + core RPC)', () => {
   });
 
   it('lands the user on a logged-in shell', async () => {
-    // Welcome text varies while the chat surface hydrates. The authenticated
-    // app shell is the stable contract this smoke test actually needs.
-    const atHome = (await browser.execute(
-      () => document.querySelector('[data-testid="root-shell-sidebar"]') !== null
-    )) as boolean;
+    const atHome =
+      (await textExists('Ask your assistant anything')) ||
+      (await textExists('Your device is connected')) ||
+      (await textExists('Your assistant is ready when you are'));
     expect(atHome).toBe(true);
   });
 

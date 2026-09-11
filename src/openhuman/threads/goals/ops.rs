@@ -9,8 +9,7 @@ use serde::Serialize;
 
 use super::store;
 use super::ThreadGoal;
-use crate::core::bus::BUS;
-use crate::core::events::DomainEvent;
+use crate::core::event_bus::{publish_global, DomainEvent};
 use crate::rpc::RpcOutcome;
 
 /// Envelope returned by reads/clears where the goal may be absent.
@@ -31,7 +30,7 @@ pub struct ClearResult {
 
 /// Publish a `thread/goal/updated` event for live UI sync (best-effort).
 fn emit_updated(goal: &ThreadGoal) {
-    BUS.publish(DomainEvent::ThreadGoalUpdated {
+    publish_global(DomainEvent::ThreadGoalUpdated {
         thread_id: goal.thread_id.clone(),
         goal_id: goal.goal_id.clone(),
         status: goal.status.as_str().to_string(),
@@ -126,7 +125,7 @@ pub async fn clear(
     log::debug!("[thread_goals] rpc=clear thread_id={thread_id}");
     let removed = store::clear(workspace_dir, thread_id).await?;
     if removed {
-        BUS.publish(DomainEvent::ThreadGoalCleared {
+        publish_global(DomainEvent::ThreadGoalCleared {
             thread_id: thread_id.to_string(),
         });
     }
@@ -137,5 +136,30 @@ pub async fn clear(
 }
 
 #[cfg(test)]
-#[path = "ops_tests.rs"]
-mod tests;
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn set_get_complete_clear_flow() {
+        let tmp = tempfile::tempdir().unwrap();
+        let dir = tmp.path();
+
+        // Empty to start.
+        let got = get(dir, "t").await.unwrap();
+        assert!(got.value.goal.is_none());
+
+        // Set.
+        let set_out = set(dir, "t", "ship it", Some(1000)).await.unwrap();
+        let goal = set_out.value.goal.unwrap();
+        assert_eq!(goal.objective, "ship it");
+
+        // Complete.
+        let done = complete(dir, "t").await.unwrap();
+        assert_eq!(done.value.goal.unwrap().status.as_str(), "complete");
+
+        // Clear.
+        let cleared = clear(dir, "t").await.unwrap();
+        assert!(cleared.value.removed);
+        assert!(get(dir, "t").await.unwrap().value.goal.is_none());
+    }
+}

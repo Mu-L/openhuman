@@ -15,9 +15,7 @@ test.describe('Insights Dashboard', () => {
     await expect(page.getByText('Graph', { exact: true }).first()).toBeVisible({ timeout: 15_000 });
     await expect(page.locator('[data-testid="memory-actions"]')).toBeVisible();
     await expect(
-      page.locator(
-        '[data-testid="memory-graph-svg"], [data-testid="memory-graph-empty"], [data-testid="memory-graph-canvas"][data-render-ready="true"] canvas'
-      )
-    ).toBeVisible({ timeout: 60_000 });
+      page.locator('[data-testid="memory-graph-svg"], [data-testid="memory-graph-empty"]')
+    ).toBeVisible();
   });
 });

@@ -8,7 +8,7 @@ use crate::openhuman::agent::profiles::PersonalityContext;
 use crate::openhuman::tools::traits::{PermissionLevel, Tool, ToolCallOptions, ToolResult};
 use async_trait::async_trait;
 use serde_json::json;
-use tinytools::ToolRunContext;
+use tinyagents::harness::tool::ToolExecutionContext;
 
 pub struct DelegateToPersonalityTool;
 
@@ -71,7 +71,7 @@ impl Tool for DelegateToPersonalityTool {
         &self,
         args: serde_json::Value,
         _options: ToolCallOptions,
-        tool_context: Option<&dyn ToolRunContext>,
+        tool_context: Option<&ToolExecutionContext>,
     ) -> anyhow::Result<ToolResult> {
         let personality_id = args
             .get("personality_id")
@@ -219,7 +219,7 @@ impl Tool for DelegateToPersonalityTool {
             }
         };
 
-        let workspace_descriptor = tool_context.and_then(|ctx| ctx.workspace().cloned());
+        let workspace_descriptor = tool_context.and_then(|ctx| ctx.workspace.clone());
         let worktree_action_dir = workspace_descriptor
             .as_ref()
             .map(|descriptor| descriptor.root.clone());

@@ -9,13 +9,10 @@ use serde::Serialize;
 pub mod agent_cli;
 pub mod all;
 pub mod auth;
-pub mod bus;
-pub mod bus_testing;
 pub mod cli;
-pub mod cli_capability;
 pub mod dispatch;
 pub mod event_bind_tokens;
-pub mod events;
+pub mod event_bus;
 // Ungated compile-time marker for the `http-server` gate (#5048) — the desktop
 // shell asserts `HTTP_SERVER_COMPILED_IN` so a listener-less core fails the
 // build instead of shipping silently (cf. voice #4901).
@@ -32,8 +29,7 @@ pub mod runtime;
 pub mod sentry_transport;
 pub mod shutdown;
 pub mod socketio;
-pub mod subsystem;
-pub mod subsystems_cli;
+pub mod subconscious_cli;
 pub mod types;
 
 /// Canonical function contract for domain controllers.

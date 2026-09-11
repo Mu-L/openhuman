@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import Button from '../../../components/ui/Button';
-import Separator from '../../../components/ui/Separator';
 import { useT } from '../../../lib/i18n/I18nContext';
 import { setCloudProviderKey } from '../../../services/api/aiSettingsApi';
 import { callCoreRpc } from '../../../services/coreRpcClient';
@@ -190,7 +189,7 @@ const ApiKeysStep = ({ onNext, onSkip }: ApiKeysStepProps) => {
                   setOauthCallbackUrl(e.target.value);
                   setError(null);
                 }}
-                className="rounded-lg border border-line-strong bg-surface px-3 py-2 text-xs text-content placeholder-content-faint focus:border-primary-500 focus:outline-hidden focus:ring-1 focus:ring-primary-500"
+                className="rounded-lg border border-line-strong bg-surface px-3 py-2 text-xs text-content placeholder-content-faint focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
               />
               <button
                 type="button"
@@ -203,11 +202,11 @@ const ApiKeysStep = ({ onNext, onSkip }: ApiKeysStepProps) => {
             </div>
           ) : null}
           <div className="relative flex items-center gap-2 py-1">
-            <Separator className="flex-1 bg-surface-strong" />
+            <div className="h-px flex-1 bg-surface-strong" />
             <span className="text-[10px] uppercase tracking-wide text-content-faint">
               {t('onboarding.apiKeys.orApiKey')}
             </span>
-            <Separator className="flex-1 bg-surface-strong" />
+            <div className="h-px flex-1 bg-surface-strong" />
           </div>
           <input
             id="onboarding-openai-key"
@@ -221,7 +220,7 @@ const ApiKeysStep = ({ onNext, onSkip }: ApiKeysStepProps) => {
               setOpenai(e.target.value);
               setError(null);
             }}
-            className="rounded-lg border border-line-strong bg-surface px-3 py-2 text-sm text-content placeholder-content-faint focus:border-primary-500 focus:outline-hidden focus:ring-1 focus:ring-primary-500"
+            className="rounded-lg border border-line-strong bg-surface px-3 py-2 text-sm text-content placeholder-content-faint focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
           />
         </div>
 
@@ -243,7 +242,7 @@ const ApiKeysStep = ({ onNext, onSkip }: ApiKeysStepProps) => {
               setAnthropic(e.target.value);
               setError(null);
             }}
-            className="rounded-lg border border-line-strong bg-surface px-3 py-2 text-sm text-content placeholder-content-faint focus:border-primary-500 focus:outline-hidden focus:ring-1 focus:ring-primary-500"
+            className="rounded-lg border border-line-strong bg-surface px-3 py-2 text-sm text-content placeholder-content-faint focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
           />
         </div>
 

@@ -29,7 +29,7 @@ function isProcessItem(item: TimelineItem): item is TimelineItem & { entry: Tool
  */
 export function ConversationTimeline({
   items,
-  agentMessageViewMode = 'text',
+  agentMessageViewMode = 'bubbles',
   handlers = {},
 }: {
   items: TimelineItem[];

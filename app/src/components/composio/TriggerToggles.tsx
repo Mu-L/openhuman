@@ -11,7 +11,7 @@ import type { ComposioActiveTrigger, ComposioAvailableTrigger } from '../../lib/
 import { useT } from '../../lib/i18n/I18nContext';
 import { useCoreState } from '../../providers/CoreStateProvider';
 import { CoreRpcError } from '../../services/coreRpcClient';
-import { Alert, Button, Switch } from '../ui';
+import Button from '../ui/Button';
 
 /**
  * Stable signature for matching an `AvailableTrigger` to an
@@ -168,9 +168,11 @@ export default function TriggerToggles({
         <div
           className="border-t border-line-subtle pt-3 mt-1"
           data-testid="trigger-session-expired">
-          <Alert variant="warning">
+          <div className="rounded-xl border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-900/10 p-3">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-              <p className="text-xs leading-relaxed">{t('composio.triggers.sessionExpired')}</p>
+              <p className="text-xs text-amber-800 dark:text-amber-200 leading-relaxed">
+                {t('composio.triggers.sessionExpired')}
+              </p>
               <Button
                 type="button"
                 variant="secondary"
@@ -180,7 +182,7 @@ export default function TriggerToggles({
                 {t('settings.embeddings.signInAgain')}
               </Button>
             </div>
-          </Alert>
+          </div>
         </div>
       );
     }
@@ -261,14 +263,22 @@ export default function TriggerToggles({
                 <span className="text-sm font-medium text-content break-all">{label}</span>
                 {sub && <p className="text-[11px] text-content-faint leading-snug">{sub}</p>}
               </div>
-              <Switch
-                id={`trigger-switch-${sig}`}
-                checked={enabled}
-                onCheckedChange={() => void handleToggle(entry)}
+              <button
+                type="button"
+                role="switch"
+                aria-checked={enabled}
                 aria-label={ariaLabel}
                 disabled={disabled}
-                className={isPending ? 'animate-pulse' : undefined}
-              />
+                onClick={() => void handleToggle(entry)}
+                className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50 ${
+                  enabled ? 'bg-primary-500' : 'bg-surface-strong'
+                }`}>
+                <span
+                  className={`inline-block h-3.5 w-3.5 transform rounded-full bg-surface shadow transition-transform ${
+                    enabled ? 'translate-x-5' : 'translate-x-0.5'
+                  } ${isPending ? 'animate-pulse' : ''}`}
+                />
+              </button>
             </li>
           );
         })}

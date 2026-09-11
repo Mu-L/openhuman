@@ -22,7 +22,6 @@ import { type ChangeEvent, useCallback, useMemo, useState } from 'react';
 
 import { useT } from '../../../lib/i18n/I18nContext';
 import Button from '../../ui/Button';
-import TextArea from '../../ui/TextArea';
 import {
   type ClassifiedImportEntry,
   classifyImport,
@@ -164,7 +163,7 @@ const McpInventoryImportTab = ({
           className="text-xs font-medium text-content-secondary">
           {t('mcp.inventory.import.pasteLabel')}
         </label>
-        <TextArea
+        <textarea
           id="mcp-inventory-import-textarea"
           value={rawInput}
           onChange={e => {
@@ -177,7 +176,7 @@ const McpInventoryImportTab = ({
           rows={6}
           placeholder={t('mcp.inventory.import.pastePlaceholder')}
           aria-label={t('mcp.inventory.import.pasteLabel')}
-          className="w-full font-mono text-xs focus:border-primary-400 focus:ring-primary-400"
+          className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-xs font-mono text-content focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-primary-400 resize-y"
         />
       </div>
 

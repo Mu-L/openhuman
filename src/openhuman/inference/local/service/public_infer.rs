@@ -1,7 +1,7 @@
 use crate::openhuman::config::Config;
 use crate::openhuman::inference::model_ids;
 use crate::openhuman::inference::parse::sanitize_inline_completion;
-use tinyinference::message::Message;
+use tinyagents::harness::message::Message;
 
 use super::LocalAiService;
 
@@ -267,6 +267,7 @@ impl LocalAiService {
             .collect();
         let outcome = super::model_rpc::invoke(
             config,
+            self.http.clone(),
             messages,
             max_tokens,
             config.default_temperature as f32,
@@ -441,6 +442,7 @@ impl LocalAiService {
 
         let outcome = super::model_rpc::invoke(
             config,
+            self.http.clone(),
             vec![
                 Message::system(effective_system),
                 Message::user(prompt.to_owned()),

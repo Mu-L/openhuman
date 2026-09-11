@@ -34,22 +34,17 @@ describe('LogoutAndClearActions', () => {
     mockClearAllAppData.mockReset().mockResolvedValue(undefined);
   });
 
-  it('renders log out as a row and clearing data as a separate destructive zone', () => {
+  it('renders the destructive actions row', () => {
     renderActions();
-    // The two used to be adjacent rows with the same amber, weight and icon.
-    // Clearing data is now its own zone with its own button, so the assertion
-    // checks the split rather than just that both strings exist.
+    expect(screen.getByText('Clear App Data')).toBeInTheDocument();
     expect(screen.getByText('Log out')).toBeInTheDocument();
-    expect(screen.getByText('Clear app data')).toBeInTheDocument();
-    expect(screen.getByTestId('account-destructive-zone')).toBeInTheDocument();
-    expect(screen.getByTestId('settings-nav-logout-and-clear')).toHaveTextContent('Clear data');
   });
 
   it('passes the current snapshot user id + clearSession to clearAllAppData', async () => {
     const user = userEvent.setup();
     renderActions();
 
-    await user.click(screen.getByTestId('settings-nav-logout-and-clear'));
+    await user.click(screen.getByText('Clear App Data').closest('button')!);
     const confirmButtons = screen.getAllByRole('button', { name: /Clear App Data/i });
     await user.click(confirmButtons[confirmButtons.length - 1]);
 
@@ -68,7 +63,7 @@ describe('LogoutAndClearActions', () => {
     );
     renderActions();
 
-    await user.click(screen.getByTestId('settings-nav-logout-and-clear'));
+    await user.click(screen.getByText('Clear App Data').closest('button')!);
     const confirmButtons = screen.getAllByRole('button', { name: /Clear App Data/i });
     await user.click(confirmButtons[confirmButtons.length - 1]);
 
@@ -82,7 +77,7 @@ describe('LogoutAndClearActions', () => {
     mockClearAllAppData.mockRejectedValueOnce(new Error(''));
     renderActions();
 
-    await user.click(screen.getByTestId('settings-nav-logout-and-clear'));
+    await user.click(screen.getByText('Clear App Data').closest('button')!);
     const confirmButtons = screen.getAllByRole('button', { name: /Clear App Data/i });
     await user.click(confirmButtons[confirmButtons.length - 1]);
 

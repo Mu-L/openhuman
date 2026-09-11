@@ -191,16 +191,14 @@ export function VaultHealthChecklist({ onToast, title }: VaultHealthChecklistPro
           data-testid="vault-health-reveal">
           {t('vaultHealth.revealFolder')}
         </Button>
-        <Button
+        <button
           type="button"
-          variant="secondary"
-          size="sm"
           onClick={openObsidian}
           disabled={!health?.content_root_abs || crossHost}
-          className="border-violet-300 dark:border-violet-500/40 text-violet-700 dark:text-violet-300"
+          className="rounded-md border border-violet-300 dark:border-violet-500/40 bg-surface px-3 py-1.5 text-xs font-semibold text-violet-700 dark:text-violet-300 disabled:opacity-50"
           data-testid="vault-health-open-obsidian">
           {t('vaultHealth.openInObsidian')}
-        </Button>
+        </button>
         <Button
           variant="secondary"
           size="sm"

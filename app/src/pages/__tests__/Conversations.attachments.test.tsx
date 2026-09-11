@@ -260,7 +260,7 @@ async function renderWithSelectedThread() {
     </Provider>
   );
 
-  const textarea = await screen.findByRole('textbox', { name: 'Message input' });
+  const textarea = await screen.findByPlaceholderText('How can I help you today?');
   return { store, textarea, thread };
 }
 
@@ -309,7 +309,7 @@ describe('Conversations — attachment feature', () => {
 
   it('renders the attachment button in the composer', async () => {
     await renderWithSelectedThread();
-    expect(screen.getByRole('button', { name: 'Attach file' })).toBeInTheDocument();
+    expect(screen.getByTitle('Attach file')).toBeInTheDocument();
   });
 
   it('shows attachment chip after selecting a valid image file', async () => {
@@ -445,9 +445,24 @@ describe('Conversations — attachment feature', () => {
     expect(mockSelectAgentProfile).not.toHaveBeenCalled();
   });
 
-  it('shows the model selector in the assistant-ui composer', async () => {
+  it('selects the Reasoning tier from the chat-header toggle', async () => {
     await renderWithSelectedThread();
-    expect(await screen.findByRole('button', { name: 'Model' })).toBeInTheDocument();
+
+    const reasoningButton = await screen.findByRole('radio', { name: 'Reasoning' });
+    expect(reasoningButton).toHaveAttribute('aria-checked', 'false');
+
+    await act(async () => {
+      fireEvent.click(reasoningButton);
+    });
+
+    await waitFor(() => {
+      expect(mockSelectAgentProfile).toHaveBeenCalledWith('reasoning');
+      // Store updates to the new active profile → toggle reflects the selection.
+      expect(screen.getByRole('radio', { name: 'Reasoning' })).toHaveAttribute(
+        'aria-checked',
+        'true'
+      );
+    });
   });
 
   it('rejects an image and shows the advisory when the model lacks vision', async () => {
@@ -486,8 +501,7 @@ describe('Conversations — attachment feature', () => {
     });
 
     await act(async () => {
-      textarea.textContent = 'describe this';
-      fireEvent.input(textarea, { data: 'describe this', inputType: 'insertText' });
+      fireEvent.change(textarea, { target: { value: 'describe this' } });
     });
 
     await act(async () => {
@@ -524,8 +538,7 @@ describe('Conversations — attachment feature', () => {
     });
 
     await act(async () => {
-      textarea.textContent = 'read this';
-      fireEvent.input(textarea, { data: 'read this', inputType: 'insertText' });
+      fireEvent.change(textarea, { target: { value: 'read this' } });
     });
 
     await act(async () => {
@@ -588,9 +601,10 @@ describe('Conversations — attachment feature', () => {
     );
 
     await waitFor(() => {
-      const img = document.querySelector(`img[src="${dataUri}"]`);
+      const img = document.querySelector('img[src^="blob:conversation-attachment-"]');
       expect(img).not.toBeNull();
     });
+    expect(URL.createObjectURL).toHaveBeenCalled();
   });
 
   it('renders a document filename chip in the user bubble from attachmentKinds/Names', async () => {
@@ -749,9 +763,10 @@ describe('Conversations — attachment feature', () => {
 
     // The image marker's data URI still renders as an <img> (parsed out for display)...
     await waitFor(() => {
-      const img = document.querySelector(`img[src="${dataUri}"]`);
+      const img = document.querySelector('img[src^="blob:conversation-attachment-"]');
       expect(img).not.toBeNull();
     });
+    expect(URL.createObjectURL).toHaveBeenCalled();
 
     // ...but the raw marker syntax must never leak into the rendered bubble text.
     expect(document.body.textContent).not.toContain('[IMAGE:');

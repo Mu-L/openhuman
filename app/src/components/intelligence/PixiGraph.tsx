@@ -85,7 +85,6 @@ export function PixiGraph({
     }
 
     // First mount or mode flip — full init.
-    host.dataset.renderReady = 'false';
     let cancelled = false;
     handleRef.current?.destroy();
     handleRef.current = null;
@@ -100,11 +99,7 @@ export function PixiGraph({
       tuning,
       onHover: n => onHoverRef.current(n),
       onOpen: n => onOpenRef.current(n),
-      onReady: () => {
-        if (cancelled) return;
-        host.dataset.renderReady = 'true';
-        onReadyRef.current?.();
-      },
+      onReady: () => onReadyRef.current?.(),
     })
       .then(handle => {
         if (cancelled) {
@@ -140,7 +135,6 @@ export function PixiGraph({
     <div
       ref={hostRef}
       data-testid="memory-graph-canvas"
-      data-render-ready="false"
       className={`block w-full ${fill ? 'min-h-0 flex-1' : ''}`}
       style={{ height: fill ? '100%' : 'min(640px, calc(100vh - 22rem))' }}
     />

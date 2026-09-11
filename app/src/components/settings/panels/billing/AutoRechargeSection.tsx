@@ -1,12 +1,7 @@
 import { useT } from '../../../../lib/i18n/I18nContext';
 import type { AutoRechargeSettings, SavedCard } from '../../../../services/api/creditsApi';
-import { Alert, AlertDescription } from '../../../ui/Alert';
-import Badge from '../../../ui/Badge';
 import Button from '../../../ui/Button';
-import Card from '../../../ui/Card';
-import { WarningIcon } from '../../../ui/icons';
-import Switch from '../../../ui/Switch';
-import { ToggleGroupItem, ToggleGroupRoot } from '../../../ui/ToggleGroup';
+import { SettingsSwitch } from '../../controls';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 const THRESHOLD_OPTIONS = [5, 10, 20] as const;
@@ -25,40 +20,6 @@ const CARD_BRAND_LABELS: Record<string, string> = {
 
 function cardBrandLabel(brand: string) {
   return CARD_BRAND_LABELS[brand.toLowerCase()] ?? brand.charAt(0).toUpperCase() + brand.slice(1);
-}
-
-/** A single-select row of dollar-amount pills backed by `ToggleGroup`. */
-function AmountPicker({
-  label,
-  options,
-  value,
-  onChange,
-}: {
-  label: string;
-  options: readonly number[];
-  value: number;
-  onChange: (v: number) => void;
-}) {
-  return (
-    <div>
-      <p className="text-[11px] text-content-faint mb-1.5">{label}</p>
-      <ToggleGroupRoot
-        type="single"
-        variant="secondary"
-        size="xs"
-        value={String(value)}
-        onValueChange={next => {
-          if (next) onChange(Number(next));
-        }}
-        className="flex-wrap">
-        {options.map(v => (
-          <ToggleGroupItem key={v} value={String(v)}>
-            ${v}
-          </ToggleGroupItem>
-        ))}
-      </ToggleGroupRoot>
-    </div>
-  );
 }
 
 interface AutoRechargeSectionProps {
@@ -113,11 +74,11 @@ const AutoRechargeSection = ({
 }: AutoRechargeSectionProps) => {
   const { t } = useT();
   return (
-    <Card className="rounded-2xl">
+    <div className="rounded-2xl border border-line bg-surface overflow-hidden">
       {/* Header row */}
       <div className="flex items-center justify-between p-3">
         <div>
-          <p className="text-sm font-semibold text-content">
+          <p className="text-md font-semibold text-content">
             {t('settings.billing.autoRecharge.title')}
           </p>
           <p className="text-[11px] text-content-faint mt-0.5">
@@ -125,9 +86,9 @@ const AutoRechargeSection = ({
           </p>
         </div>
         {arLoading ? (
-          <div className="w-10 h-5 rounded-full bg-surface-strong animate-pulse" />
+          <div className="w-10 h-5 rounded-full bg-neutral-300 dark:bg-neutral-700 animate-pulse" />
         ) : (
-          <Switch
+          <SettingsSwitch
             id="auto-recharge-toggle"
             checked={arSettings?.enabled ?? false}
             onCheckedChange={onArToggle}
@@ -139,17 +100,26 @@ const AutoRechargeSection = ({
 
       {/* Error banner */}
       {arError && (
-        <Alert variant="destructive" className="mx-3 mb-2 items-start rounded-lg py-2">
-          <WarningIcon className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-          <AlertDescription className="text-[12px] leading-relaxed opacity-100">
-            {arError}
-          </AlertDescription>
-        </Alert>
+        <div className="mx-3 mb-2 flex items-start gap-2 rounded-lg bg-coral-500/10 border border-coral-500/20 px-2.5 py-2">
+          <svg
+            className="w-3.5 h-3.5 text-coral-400 flex-shrink-0 mt-0.5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
+            />
+          </svg>
+          <p className="text-[12px] text-coral-400 leading-relaxed">{arError}</p>
+        </div>
       )}
 
       {/* Settings — only shown when enabled */}
       {!arLoading && arSettings?.enabled && (
-        <div className="px-3 pt-3 pb-2 space-y-3">
+        <div className="border-t border-line px-3 pt-3 pb-2 space-y-3">
           {/* Status row */}
           <div className="flex items-center gap-3 flex-wrap">
             {arSettings.inFlight && (
@@ -194,33 +164,90 @@ const AutoRechargeSection = ({
 
           {/* Last error from recharge attempt */}
           {arSettings.lastError && (
-            <Alert variant="destructive" className="items-start rounded-lg py-2 gap-1.5">
-              <WarningIcon className="w-3 h-3 shrink-0 mt-0.5" />
-              <AlertDescription className="text-[10px] opacity-100">
+            <div className="flex items-start gap-1.5 rounded-lg bg-coral-500/10 border border-coral-500/20 px-2.5 py-2">
+              <svg
+                className="w-3 h-3 text-coral-400 flex-shrink-0 mt-0.5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
+                />
+              </svg>
+              <p className="text-[10px] text-coral-300">
                 {t('settings.billing.autoRecharge.lastRechargeFailed')}: {arSettings.lastError}
-              </AlertDescription>
-            </Alert>
+              </p>
+            </div>
           )}
 
-          {/* Trigger threshold / recharge amount / weekly limit — pill selectors */}
-          <AmountPicker
-            label={t('settings.billing.autoRecharge.rechargeWhen')}
-            options={THRESHOLD_OPTIONS}
-            value={arThreshold}
-            onChange={setArThreshold}
-          />
-          <AmountPicker
-            label={t('settings.billing.autoRecharge.addAmount')}
-            options={RECHARGE_OPTIONS}
-            value={arAmount}
-            onChange={setArAmount}
-          />
-          <AmountPicker
-            label={t('settings.billing.autoRecharge.weeklyLimit')}
-            options={WEEKLY_LIMIT_OPTIONS}
-            value={arWeeklyLimit}
-            onChange={setArWeeklyLimit}
-          />
+          {/* Trigger threshold — bespoke pill-button selector, keep layout */}
+          <div>
+            <p className="text-[11px] text-content-faint mb-1.5">
+              {t('settings.billing.autoRecharge.rechargeWhen')}
+            </p>
+            <div className="flex gap-1.5 flex-wrap">
+              {THRESHOLD_OPTIONS.map(v => (
+                <button
+                  key={v}
+                  type="button"
+                  onClick={() => setArThreshold(v)}
+                  className={`px-2.5 py-1 text-xs rounded-lg border transition-colors ${
+                    arThreshold === v
+                      ? 'bg-primary-500/20 text-primary-400 border-primary-500/40'
+                      : 'bg-surface-subtle text-content-muted border-line hover:text-content-secondary dark:hover:text-neutral-200'
+                  }`}>
+                  ${v}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Recharge amount — bespoke pill-button selector, keep layout */}
+          <div>
+            <p className="text-[11px] text-content-faint mb-1.5">
+              {t('settings.billing.autoRecharge.addAmount')}
+            </p>
+            <div className="flex gap-1.5 flex-wrap">
+              {RECHARGE_OPTIONS.map(v => (
+                <button
+                  key={v}
+                  type="button"
+                  onClick={() => setArAmount(v)}
+                  className={`px-2.5 py-1 text-xs rounded-lg border transition-colors ${
+                    arAmount === v
+                      ? 'bg-primary-500/20 text-primary-400 border-primary-500/40'
+                      : 'bg-surface-subtle text-content-muted border-line hover:text-content-secondary dark:hover:text-neutral-200'
+                  }`}>
+                  ${v}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Weekly limit — bespoke pill-button selector, keep layout */}
+          <div>
+            <p className="text-[11px] text-content-faint mb-1.5">
+              {t('settings.billing.autoRecharge.weeklyLimit')}
+            </p>
+            <div className="flex gap-1.5 flex-wrap">
+              {WEEKLY_LIMIT_OPTIONS.map(v => (
+                <button
+                  key={v}
+                  type="button"
+                  onClick={() => setArWeeklyLimit(v)}
+                  className={`px-2.5 py-1 text-xs rounded-lg border transition-colors ${
+                    arWeeklyLimit === v
+                      ? 'bg-primary-500/20 text-primary-400 border-primary-500/40'
+                      : 'bg-surface-subtle text-content-muted border-line hover:text-content-secondary dark:hover:text-neutral-200'
+                  }`}>
+                  ${v}
+                </button>
+              ))}
+            </div>
+          </div>
 
           {/* Validation hint */}
           {arAmount <= arThreshold && (
@@ -247,7 +274,7 @@ const AutoRechargeSection = ({
       )}
 
       {/* Payment methods */}
-      <div className="px-3 py-2.5">
+      <div className="border-t border-line px-3 py-2.5">
         <div className="flex items-center justify-between mb-2">
           <p className="text-[11px] font-medium text-content-secondary">
             {t('settings.billing.autoRecharge.paymentMethods')}
@@ -265,13 +292,16 @@ const AutoRechargeSection = ({
         {cardsLoading ? (
           <div className="space-y-1.5">
             {[0, 1].map(i => (
-              <div key={i} className="h-9 rounded-lg bg-surface-strong/60 animate-pulse" />
+              <div
+                key={i}
+                className="h-9 rounded-lg bg-surface-strong/60 dark:bg-neutral-700/30 animate-pulse"
+              />
             ))}
           </div>
         ) : cards.length === 0 ? (
           <div className="flex items-center gap-2 rounded-lg bg-surface-muted border border-line p-2.5">
             <svg
-              className="w-4 h-4 text-content-muted shrink-0"
+              className="w-4 h-4 text-content-muted flex-shrink-0"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24">
@@ -299,7 +329,7 @@ const AutoRechargeSection = ({
                   className="flex items-center gap-2 rounded-lg bg-surface-muted border border-line px-2.5 py-2">
                   {/* Card icon */}
                   <svg
-                    className="w-4 h-4 text-content-faint shrink-0"
+                    className="w-4 h-4 text-content-faint flex-shrink-0"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24">
@@ -318,9 +348,9 @@ const AutoRechargeSection = ({
                         {cardBrandLabel(card.brand)} ••••{card.last4}
                       </span>
                       {card.isDefault && (
-                        <Badge variant="primary">
+                        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-primary-500/20 text-primary-400 border border-primary-500/30 font-medium">
                           {t('settings.billing.autoRecharge.defaultCard')}
-                        </Badge>
+                        </span>
                       )}
                     </div>
                     <p className="text-[10px] text-content-muted mt-0.5">
@@ -332,7 +362,7 @@ const AutoRechargeSection = ({
                   </div>
 
                   {/* Actions */}
-                  <div className="flex items-center gap-1 shrink-0">
+                  <div className="flex items-center gap-1 flex-shrink-0">
                     {!card.isDefault && (
                       <Button
                         type="button"
@@ -381,7 +411,7 @@ const AutoRechargeSection = ({
           </div>
         )}
       </div>
-    </Card>
+    </div>
   );
 };
 

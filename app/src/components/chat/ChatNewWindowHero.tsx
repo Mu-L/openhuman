@@ -1,13 +1,17 @@
+import debugFactory from 'debug';
 import { useEffect, useMemo, useState } from 'react';
 
+import { useUsageState } from '../../hooks/useUsageState';
 import { useUser } from '../../hooks/useUser';
 import { useT } from '../../lib/i18n/I18nContext';
+import { applyOpenRouterFreeModels } from '../../services/api/openrouterFreeModels';
 import { restartCoreProcess } from '../../services/coreProcessControl';
 import { selectBlockingState } from '../../store/connectivitySelectors';
 import { useAppSelector } from '../../store/hooks';
 import { resolveUserName } from '../../utils/userName';
-import { DiscordBanner, PromotionalCreditsBanner } from '../home/HomeBanners';
-import { Button } from '../ui';
+import { DiscordBanner, PromotionalCreditsBanner, UsageLimitBanner } from '../home/HomeBanners';
+
+const debug = debugFactory('chat:new-window-hero');
 
 /**
  * Hero shown above the composer in the chat "new window" (empty thread) state —
@@ -20,6 +24,7 @@ import { Button } from '../ui';
 export default function ChatNewWindowHero() {
   const { t } = useT();
   const { user } = useUser();
+  const { shouldShowBudgetCompletedMessage } = useUsageState();
 
   const userName = resolveUserName(user).split(' ')[0];
   const promoCredits = user?.usage?.promotionBalanceUsd ?? 0;
@@ -31,6 +36,7 @@ export default function ChatNewWindowHero() {
 
   const [isRestartingCore, setIsRestartingCore] = useState(false);
   const [restartError, setRestartError] = useState<string | null>(null);
+  const [openRouterStatus, setOpenRouterStatus] = useState<'idle' | 'saving' | 'error'>('idle');
 
   const welcomeVariants = useMemo(
     () => [
@@ -60,6 +66,17 @@ export default function ChatNewWindowHero() {
       setRestartError(err instanceof Error ? err.message : String(err));
     } finally {
       setIsRestartingCore(false);
+    }
+  };
+
+  const handleUseOpenRouterFree = async () => {
+    setOpenRouterStatus('saving');
+    try {
+      await applyOpenRouterFreeModels();
+      setOpenRouterStatus('idle');
+    } catch (err) {
+      debug('applyOpenRouterFreeModels failed: %o', err);
+      setOpenRouterStatus('error');
     }
   };
 
@@ -99,6 +116,29 @@ export default function ChatNewWindowHero() {
 
   return (
     <div className="mx-auto flex h-full w-full max-w-md flex-col justify-center py-4">
+      {shouldShowBudgetCompletedMessage && (
+        <UsageLimitBanner
+          tone="danger"
+          icon="⚠️"
+          title={t('home.usageExhaustedTitle')}
+          message={t('home.usageExhaustedBody')}
+          ctaLabel={t('home.usageExhaustedCta')}
+          secondaryCtaLabel={
+            openRouterStatus === 'saving' ? t('openrouterFree.saving') : t('openrouterFree.cta')
+          }
+          onSecondaryCtaClick={() => {
+            if (openRouterStatus !== 'saving') {
+              void handleUseOpenRouterFree();
+            }
+          }}
+        />
+      )}
+      {openRouterStatus === 'error' && (
+        <div className="mb-3 rounded-lg border border-coral-200 bg-coral-50 px-3 py-2 text-xs text-coral-700 dark:border-coral-500/30 dark:bg-coral-900/20 dark:text-coral-200">
+          {t('openrouterFree.error')}
+        </div>
+      )}
+
       {showPromoBanner && <PromotionalCreditsBanner promoCredits={promoCredits} />}
 
       {/* Main card — sizes to its content. The full height lives on the
@@ -107,14 +147,9 @@ export default function ChatNewWindowHero() {
           the app background. */}
       <div
         data-walkthrough="home-card"
-        // `surface-muted`, not `surface/80`: the translucent fill only read as a
-        // card while the chat page painted a darker tint beneath it. The page is
-        // the card surface now, so surface/80 over surface would flatten to the
-        // same colour and leave only the border. This is the same lift token the
-        // message bubbles use.
-        className="animate-fade-up rounded-2xl border border-line/80 bg-surface-muted p-6 shadow-soft dark:border-line/80">
+        className="animate-fade-up rounded-2xl border border-line/80 bg-surface/80 p-6 shadow-soft backdrop-blur-sm dark:border-line/80">
         {/* Animated greeting */}
-        <h1 className="min-h-14 text-2xl text-center font-bold text-content">
+        <h1 className="min-h-[3.5rem] text-2xl text-center font-bold text-content">
           {typedWelcome}
           <span aria-hidden="true" className="ml-0.5 inline-block animate-pulse text-primary-500">
             |
@@ -128,28 +163,19 @@ export default function ChatNewWindowHero() {
         {/* Recovery: only when the local core is the broken link. */}
         {blocking === 'core-unreachable' && (
           <div className="mt-4">
-            <Button
-              size="lg"
+            <button
+              type="button"
               onClick={handleRestartCore}
               disabled={isRestartingCore}
-              className="w-full rounded-xl bg-amber-500 text-content-inverted hover:bg-amber-600">
+              className="w-full rounded-xl bg-amber-500 py-3 font-medium text-content-inverted transition-colors duration-200 hover:bg-amber-600 disabled:opacity-50">
               {isRestartingCore ? t('home.restartingCore') : t('home.restartCore')}
-            </Button>
+            </button>
             {restartError && (
               <p className="mt-2 text-center text-xs text-coral-500">{restartError}</p>
             )}
           </div>
         )}
       </div>
-
-      {/* Prompt heading — sits directly above the composer, which is the call
-          to action. This is the string the composer placeholder used to carry
-          (`chat.typeMessage`); the placeholder is now the plain
-          "Send a message" affordance, so the question moved here where it can
-          be a real heading rather than hint text inside an input. */}
-      <h2 className="mt-6 text-center text-lg font-semibold text-content">
-        {t('chat.newWindowPrompt')}
-      </h2>
 
       <DiscordBanner />
     </div>

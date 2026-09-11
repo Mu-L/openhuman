@@ -37,7 +37,7 @@ import {
   useRunsPendingApprovalSet,
 } from '../../hooks/useRunsPendingApprovalSet';
 import { useT } from '../../lib/i18n/I18nContext';
-import { Button, CenteredLoadingState, EmptyState, ErrorBanner } from '../ui';
+import { CenteredLoadingState, ErrorBanner } from '../ui/LoadingState';
 import { type FlowRepairRequest, FlowRunInspectorDrawer } from './FlowRunInspectorDrawer';
 import { FlowRunStatus, flowRunStatusLabel } from './FlowRunStatus';
 
@@ -115,12 +115,11 @@ function FlowRunsDrawer({ flowId, flowName, onClose, onFixWithAgent }: Props) {
         data-testid="flow-runs-drawer"
         onPointerDownCapture={onPointerDownCapture}>
         {/* Backdrop */}
-        <Button
+        <button
           type="button"
-          variant="tertiary"
           aria-label={t('conversations.subagent.close')}
           data-testid="flow-runs-backdrop"
-          className="absolute inset-0 h-auto w-auto rounded-none bg-surface-overlay/50 backdrop-blur-sm hover:bg-surface-overlay/50"
+          className="absolute inset-0 bg-stone-900/30 dark:bg-black/50"
           onClick={event => {
             // Keyboard and assistive activation produces a click without a
             // preceding pointer event. Pointer clicks were already handled
@@ -136,17 +135,14 @@ function FlowRunsDrawer({ flowId, flowName, onClose, onFixWithAgent }: Props) {
           {/* Header */}
           <header className="flex items-center gap-2.5 border-b border-line px-4 py-3">
             <span className="min-w-0 flex-1 truncate font-semibold text-content">{title}</span>
-            <Button
+            <button
               type="button"
-              variant="tertiary"
-              size="xs"
-              iconOnly
               data-testid="flow-runs-close"
               onClick={onClose}
               aria-label={t('conversations.subagent.close')}
-              className="shrink-0 rounded-full">
+              className="shrink-0 rounded-full p-1.5 text-content-faint hover:bg-surface-hover hover:text-content-secondary">
               ✕
-            </Button>
+            </button>
           </header>
 
           <div className="flex-1 overflow-y-auto px-4 py-4">
@@ -165,9 +161,11 @@ function FlowRunsDrawer({ flowId, flowName, onClose, onFixWithAgent }: Props) {
             )}
 
             {!loading && !error && runs.length === 0 && (
-              <div data-testid="flow-runs-empty">
-                <EmptyState label={t('flows.runs.empty')} className="py-8 text-center" />
-              </div>
+              <p
+                className="py-8 text-center text-xs italic text-content-faint"
+                data-testid="flow-runs-empty">
+                {t('flows.runs.empty')}
+              </p>
             )}
 
             {!loading && !error && runs.length > 0 && (
@@ -177,12 +175,11 @@ function FlowRunsDrawer({ flowId, flowName, onClose, onFixWithAgent }: Props) {
                   const displayStatus = resolveDisplayStatus(run, pendingRunIds);
                   return (
                     <li key={run.id}>
-                      <Button
+                      <button
                         type="button"
-                        variant="secondary"
                         data-testid={`flow-run-row-${run.id}`}
                         onClick={() => setSelectedRunId(run.id)}
-                        className="h-auto w-full justify-start gap-2 bg-surface-muted px-3 py-2 text-left text-xs font-normal">
+                        className="flex w-full items-center gap-2 rounded-lg border border-line bg-surface-muted px-3 py-2 text-left text-xs hover:bg-surface-hover">
                         <FlowRunStatus
                           status={displayStatus}
                           label={flowRunStatusLabel(displayStatus, t)}
@@ -200,7 +197,7 @@ function FlowRunsDrawer({ flowId, flowName, onClose, onFixWithAgent }: Props) {
                         <span className="ml-auto truncate font-mono text-[10px] text-content-faint">
                           {run.id.slice(0, 8)}
                         </span>
-                      </Button>
+                      </button>
                     </li>
                   );
                 })}

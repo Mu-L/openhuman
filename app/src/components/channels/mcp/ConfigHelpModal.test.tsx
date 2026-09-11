@@ -81,7 +81,7 @@ describe('ConfigHelpModal', () => {
     expect(user_message).toContain('acme/test-server');
   });
 
-  it('closes via the close button', () => {
+  it('closes via the ✕ button', () => {
     const onClose = vi.fn();
     render(
       <ConfigHelpModal
@@ -90,14 +90,12 @@ describe('ConfigHelpModal', () => {
         onClose={onClose}
       />
     );
-    // Migrated onto the shared `ModalShell` (#radix-ui-foundation): the close
-    // button is now the shell's own, labelled with the common "Close" string
-    // rather than the old hand-rolled ✕ button's "Cancel" label.
-    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    // The ✕ close button is labelled with the Cancel a11y string.
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
     expect(onClose).toHaveBeenCalled();
   });
 
-  it('closes on Escape', () => {
+  it('closes on backdrop mousedown', () => {
     const onClose = vi.fn();
     render(
       <ConfigHelpModal
@@ -106,10 +104,8 @@ describe('ConfigHelpModal', () => {
         onClose={onClose}
       />
     );
-    // Migrated onto `ModalShell` / Radix `Dialog`: dismissal is now via Escape
-    // or the close button rather than a manual mousedown-on-self handler, so
-    // this test now exercises the Radix escape-key path instead.
-    fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' });
+    const dialog = screen.getByRole('dialog');
+    fireEvent.mouseDown(dialog);
     expect(onClose).toHaveBeenCalled();
   });
 

@@ -6,7 +6,7 @@
  * needs:
  *
  *   - `button[title="New thread"]`       — icon-only button, no text
- *   - `textarea[placeholder="Send a message..."]` — React-controlled
+ *   - `textarea[placeholder="How can I help you today?"]` — React-controlled
  *     input that should be driven through WebDriver so React observes
  *     the same input events a user would produce
  *   - `button[aria-label="Send message"]` — icon-only button
@@ -57,12 +57,7 @@ export async function clickByTitle(title: string, timeoutMs = 6_000): Promise<bo
   return false;
 }
 
-// Chat now uses assistant-ui's Lexical contenteditable surface. Keep the
-// former textarea selector as a fallback for the voice/legacy embed, but make
-// all harness flows target the stable semantic textbox rather than a specific
-// editor implementation.
-const COMPOSER_SELECTOR =
-  'textarea[placeholder="Send a message..."], [contenteditable="true"][role="textbox"][aria-label="Message input"]';
+const COMPOSER_SELECTOR = 'textarea[placeholder="How can I help you today?"]';
 
 /** True once the Conversations page has mounted its composer/header.
  *
@@ -85,7 +80,7 @@ export async function chatMounted(): Promise<boolean> {
 export async function typeIntoComposer(text: string): Promise<void> {
   let actual = '';
   for (let attempt = 1; attempt <= 3; attempt += 1) {
-    // Creating a thread can replace the controlled composer after the selected
+    // Creating a thread can replace the controlled textarea after the selected
     // thread id changes. Resolve it afresh on every attempt so a late React
     // commit cannot leave WebDriver typing into a detached element.
     const composer = await browser.$(COMPOSER_SELECTOR);
@@ -95,54 +90,22 @@ export async function typeIntoComposer(text: string): Promise<void> {
     // Focus via JS — avoids the coordinate-based click that gets intercepted
     // by AppUpdatePrompt. Select any partial value before deleting it.
     const focused = await browser.execute((sel: string) => {
-      const el = document.querySelector(sel) as HTMLTextAreaElement | HTMLElement | null;
+      const el = document.querySelector(sel) as HTMLTextAreaElement | null;
       if (!el) return false;
       el.focus();
-      if (el instanceof HTMLTextAreaElement) {
-        el.select();
-      } else {
-        const range = document.createRange();
-        range.selectNodeContents(el);
-        const selection = window.getSelection();
-        selection?.removeAllRanges();
-        selection?.addRange(range);
-      }
+      el.select();
       return true;
     }, COMPOSER_SELECTOR);
     if (!focused) continue;
 
-    // WebKitWebDriver drops trailing key events even when they are paced. Use
-    // the native textarea setter for the legacy field or textContent for the
-    // assistant-ui Lexical field, then emit the bubbling input event each
-    // surface observes.
-    const typed = await browser.execute(
-      (sel: string, nextValue: string) => {
-        const el = document.querySelector(sel) as HTMLElement | null;
-        if (!el) return false;
-        if (el instanceof HTMLTextAreaElement) {
-          const setter = Object.getOwnPropertyDescriptor(
-            window.HTMLTextAreaElement.prototype,
-            'value'
-          )?.set;
-          if (setter) setter.call(el, nextValue);
-          else el.value = nextValue;
-        } else {
-          el.textContent = nextValue;
-        }
-        el.dispatchEvent(new InputEvent('input', { bubbles: true, data: nextValue }));
-        el.dispatchEvent(new Event('change', { bubbles: true }));
-        return true;
-      },
-      COMPOSER_SELECTOR,
-      text
-    );
-    if (!typed) continue;
+    await browser.pause(80);
+    await browser.keys('Delete');
+    await browser.pause(80);
+
+    // Real keyboard events keep React's controlled state and the DOM in sync.
+    await browser.keys(text.split(''));
     await browser.pause(200);
-    actual = (await browser.execute((sel: string) => {
-      const el = document.querySelector(sel) as HTMLTextAreaElement | HTMLElement | null;
-      if (!el) return '';
-      return el instanceof HTMLTextAreaElement ? el.value : (el.textContent ?? '');
-    }, COMPOSER_SELECTOR)) as string;
+    actual = String(await composer.getValue());
     if (actual === text) return;
   }
 

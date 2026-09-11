@@ -19,6 +19,7 @@ use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 use anyhow::Result;
+use openhuman_core::core::event_bus::init_global;
 use openhuman_core::openhuman::agent::harness::AgentDefinitionRegistry;
 use openhuman_core::openhuman::agent::Agent;
 use openhuman_core::openhuman::inference::provider::factory::test_provider_override;
@@ -32,7 +33,6 @@ const DEFAULT_TURNS: usize = 3;
 const DEFAULT_TARGET_AGENTS: u64 = 1000;
 const DEFAULT_RAM_BUDGET_MIB: u64 = 2048;
 const IDLE_WINDOW: Duration = Duration::from_secs(10);
-const FLEET_AGENT_ID: &str = "orchestrator";
 
 fn env_usize(key: &str, default: usize) -> usize {
     std::env::var(key)
@@ -116,7 +116,7 @@ fn build_agents(
     let stride = (n / 10).max(1);
     let mut agents = Vec::with_capacity(n);
     for i in 0..n {
-        match Agent::from_config_for_agent(config, FLEET_AGENT_ID) {
+        match Agent::from_config_for_agent(config, "subconscious") {
             Ok(agent) => agents.push(agent),
             Err(err) => {
                 eprintln!(
@@ -144,7 +144,7 @@ pub async fn run() -> Result<ProfileResult> {
     raise_fd_limit();
 
     let fixture = fixture()?;
-    openhuman_core::core::bus::init().await.expect("bus init");
+    let _ = init_global(256);
     openhuman_core::openhuman::agent::bus::register_agent_handlers();
     let _ = AgentDefinitionRegistry::init_global_builtins();
     let mock = LatencyMock::from_env("Fleet agent: nothing needs your attention.");
@@ -286,16 +286,6 @@ mod tests {
         assert_eq!(percentile(&v, 100), 100);
         assert_eq!(percentile(&[], 50), 0);
         assert_eq!(percentile(&[7], 99), 7);
-    }
-
-    #[test]
-    fn fleet_agent_is_a_shipped_definition() {
-        assert!(
-            AgentDefinitionRegistry::builtins_only()
-                .get(FLEET_AGENT_ID)
-                .is_some(),
-            "fleet benchmark must construct a current shipped agent"
-        );
     }
 
     #[test]

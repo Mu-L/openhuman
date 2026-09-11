@@ -80,7 +80,6 @@ interface GlobalActionDef {
   register?: boolean;
   handler: () => void;
   keywords?: string[];
-  slashCommand?: { id: string; descriptionKey?: string };
 }
 
 /**
@@ -187,7 +186,6 @@ function buildGlobalActions(h: GlobalActionHandlers): GlobalActionDef[] {
       allowInInput: true,
       handler: h.newChat,
       keywords: ['new', 'thread', 'compose', 'conversation', 'session'],
-      slashCommand: { id: 'clear', descriptionKey: 'conversations.composer.command.clear' },
     },
 
     // ── View ────────────────────────────────────────────────────────────
@@ -256,7 +254,6 @@ export function registerGlobalActions(
               shortcut: a.shortcut,
               handler: a.handler,
               keywords: a.keywords,
-              slashCommand: a.slashCommand,
               allowInInput: a.allowInInput,
               enabled: a.enabled,
             },

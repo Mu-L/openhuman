@@ -3,35 +3,33 @@
 //! Tracks active runs by session `thread_id` so the web-channel cancel path
 //! can abort them even though they are detached tokio tasks rather than
 //! web-channel turns.
-//!
-//! The map itself is
-//! [`ActiveRunRegistry`](tinyagents_graph::todos::dispatch::ActiveRunRegistry),
-//! which owns the race-free removal that decides who writes a run's terminal
-//! card state. What stays here is the OpenHuman side of a cancel: the board
-//! write-back and the terminal chat event.
 
-use std::sync::OnceLock;
-
-use tinyagents_graph::todos::dispatch::ActiveRunRegistry;
-
-use crate::openhuman::threads::todos::ops::BoardLocation;
+use std::collections::HashMap;
+use std::sync::{Mutex, OnceLock};
 
 use super::types::ActiveRun;
 
-fn registry() -> &'static ActiveRunRegistry<BoardLocation> {
-    static ACTIVE_RUNS: OnceLock<ActiveRunRegistry<BoardLocation>> = OnceLock::new();
-    ACTIVE_RUNS.get_or_init(ActiveRunRegistry::new)
+static ACTIVE_RUNS: OnceLock<Mutex<HashMap<String, ActiveRun>>> = OnceLock::new();
+
+pub(super) fn active_runs() -> &'static Mutex<HashMap<String, ActiveRun>> {
+    ACTIVE_RUNS.get_or_init(|| Mutex::new(HashMap::new()))
 }
 
 pub(super) fn register_active_run(thread_id: String, run: ActiveRun) {
-    registry().register(thread_id, run);
+    active_runs()
+        .lock()
+        .expect("active_runs mutex poisoned")
+        .insert(thread_id, run);
 }
 
 /// Remove and return the active-run entry for `thread_id`. The naturally
 /// completing run and a concurrent [`cancel_session`] race on this — whoever
 /// gets `Some` "owns" the terminal board write-back, so it happens exactly once.
 pub(super) fn take_active_run(thread_id: &str) -> Option<ActiveRun> {
-    registry().take(thread_id)
+    active_runs()
+        .lock()
+        .expect("active_runs mutex poisoned")
+        .remove(thread_id)
 }
 
 /// Atomically remove the active-run entry for `thread_id`, but only when it
@@ -42,11 +40,36 @@ pub(super) fn take_active_run(thread_id: &str) -> Option<ActiveRun> {
 /// by a newer run before removal — the "stale cancel kills a newer turn" race a
 /// separate peek-then-`take_active_run` would reopen (#4760). A `None`
 /// `request_id` removes whatever run is on the thread (unscoped Stop /
-/// teardown). Both scoped no-op cases (no active run, or a `run_id` mismatch
-/// from a superseded/unrelated request) are logged by the crate registry, so an
+/// teardown).
+///
+/// Both scoped no-op cases (no active run, or a `run_id` mismatch from a
+/// superseded/unrelated request) emit grep-friendly `debug` diagnostics so an
 /// intentional no-op cancel is still traceable.
 pub(super) fn take_active_run_if(thread_id: &str, request_id: Option<&str>) -> Option<ActiveRun> {
-    registry().take_if(thread_id, request_id)
+    let mut guard = active_runs().lock().expect("active_runs mutex poisoned");
+    if let Some(rid) = request_id {
+        match guard.get(thread_id) {
+            None => {
+                tracing::debug!(
+                    thread_id = %thread_id,
+                    request_id = %rid,
+                    "[task_dispatcher] scoped cancel ignored: no active run on thread"
+                );
+                return None;
+            }
+            Some(run) if run.run_id != rid => {
+                tracing::debug!(
+                    thread_id = %thread_id,
+                    request_id = %rid,
+                    active_run_id = %run.run_id,
+                    "[task_dispatcher] scoped cancel ignored: run_id mismatch (superseded/unrelated request)"
+                );
+                return None;
+            }
+            _ => {}
+        }
+    }
+    guard.remove(thread_id)
 }
 
 /// Cancel the in-flight autonomous run streaming into session `thread_id`.
@@ -73,11 +96,12 @@ pub async fn cancel_session(thread_id: &str) -> bool {
 /// exact run it atomically removed via [`take_active_run_if`], rather than
 /// re-acquiring the lock and racing a replacement run (#4760).
 async fn cancel_taken_run(thread_id: &str, run: ActiveRun) {
-    run.cancel();
+    run.abort.abort();
+    let _ = run.hb_cancel.send(true);
     // The aborted task never reaches its own write-back — do it here so the
     // card lands in a terminal state instead of a stale `in_progress`.
     super::executor::write_back(
-        &run.context,
+        &run.location,
         &run.card_id,
         &run.run_id,
         Err("Cancelled by user".to_string()),

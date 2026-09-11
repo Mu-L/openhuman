@@ -17,7 +17,7 @@ use crate::openhuman::tools::traits::{PermissionLevel, Tool, ToolCallOptions, To
 use async_trait::async_trait;
 use serde_json::json;
 use std::sync::Arc;
-use tinytools::ToolRunContext;
+use tinyagents::harness::tool::ToolExecutionContext;
 
 /// Default reviewer-requested revision budget when the caller omits it.
 const DEFAULT_MAX_REVISIONS: usize = 2;
@@ -108,7 +108,7 @@ impl Tool for DelegateGraphTool {
         &self,
         args: serde_json::Value,
         _options: ToolCallOptions,
-        tool_context: Option<&dyn ToolRunContext>,
+        tool_context: Option<&ToolExecutionContext>,
     ) -> anyhow::Result<ToolResult> {
         let agent_id = match args.get("agent_id").and_then(|v| v.as_str()) {
             Some(s) if !s.trim().is_empty() => s.trim().to_string(),
@@ -155,7 +155,7 @@ impl Tool for DelegateGraphTool {
             definition,
             task,
             max_revisions,
-            tool_context.and_then(|ctx| ctx.workspace().cloned()),
+            tool_context.and_then(|ctx| ctx.workspace.clone()),
         )
         .await
         {

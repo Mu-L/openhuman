@@ -13,20 +13,18 @@
 //!
 //! | String                | Resolves to                                    |
 //! |-----------------------|------------------------------------------------|
-//! | `"cloud"` / `"openhuman"` / `"backend"` | OpenHuman backend proxy      |
+//! | `"cloud"` / `"openhuman"` | OpenHuman backend proxy                    |
+//! | `"whisper"`           | Local Whisper (STT)                            |
 //! | `"piper"`             | Local Piper (TTS)                              |
 //! | `"<slug>:<model>"`    | Voice provider entry matched by slug           |
 //! | `"<slug>"`            | Bare slug — uses provider's default model/voice|
 //!
 //! ## STT providers
 //!
-//! - `"cloud"` → backend transcription proxy (POST `/openai/v1/audio/transcriptions`).
+//! - `"cloud"` → backend Whisper proxy (POST `/openai/v1/audio/transcriptions`).
+//! - `"whisper"` → local Whisper via `WHISPER_BIN` (or in-process `whisper-rs`).
 //! - `"<slug>:<model>"` → third-party STT API via the voice provider registry
-//!   (e.g. `"deepgram:nova-2"`, `"openai:whisper-1"`, `"elevenlabs:scribe_v1"`).
-//!
-//! There is **no local STT branch**. The bundled whisper.cpp engine was removed;
-//! which hosted engine runs is chosen by `voice_server.stt_engine` and resolved
-//! by [`effective_stt_provider`].
+//!   (e.g. `"deepgram:nova-2"`, `"openai:whisper-1"`).
 //!
 //! ## TTS providers
 //!
@@ -49,15 +47,14 @@ mod traits;
 mod tts_providers;
 
 #[cfg(test)]
-#[path = "factory_tests.rs"]
 mod tests;
 
 // Re-export the public API — exact visibility preserved from the original file.
 pub use entry::{
     create_stt_provider, create_tts_provider, default_stt_provider, default_tts_provider,
-    DEFAULT_PIPER_VOICE, DEFAULT_STT_MODEL,
+    DEFAULT_PIPER_VOICE, DEFAULT_WHISPER_MODEL, WHISPER_MODEL_PRESETS,
 };
 pub use helpers::{effective_stt_provider, effective_tts_provider};
-pub use stt_providers::{CloudSttProvider, ExternalSttProvider};
+pub use stt_providers::{CloudSttProvider, ExternalSttProvider, WhisperSttProvider};
 pub use traits::{SttProvider, SttResult, TtsProvider};
 pub use tts_providers::{CloudTtsProvider, ExternalTtsProvider, PiperTtsProvider};

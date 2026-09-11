@@ -22,5 +22,4 @@ pub use types::{
 };
 
 #[cfg(test)]
-#[path = "webhooks_tests.rs"]
 mod tests;

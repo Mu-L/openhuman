@@ -2,7 +2,9 @@
 
 Reproducible benchmarking scripts for the OpenHuman Rust core as an embedded
 library (no RPC server), built around the `library-profile` and `rss-bench`
-binaries (see `src/bin/library_profile/main.rs`).
+binaries (see `src/bin/library_profile/main.rs`). Full write-up:
+[`docs/library-benchmarking.md`](../../docs/library-benchmarking.md). Prior
+findings: [`docs/resource-profiling-session-2026-07-21.md`](../../docs/resource-profiling-session-2026-07-21.md).
 
 Five driver scripts: `library-bench.sh` (per-scenario RSS/duration),
 `library-cpu.sh` (samply), `library-heap.sh` (dhat), `library-fleet.sh`
@@ -18,9 +20,9 @@ process, and aggregates median/min/max duration, settled RSS, retained delta,
 and peak delta into `summary.json` + `summary.md`.
 
 ```bash
-./scripts/profile/library-bench.sh                              # all 6 scenarios, default build, 5 repeats
+./scripts/profile/library-bench.sh                              # all 7 scenarios, default build, 5 repeats
 ./scripts/profile/library-bench.sh --slim --repeat 7             # slim (no-default-features) build
-./scripts/profile/library-bench.sh --scenarios "long-agent,subagent-storm" --turns 50 --warm
+./scripts/profile/library-bench.sh --scenarios "long-agent,subagents" --turns 50 --warm
 ```
 
 Results land in `target/profile/rust-library/bench-<timestamp>/` (or `--out DIR`).
@@ -31,9 +33,9 @@ Wraps `samply record` around one scenario, isolated from persistence/timezone
 noise by default (matching the documented cold-path CPU recipe).
 
 ```bash
-./scripts/profile/library-cpu.sh subagent-storm
+./scripts/profile/library-cpu.sh subagents
 ./scripts/profile/library-cpu.sh long-agent -- OPENHUMAN_PROFILE_TURNS=50
-samply load target/profile/rust-library/subagent-storm-cpu.json.gz
+samply load target/profile/rust-library/subagents-cpu.json.gz
 ```
 
 ### `library-heap.sh` — live heap attribution via dhat
@@ -43,9 +45,9 @@ timing numbers from this build are perturbed by instrumentation; use it only
 for allocation-site/retained-bytes attribution, not for RSS comparisons.
 
 ```bash
-./scripts/profile/library-heap.sh agent-turn
+./scripts/profile/library-heap.sh memory-ingest
 # open https://nnethercote.github.io/dh_view/dh_view.html and load
-# target/profile/rust-library/dhat-agent-turn.json
+# target/profile/rust-library/dhat-memory-ingest.json
 ```
 
 ### `library-fleet.sh` — fleet sweep + 2 GB / 2 vCPU budget gate
@@ -62,7 +64,9 @@ projected footprint at the target agent count fits the RAM budget.
 
 Results land in `target/profile/rust-library/fleet-<timestamp>/` (or
 `--out DIR`). Exits nonzero if any swept N reports `fits: false` (use
-`--no-gate` to report only). The script's `--help` documents the budget math.
+`--no-gate` to report only). See
+[`docs/library-benchmarking.md`](../../docs/library-benchmarking.md#the-2-gb--2-vcpu-server-budget)
+for the budget math.
 
 ### `library-instances.sh` — multi-instance (many-processes) sweep
 
@@ -86,7 +90,9 @@ Results land in `target/profile/rust-library/instances-<timestamp>/` (or
 `--out DIR`). Refuses to spawn more than `--max-instances` (default 200)
 without an explicit raise — see the script's `--help` for the RAM math. Exits
 nonzero with `--gate` if any instance failed to complete cleanly (nonzero
-exit or missing/invalid JSON); default is report-only.
+exit or missing/invalid JSON); default is report-only. See
+[`docs/library-benchmarking.md`](../../docs/library-benchmarking.md#fleet-one-process-vs-instances-many-processes)
+for the fleet-vs-instances framing.
 
 ### `library-pool-gate.sh` — runtime pool regression gate (#5106)
 
@@ -112,10 +118,10 @@ runners don't false-fail.
 ./scripts/profile/library-bench.sh
 
 # 2. CPU attribution for the slowest/most interesting scenario
-./scripts/profile/library-cpu.sh subagent-storm
+./scripts/profile/library-cpu.sh subagents
 
 # 3. If a scenario's RSS looks off, drill into live heap
-./scripts/profile/library-heap.sh subagent-storm
+./scripts/profile/library-heap.sh subagents
 ```
 
 All scripts require `jq` for JSON parsing/aggregation; `library-cpu.sh` also

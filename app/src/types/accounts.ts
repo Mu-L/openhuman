@@ -65,6 +65,7 @@ export interface AccountsState {
    * accordingly (DOM z-index can't paint React overlays above a CEF webview).
    * Transient: not in the persist whitelist.
    */
+  overlayOpen: boolean;
 }
 
 export interface AccountLogEntry {

@@ -1,3 +1,7 @@
+// Leaf-gated with `polymarket*` below — CLOB order signing exists only to
+// serve the Polymarket tools.
+#[cfg(feature = "prediction-markets")]
+mod clob_auth;
 mod curl;
 mod gitbooks;
 mod gmail_unsubscribe;
@@ -11,6 +15,10 @@ mod http_request;
 mod mcp;
 #[cfg(feature = "mcp")]
 mod mcp_setup;
+#[cfg(feature = "prediction-markets")]
+mod polymarket;
+#[cfg(feature = "prediction-markets")]
+mod polymarket_orders;
 mod url_guard;
 mod web_fetch;
 
@@ -25,9 +33,8 @@ pub use mcp_setup::{
     McpSetupGetTool, McpSetupInstallAndConnectTool, McpSetupRequestSecretTool, McpSetupSearchTool,
     McpSetupTestConnectionTool,
 };
-/// The SSRF guard the network tools apply, so a host outside this crate can
-/// hold user-supplied URLs to the same rule rather than writing a second one.
-pub use url_guard::validate_url_with_dns_check;
+#[cfg(feature = "prediction-markets")]
+pub use polymarket::PolymarketTool;
 pub use web_fetch::WebFetchTool;
 
 /// Shared test helper for the network tools' local-only enforcement tests

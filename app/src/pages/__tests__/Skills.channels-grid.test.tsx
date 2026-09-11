@@ -115,9 +115,7 @@ describe('Skills page — Channels grid', () => {
     renderWithProviders(<Skills />, { initialEntries: ['/connections'], preloadedState });
     fireEvent.click(screen.getByTestId('two-pane-nav-channels'));
 
-    const channelsCard = screen
-      .getByRole('heading', { name: 'Messaging' })
-      .closest('[data-slot="card"]');
+    const channelsCard = screen.getByRole('heading', { name: 'Messaging' }).closest('.rounded-2xl');
     const order = within(channelsCard as HTMLElement)
       .getAllByTestId(/^skill-row-channel-/)
       .map(el => el.getAttribute('data-testid'));
@@ -137,9 +135,7 @@ describe('Skills page — Channels grid', () => {
     const { store } = renderWithProviders(<Skills />, { initialEntries: ['/connections'] });
     fireEvent.click(screen.getByTestId('two-pane-nav-channels'));
 
-    const channelsCard = screen
-      .getByRole('heading', { name: 'Messaging' })
-      .closest('[data-slot="card"]');
+    const channelsCard = screen.getByRole('heading', { name: 'Messaging' }).closest('.rounded-2xl');
     const within$ = within(channelsCard as HTMLElement);
 
     // The redux default starts on Telegram, so its tile shows the "Default"
@@ -168,7 +164,7 @@ describe('Skills page — Channels grid', () => {
     const channelsHeading = screen.getByRole('heading', { name: 'Messaging' });
     expect(channelsHeading).toBeInTheDocument();
 
-    const channelsCard = channelsHeading.closest('[data-slot="card"]');
+    const channelsCard = channelsHeading.closest('.rounded-2xl');
     expect(channelsCard).not.toBeNull();
     const within$ = within(channelsCard as HTMLElement);
 
@@ -232,7 +228,7 @@ describe('Skills page — Channels grid', () => {
       fireEvent.click(screen.getByTestId('two-pane-nav-channels'));
       const channelsCard = screen
         .getByRole('heading', { name: 'Messaging' })
-        .closest('[data-slot="card"]');
+        .closest('.rounded-2xl');
       const telegramTile = within(channelsCard as HTMLElement).getByRole('button', {
         name: new RegExp(`Telegram.*${labelPattern.source}`, 'i'),
       });

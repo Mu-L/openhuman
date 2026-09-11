@@ -1,8 +1,6 @@
 import type { ReactNode } from 'react';
 
-import { cn } from '../../lib/cn';
-import { Button } from '../ui';
-import { type ContentWidth, contentWidthVariants } from './contentWidth';
+import Button from '../ui/Button';
 
 /**
  * PageWelcome — the welcome landing shown as the first destination of a sidebar
@@ -59,8 +57,6 @@ interface PageWelcomeProps {
   /** Benefit cards. */
   features?: WelcomeFeature[];
   accent?: PageWelcomeAccent;
-  /** Pitch column width. Defaults to `'md'` — today's hardcoded `max-w-2xl`. */
-  width?: ContentWidth;
   testId?: string;
 }
 
@@ -73,7 +69,6 @@ export default function PageWelcome({
   featuresHeading,
   features,
   accent = 'ocean',
-  width = 'md',
   testId,
 }: PageWelcomeProps) {
   const tile = ACCENT_TILE[accent];
@@ -84,12 +79,7 @@ export default function PageWelcome({
     // scroll takes over and the top stays reachable (min-h-full, not h-full).
     <div className="h-full overflow-y-auto">
       <div className="flex min-h-full items-center">
-        <div
-          data-testid={testId}
-          className={cn(
-            'mx-auto w-full animate-fade-up px-6 py-10',
-            contentWidthVariants({ width })
-          )}>
+        <div data-testid={testId} className="mx-auto w-full max-w-2xl animate-fade-up px-6 py-10">
           <div
             aria-hidden
             className={`mb-5 flex items-center justify-center rounded-2xl text-3xl ${tile}`}

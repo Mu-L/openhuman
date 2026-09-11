@@ -101,5 +101,5 @@ fn parse_cursor(cursor: Option<&str>) -> usize {
 }
 
 #[cfg(test)]
-#[path = "transcript_view_tests.rs"]
+#[path = "tests.rs"]
 mod tests;

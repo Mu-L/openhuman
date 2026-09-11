@@ -1,6 +1,5 @@
 use super::{
-    ArchetypeDelegationTool, DelegationTarget, SkillDelegationTool, SpawnSubagentTool,
-    SpawnWorkerThreadTool,
+    ArchetypeDelegationTool, SkillDelegationTool, SpawnSubagentTool, SpawnWorkerThreadTool,
 };
 use crate::openhuman::agent::context::prompt::{ConnectedIntegration, ToolCallFormat};
 use crate::openhuman::agent::harness::definition::AgentDefinitionRegistry;
@@ -14,8 +13,8 @@ use parking_lot::Mutex;
 use serde_json::json;
 use std::path::Path;
 use std::sync::Arc;
-use tinyinference::message::Message;
-use tinyinference::model::{ChatModel, ModelProfile, ModelRequest, ModelResponse};
+use tinyagents::harness::message::Message;
+use tinyagents::harness::model::{ChatModel, ModelProfile, ModelRequest, ModelResponse};
 
 const SPAWN_SUBAGENT_CANARY: &str = "tool-e2e-spawn-subagent-canary";
 const ARCHETYPE_DELEGATION_CANARY: &str = "tool-e2e-archetype-delegation-canary";
@@ -64,7 +63,7 @@ async fn archetype_delegation_tool_runs_child_agent_e2e() {
     )]));
     let tool = ArchetypeDelegationTool {
         tool_name: "delegate_researcher".to_string(),
-        agent_id: DelegationTarget("researcher".to_string()),
+        agent_id: "researcher".to_string(),
         tool_description: "Delegate research work.".to_string(),
     };
 
@@ -82,18 +81,7 @@ async fn archetype_delegation_tool_runs_child_agent_e2e() {
     .expect("tool execution");
 
     assert!(!result.is_error, "{}", result.output());
-    // This archetype delegation asks for async but has no delivery thread in
-    // a test, so it falls back to running inline — and a fallback registers
-    // no durable worker either, so the result says so (#6033).
-    let output = result.output();
-    assert!(
-        output.starts_with("archetype-delegation-child-answer"),
-        "the child's answer must lead the result: {output}"
-    );
-    assert!(
-        output.contains("[INLINE_RESULT]"),
-        "an async delegation that fell back to blocking must disclose that no worker exists: {output}"
-    );
+    assert_eq!(result.output(), "archetype-delegation-child-answer");
     assert!(provider.saw(ARCHETYPE_DELEGATION_CANARY));
 }
 
@@ -113,7 +101,7 @@ async fn archetype_delegation_defaults_to_async_with_durable_session_e2e() {
     )]));
     let tool = ArchetypeDelegationTool {
         tool_name: "delegate_researcher".to_string(),
-        agent_id: DelegationTarget("researcher".to_string()),
+        agent_id: "researcher".to_string(),
         tool_description: "Delegate research work.".to_string(),
     };
 
@@ -380,18 +368,7 @@ async fn skill_delegation_tool_runs_integrations_agent_e2e() {
     .expect("tool execution");
 
     assert!(!result.is_error, "{}", result.output());
-    // The sub-agent's answer comes back verbatim, followed by the
-    // inline-result note: this delegation is blocking and registers no
-    // worker, so the orchestrator must not go hunting for one (#6033).
-    let output = result.output();
-    assert!(
-        output.starts_with("skill-delegation-child-answer"),
-        "the child's answer must lead the result: {output}"
-    );
-    assert!(
-        output.contains("[INLINE_RESULT]") && output.contains("no sub-agent worker"),
-        "a blocking delegation must say its result is inline: {output}"
-    );
+    assert_eq!(result.output(), "skill-delegation-child-answer");
     assert!(provider.saw(SKILL_DELEGATION_CANARY));
     assert!(provider.saw("gmail"));
 }
@@ -457,7 +434,6 @@ fn parent_context(
         turn_model_source: crate::openhuman::agent::tinyagents::TurnModelSource::from_model(model),
         all_tools: Arc::new(Vec::new()),
         all_tool_specs: Arc::new(Vec::new()),
-        visible_tool_specs: Arc::new(Vec::new()),
         visible_tool_names: std::collections::HashSet::new(),
         subagent_tool_ceiling_names: std::collections::HashSet::new(),
         model_name: "test-model".into(),
@@ -515,7 +491,7 @@ impl ChatModel<()> for ScriptedModel {
         &self,
         _state: &(),
         request: ModelRequest,
-    ) -> tinyinference::Result<ModelResponse> {
+    ) -> tinyagents::Result<ModelResponse> {
         let flattened = flatten_messages(&request.messages);
         self.seen.lock().push(flattened.clone());
         for (needle, answer) in &self.responses {
@@ -523,7 +499,7 @@ impl ChatModel<()> for ScriptedModel {
                 return Ok(ModelResponse::assistant(*answer));
             }
         }
-        Err(tinyinference::Error::Model(format!(
+        Err(tinyagents::TinyAgentsError::Model(format!(
             "unexpected model request: {flattened}"
         )))
     }

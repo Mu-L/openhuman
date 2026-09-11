@@ -3,7 +3,6 @@ import { expect, type Page, test } from '@playwright/test';
 import { agentMessageText } from '../helpers/chat-locators';
 import {
   bootAuthenticatedPage,
-  callCoreRpc,
   dismissWalkthroughIfPresent,
   waitForAppReady,
 } from '../helpers/core-rpc';
@@ -13,45 +12,21 @@ const USER_ID = 'pw-chat-subagent';
 const PROMPT = 'Research the answer to life and tell me a marker phrase.';
 const CANARY_FINAL = 'subagent-canary-final-7afe2';
 const RESEARCHER_REPLY = 'The researcher answer is 42.';
-const PARENT_THINKING = 'Parent trace: delegate the factual lookup before synthesizing.';
-const PARENT_NARRATION = 'I am delegating the factual lookup now.';
-const CHILD_THINKING = 'Child trace: isolate the requested marker before replying.';
-const FINAL_THINKING = 'Parent trace: verify the delegated finding and answer.';
 const KEYWORD_RESPONSES = [
   { keyword: "Search the user's memory tree", content: 'No relevant memory.' },
   {
     keyword: PROMPT,
-    streamScript: [
-      { thinking: PARENT_THINKING },
-      { text: PARENT_NARRATION },
+    content: '',
+    toolCalls: [
       {
-        toolCall: {
-          id: 'call_research_1',
-          name: 'research',
-          arguments: JSON.stringify({ prompt: 'Tell me a marker phrase' }),
-        },
+        id: 'call_research_1',
+        name: 'research',
+        arguments: JSON.stringify({ prompt: 'Tell me a marker phrase' }),
       },
-      { finish: 'tool_calls' },
     ],
   },
-  {
-    // `spawn_async_subagent` wraps the requested task in its background-run
-    // contract, so the latest child user message is the rendered handoff, not
-    // the raw tool argument.
-    keyword: 'Run this task without requiring attention from the parent or user',
-    streamScript: [{ thinking: CHILD_THINKING }, { text: RESEARCHER_REPLY }, { finish: 'stop' }],
-  },
-  {
-    // Detached completion is delivered to the parent as a fresh background
-    // notification turn; match that stable framing rather than depending on
-    // exactly how the result body is quoted inside it.
-    keyword: 'background sub-agent finished while you were busy',
-    streamScript: [
-      { thinking: FINAL_THINKING },
-      { text: `Done. The result is: ${CANARY_FINAL}` },
-      { finish: 'stop' },
-    ],
-  },
+  { keyword: 'Tell me a marker phrase', content: RESEARCHER_REPLY },
+  { keyword: RESEARCHER_REPLY, content: `Done. The result is: ${CANARY_FINAL}` },
 ];
 
 interface MockRequest {
@@ -87,7 +62,7 @@ async function openChat(page: Page): Promise<void> {
   await page.goto('/#/chat');
   await waitForAppReady(page);
   await dismissWalkthroughIfPresent(page);
-  await expect(page.getByTestId('chat-message-input')).toBeVisible();
+  await expect(page.getByTestId('send-message-button')).toBeVisible();
 }
 
 async function selectedThreadId(page: Page): Promise<string | null> {
@@ -155,7 +130,7 @@ async function waitForSocketConnected(page: Page): Promise<void> {
 async function sendMessage(page: Page, prompt: string): Promise<void> {
   await waitForSocketConnected(page);
   await dismissWalkthroughIfPresent(page);
-  await page.getByTestId('chat-message-input').fill(prompt);
+  await page.getByPlaceholder('How can I help you today?').fill(prompt);
   await dismissWalkthroughIfPresent(page);
   await expect(page.getByTestId('send-message-button')).toBeEnabled();
   await page.getByTestId('send-message-button').click();
@@ -180,7 +155,6 @@ interface DiagnosticsSnapshot {
     phase: string | null;
     toolTimelineNames: string[];
     toolTimelineIds: string[];
-    turnTranscriptTexts: Record<string, string[]>;
     messageCount: number;
     lastAssistantText: string | null;
   };
@@ -242,7 +216,6 @@ async function diagnosticsSnapshot(page: Page): Promise<DiagnosticsSnapshot> {
             chatRuntime?: {
               inferenceStatusByThread?: Record<string, { phase?: string }>;
               toolTimelineByThread?: Record<string, Array<{ id?: string; name?: string }>>;
-              turnTranscriptsByThread?: Record<string, Record<string, Array<{ text?: string }>>>;
             };
             thread?: {
               messagesByThread?: Record<string, Array<{ role?: string; content?: string }>>;
@@ -260,10 +233,6 @@ async function diagnosticsSnapshot(page: Page): Promise<DiagnosticsSnapshot> {
       currentThreadId && state?.chatRuntime?.toolTimelineByThread?.[currentThreadId]
         ? state.chatRuntime.toolTimelineByThread[currentThreadId]
         : [];
-    const turnTranscripts =
-      currentThreadId && state?.chatRuntime?.turnTranscriptsByThread?.[currentThreadId]
-        ? state.chatRuntime.turnTranscriptsByThread[currentThreadId]
-        : {};
     const messages =
       currentThreadId && state?.thread?.messagesByThread?.[currentThreadId]
         ? state.thread.messagesByThread[currentThreadId]
@@ -273,12 +242,6 @@ async function diagnosticsSnapshot(page: Page): Promise<DiagnosticsSnapshot> {
       phase,
       toolTimelineNames: timeline.map(entry => entry?.name ?? ''),
       toolTimelineIds: timeline.map(entry => entry?.id ?? ''),
-      turnTranscriptTexts: Object.fromEntries(
-        Object.entries(turnTranscripts).map(([requestId, items]) => [
-          requestId,
-          items.map(item => item.text ?? ''),
-        ])
-      ),
       messageCount: messages.length,
       lastAssistantText:
         typeof lastAssistant?.content === 'string' ? lastAssistant.content.slice(0, 240) : null,
@@ -295,7 +258,6 @@ function formatDiagnostics(snapshot: DiagnosticsSnapshot): string {
     `matchedKeywords=${JSON.stringify(snapshot.matchedKeywords)}`,
     `runtime.phase=${snapshot.runtime.phase ?? '<null>'}`,
     `runtime.toolTimelineNames=${JSON.stringify(snapshot.runtime.toolTimelineNames)}`,
-    `runtime.turnTranscriptTexts=${JSON.stringify(snapshot.runtime.turnTranscriptTexts)}`,
     `runtime.messageCount=${snapshot.runtime.messageCount}`,
     `runtime.lastAssistantText=${JSON.stringify(snapshot.runtime.lastAssistantText)}`,
     `completionProbes=${JSON.stringify(
@@ -330,7 +292,7 @@ test.describe('Chat Harness - Subagent', () => {
     }
   });
 
-  test('renders and rehydrates the full delegated-turn trace', async ({ page }) => {
+  test('delegates to a subagent and persists the final orchestrator text', async ({ page }) => {
     test.setTimeout(150_000);
 
     await resetMock();
@@ -339,7 +301,7 @@ test.describe('Chat Harness - Subagent', () => {
     await setMockBehavior('llmStreamChunkDelayMs', '10');
 
     await openChat(page);
-    const threadId = await createNewThread(page);
+    await createNewThread(page);
     await sendMessage(page, PROMPT);
 
     // Three LLM hits are expected: orchestrator-1 (delegates), researcher
@@ -350,46 +312,18 @@ test.describe('Chat Harness - Subagent', () => {
     await expect.poll(completionRequestCount, { timeout: 90_000 }).toBeGreaterThanOrEqual(3);
     await expect(agentMessageText(page, CANARY_FINAL)).toBeVisible({ timeout: 30_000 });
 
-    // Re-assert after completion so the persisted message survives the
-    // turn-settlement transition rather than only being visible mid-stream.
+    const runtimeSnapshot = await diagnosticsSnapshot(page);
+    expect(
+      runtimeSnapshot.runtime.phase === 'subagent' ||
+        runtimeSnapshot.runtime.toolTimelineNames.some(name => name.startsWith('subagent:')) ||
+        runtimeSnapshot.runtime.toolTimelineIds.some(id => id.includes(':subagent:')),
+      `expected runtime to show a subagent delegation, got:\n  ${formatDiagnostics(
+        runtimeSnapshot
+      )}`
+    ).toBe(true);
+
+    // Re-assert after the runtime probe so the persisted message survives the
+    // turn-completion store transition rather than only being visible mid-stream.
     await expect(agentMessageText(page, CANARY_FINAL)).toBeVisible({ timeout: 15_000 });
-
-    // The trace belongs to assistant-ui's message parts—there is no parallel
-    // legacy timeline surface.
-    const finalMessage = page.getByTestId('agent-message').filter({ hasText: CANARY_FINAL }).last();
-    await expect(finalMessage).toBeVisible({ timeout: 15_000 });
-    const finalReasoning = finalMessage.getByRole('button', { name: /Reasoning/ });
-    if ((await finalReasoning.getAttribute('aria-expanded')) !== 'true')
-      await finalReasoning.click();
-    await expect(finalMessage.getByText(FINAL_THINKING, { exact: true })).toBeVisible();
-
-    // Reloading removes the live socket and Redux stream. The same visual
-    // trace must rehydrate from persisted transcript/turn-state data.
-    await page.reload();
-    await waitForAppReady(page);
-    await page.goto('/#/chat');
-    const restoredThread = page.getByTestId(`thread-row-${threadId}`);
-    await expect(restoredThread).toBeVisible({ timeout: 15_000 });
-    await restoredThread.click({ force: true });
-    await expect.poll(() => selectedThreadId(page), { timeout: 15_000 }).toBe(threadId);
-    const derived = await callCoreRpc<unknown>('openhuman.threads_transcript_get', {
-      thread_id: threadId,
-      limit: 500,
-    });
-    expect(JSON.stringify(derived)).toContain(PARENT_THINKING);
-    const restoredMessage = page
-      .getByTestId('agent-message')
-      .filter({ has: page.getByTestId('assistant-ui-subagent-call') })
-      .last();
-    await expect(restoredMessage).toBeVisible({ timeout: 20_000 });
-    const subagentCall = page.getByTestId('assistant-ui-subagent-call').first();
-    await expect(subagentCall).toBeVisible();
-    const subagentTrigger = subagentCall.getByRole('button').first();
-    await expect(subagentTrigger).toHaveAttribute('aria-expanded', 'false');
-    await expect(subagentCall.getByTestId('subagent-activity')).toHaveCount(0);
-    await subagentTrigger.click();
-    await expect(subagentTrigger).toHaveAttribute('aria-expanded', 'true');
-    await expect(subagentCall.getByTestId('subagent-activity')).toContainText(CHILD_THINKING);
-    await expect(subagentCall.getByTestId('subagent-activity')).toContainText(RESEARCHER_REPLY);
   });
 });

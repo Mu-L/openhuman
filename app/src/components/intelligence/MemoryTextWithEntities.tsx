@@ -100,7 +100,7 @@ export function MemoryTextWithEntities({ text, entities, className }: MemoryText
     <div className={className}>
       {/* Structured entity chips */}
       {hasStructuredEntities && (
-        <div className="flex flex-wrap gap-1 mb-2 pb-2 border-b border-line">
+        <div className="flex flex-wrap gap-1 mb-2 pb-2 border-b border-white/5">
           {entities.map((entity, i) => (
             <EntityChip key={entity.id ?? `${entity.name}-${i}`} entity={entity} />
           ))}

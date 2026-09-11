@@ -11,6 +11,9 @@
  *   │   Sync button, status chip, chunk count, freshness)   │
  *   └───────────────────────────────────────────────────────┘
  *   ┌───────────────────────────────────────────────────────┐
+ *   │  WhatsAppMemorySection                                │
+ *   └───────────────────────────────────────────────────────┘
+ *   ┌───────────────────────────────────────────────────────┐
  *   │  ModeToggle · Reset Memory · Reset Tree · Build Trees │
  *   │  [ View vault in Obsidian ]  (shown when vault set)   │
  *   └───────────────────────────────────────────────────────┘
@@ -42,6 +45,7 @@ import { MemoryControls } from './MemoryControls';
 import { MemoryGraph } from './MemoryGraph';
 import { MemorySourcesRegistry } from './MemorySourcesRegistry';
 import { MemoryTreeStatusPanel } from './MemoryTreeStatusPanel';
+import { WhatsAppMemorySection } from './WhatsAppMemorySection';
 
 interface MemoryWorkspaceProps {
   onToast?: (toast: Omit<ToastNotification, 'id'>) => void;
@@ -120,6 +124,7 @@ export function MemoryWorkspace({ onToast }: MemoryWorkspaceProps) {
     <div className="space-y-4" data-testid="memory-workspace">
       <MemoryTreeStatusPanel onToast={onToast} />
       <MemorySourcesRegistry onToast={onToast} />
+      <WhatsAppMemorySection />
 
       <MemoryControls
         mode={mode}

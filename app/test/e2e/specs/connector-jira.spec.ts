@@ -23,11 +23,7 @@ import {
   waitForWebView,
   waitForWindowVisible,
 } from '../helpers/element-helpers';
-import {
-  completeOnboardingIfVisible,
-  navigateToSkills,
-  navigateViaHash,
-} from '../helpers/shared-flows';
+import { completeOnboardingIfVisible, navigateToSkills } from '../helpers/shared-flows';
 import {
   clearRequestLog,
   getRequestLog,
@@ -105,11 +101,6 @@ describe('Jira Composio connector flow', () => {
         .filter(k => k.includes('composio:connections'))
         .forEach(k => window.localStorage.removeItem(k));
     });
-    // The preceding test already leaves us on Connections → Composio. Setting
-    // the same hash again does not remount the page, so it would keep the
-    // previous ACTIVE tile and never refetch the newly seeded empty list.
-    // Take a real route transition before returning to the connector surface.
-    await navigateViaHash('/chat');
     await navigateToSkills();
     await waitForText(CONNECTOR_NAME, 10_000);
     await waitForJiraDisconnected(20_000);

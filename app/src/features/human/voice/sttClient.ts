@@ -132,11 +132,10 @@ export async function transcribeCloud(
 interface FactoryTranscribeOptions {
   /** BCP-47 language hint, e.g. `'en'`. */
   language?: string;
-  /** Override the server-side provider resolution: `'cloud'` for the backend
-   *  proxy, or a `voice_providers` slug. When unset the core resolves
-   *  `voice_server.stt_engine`. */
-  provider?: string;
-  /** Model id for the selected engine (e.g. `'whisper-1'`, `'scribe_v1'`). */
+  /** Override the server-side provider resolution (`'cloud'` | `'whisper'`).
+   *  When unset the core reads `config.local_ai.stt_provider`. */
+  provider?: 'cloud' | 'whisper';
+  /** Whisper model id (whisper branch only). */
   model?: string;
   /** Defaults derived from the recorded blob. */
   mimeType?: string;
@@ -145,7 +144,7 @@ interface FactoryTranscribeOptions {
 
 interface FactoryTranscribeResult {
   text: string;
-  /** Provider that actually ran ('cloud' or the third-party slug). */
+  /** Provider that actually ran ('cloud' or 'whisper'). */
   provider: string;
 }
 

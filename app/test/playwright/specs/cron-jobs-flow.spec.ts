@@ -21,7 +21,8 @@ test.describe('Cron jobs settings panel', () => {
   test('chat surface is reachable after login', async ({ page }) => {
     // Home folded into the unified chat surface: post-login landing is /chat.
     await waitForAppReady(page);
-    await expect(page.getByTestId('chat-message-input')).toBeVisible();
+    const text = await page.locator('#root').innerText();
+    expect(['New Conversation', 'Threads'].some(marker => text.includes(marker))).toBe(true);
   });
 
   test('cron jobs panel renders in the browser lane and surfaces the current fallback state', async ({

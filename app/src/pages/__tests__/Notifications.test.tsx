@@ -142,12 +142,6 @@ describe('Notifications page row wrapper', () => {
   });
 });
 
-/**
- * The chip row migrated onto `ChipTabs as="tab"` (Radix Tabs), so the active
- * chip is marked with `aria-selected` on a `role="tab"` rather than the old
- * hand-rolled `aria-pressed` toggle. The assertions below are unchanged in
- * meaning — only the attribute name moved with the primitive.
- */
 describe('Notifications page category filter', () => {
   const mixed = () => [
     makeItem('m-1', 'msg one', { category: 'messages' }),
@@ -171,7 +165,7 @@ describe('Notifications page category filter', () => {
   it('shows all items under the default All filter', () => {
     renderPage(mixed());
     expect(screen.getAllByTestId('notification-item')).toHaveLength(4);
-    expect(screen.getByTestId('notif-filter-chip-all')).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByTestId('notif-filter-chip-all')).toHaveAttribute('aria-pressed', 'true');
   });
 
   it('filters the list to the selected category and marks the chip active', () => {
@@ -181,10 +175,10 @@ describe('Notifications page category filter', () => {
 
     expect(screen.getAllByTestId('notification-item')).toHaveLength(2);
     expect(screen.getByTestId('notif-filter-chip-messages')).toHaveAttribute(
-      'aria-selected',
+      'aria-pressed',
       'true'
     );
-    expect(screen.getByTestId('notif-filter-chip-all')).toHaveAttribute('aria-selected', 'false');
+    expect(screen.getByTestId('notif-filter-chip-all')).toHaveAttribute('aria-pressed', 'false');
   });
 
   it('restores the full list when All is reselected', () => {
@@ -216,7 +210,7 @@ describe('Notifications page category filter', () => {
     // Select the only category present.
     fireEvent.click(screen.getByTestId('notif-filter-chip-messages'));
     expect(screen.getByTestId('notif-filter-chip-messages')).toHaveAttribute(
-      'aria-selected',
+      'aria-pressed',
       'true'
     );
 
@@ -232,9 +226,9 @@ describe('Notifications page category filter', () => {
     act(() => {
       store.dispatch(notificationReceived(makeItem('m-2', 'msg two', { category: 'messages' })));
     });
-    expect(screen.getByTestId('notif-filter-chip-all')).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByTestId('notif-filter-chip-all')).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByTestId('notif-filter-chip-messages')).toHaveAttribute(
-      'aria-selected',
+      'aria-pressed',
       'false'
     );
     expect(screen.getAllByTestId('notification-item')).toHaveLength(1);

@@ -96,11 +96,8 @@ describe('FlowRunInspectorDrawer', () => {
     renderDrawer('thread-1', vi.fn());
 
     expect(screen.getByTestId('flow-run-status-pill')).toHaveTextContent('Running');
-    // Assert the semantic status the pill/dot advertise, not the Tailwind
-    // colour classes they happen to render with: a class-pinned assertion is
-    // exactly what let the undefined `ocean-*` scale ship unnoticed.
-    expect(screen.getByTestId('flow-run-status-pill')).toHaveAttribute('data-status', 'running');
-    expect(screen.getByTestId('flow-run-status-dot')).toHaveAttribute('data-status', 'running');
+    expect(screen.getByTestId('flow-run-status-pill')).toHaveClass('bg-ocean-50');
+    expect(screen.getByTestId('flow-run-status-dot')).toHaveClass('bg-ocean-500', 'animate-pulse');
     expect(screen.getByTestId('flow-run-steps')).toBeInTheDocument();
     expect(screen.getByText('fetch-data')).toBeInTheDocument();
     expect(screen.getByText('branch')).toBeInTheDocument();

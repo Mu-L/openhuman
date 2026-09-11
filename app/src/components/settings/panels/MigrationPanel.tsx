@@ -8,7 +8,6 @@ import {
   openhumanMigrateOpenclaw,
 } from '../../../utils/tauriCommands/core';
 import PanelPage from '../../layout/PanelPage';
-import { Alert, AlertDescription } from '../../ui';
 import Button from '../../ui/Button';
 import { SettingsSection, SettingsSelect, SettingsTextField } from '../controls';
 import SettingsPanel from '../layout/SettingsPanel';
@@ -135,19 +134,11 @@ const MigrationPanel = ({ embedded = false }: MigrationPanelProps = {}) => {
 
   const body = (
     <>
-      {/* The card fills the pane, but a paragraph does not want to: at this
-          pane width an uncapped line runs past 180 characters. */}
-      <p className="max-w-[68ch] text-sm text-content-secondary">{t('migration.description')}</p>
+      <p className="text-sm text-content-secondary">{t('migration.description')}</p>
 
       <SettingsSection>
         <div className="p-4 space-y-5" data-testid="migration-form">
-          {/* The card fills the pane; each field takes the width its own value
-              needs. A two-option vendor picker a metre wide puts its label and
-              its value at opposite ends of an empty control; a workspace path is
-              long and genuinely uses the room. Sized per field, not uniformly.
-              NOTE: the sibling Core connection panel runs its URL and token
-              fields at full width, so the app has no settled rule here yet. */}
-          <div className="max-w-sm space-y-1">
+          <div className="space-y-1">
             <label className="block text-xs font-medium text-content-secondary">
               {t('migration.vendorLabel')}
             </label>
@@ -163,7 +154,7 @@ const MigrationPanel = ({ embedded = false }: MigrationPanelProps = {}) => {
             </SettingsSelect>
           </div>
 
-          <div className="max-w-2xl space-y-1">
+          <div className="space-y-1">
             <label className="block text-xs font-medium text-content-secondary">
               {t('migration.sourceLabel')}
             </label>
@@ -193,32 +184,28 @@ const MigrationPanel = ({ embedded = false }: MigrationPanelProps = {}) => {
               disabled={isPreviewing || isApplying}>
               {isPreviewing ? t('migration.previewRunning') : t('migration.previewAction')}
             </Button>
-            {/* Was an amber wash over `variant="tertiary"`, which bypassed the
-                danger tone and used the warning ramp. Disabled, that wash read
-                as a broken button rather than a locked one; the gate is
-                explained in the line below the row instead. */}
             <Button
               type="button"
-              variant="primary"
-              tone="danger"
+              variant="tertiary"
               size="sm"
               data-testid="migration-apply-button"
               onClick={() => void runApply()}
-              disabled={!canApply}>
+              disabled={!canApply}
+              className="bg-amber-600 hover:bg-amber-700 text-content-inverted disabled:bg-amber-600/50">
               {isApplying ? t('migration.applyRunning') : t('migration.applyAction')}
             </Button>
           </div>
 
-          <p className="max-w-[68ch] text-[11px] text-content-muted">
-            {t('migration.applyDisclaimer')}
-          </p>
+          <p className="text-[11px] text-content-muted">{t('migration.applyDisclaimer')}</p>
         </div>
       </SettingsSection>
 
       {error != null && (
-        <Alert variant="destructive" density="compact" data-testid="migration-error">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
+        <div
+          data-testid="migration-error"
+          className="rounded-md border border-coral-200 dark:border-coral-500/30 bg-coral-50 dark:bg-coral-500/10 px-3 py-2 text-xs text-coral-700 dark:text-coral-300">
+          {error}
+        </div>
       )}
 
       {reportToRender != null && (
@@ -270,7 +257,7 @@ const MigrationPanel = ({ embedded = false }: MigrationPanelProps = {}) => {
             </div>
           )}
 
-          <p className="max-w-[68ch] text-[11px] text-content-muted">
+          <p className="text-[11px] text-content-muted">
             {appliedReport != null
               ? t('migration.report.appliedHint')
               : t('migration.report.previewHint')}

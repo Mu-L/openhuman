@@ -18,9 +18,9 @@ const panels: PanelCheck[] = [
     markers: ['Billing moved to the web', 'Open billing dashboard', 'credits'],
   },
   // Home folded into the unified chat surface — /home redirects to /chat.
-  { hash: '/home', markers: [] },
+  { hash: '/home', markers: ['New Conversation'] },
   // /chat is the Assistant surface (thread list + agent chat header).
-  { hash: '/chat', markers: [] },
+  { hash: '/chat', markers: ['New Conversation', 'Threads', 'New thread', 'Reasoning'] },
 ];
 
 async function waitForPanelLoad(page: Parameters<typeof test>[0]['page']) {
@@ -41,7 +41,8 @@ test.describe('User journey - settings round-trip', () => {
     await expect
       .poll(async () => page.evaluate(() => window.location.hash), { timeout: PANEL_TIMEOUT })
       .toMatch(/^#\/chat/);
-    await expect(page.getByTestId('chat-message-input')).toBeVisible();
+    const text = await page.locator('#root').innerText();
+    expect(['New Conversation', 'Threads'].some(marker => text.includes(marker))).toBe(true);
   });
 
   for (const panel of panels) {
@@ -49,12 +50,8 @@ test.describe('User journey - settings round-trip', () => {
       await page.goto(`/#${panel.hash}`);
       await waitForPanelLoad(page);
 
-      if (panel.hash === '/home' || panel.hash === '/chat') {
-        await expect(page.getByTestId('chat-message-input')).toBeVisible();
-      } else {
-        const text = await page.locator('#root').innerText();
-        expect(panel.markers.some(marker => text.includes(marker))).toBe(true);
-      }
+      const text = await page.locator('#root').innerText();
+      expect(panel.markers.some(marker => text.includes(marker))).toBe(true);
     });
   }
 });

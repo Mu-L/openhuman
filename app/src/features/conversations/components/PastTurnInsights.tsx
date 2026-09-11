@@ -1,8 +1,7 @@
 import type { ProcessingTranscriptItem, ToolTimelineEntry } from '../../../store/chatRuntimeSlice';
 import { formatTimelineEntry } from '../../../utils/toolTimelineFormatting';
-import { AssistantUiSubagentCall } from './AssistantUiSubagentCall';
 import { ProcessingTranscriptView } from './ProcessingTranscriptView';
-import { ToolTimelineBlock } from './ToolTimelineBlock';
+import { SubagentActivityBlock, ToolTimelineBlock } from './ToolTimelineBlock';
 
 /**
  * The collapsed process trail rendered above a PAST (settled) turn's answer on a
@@ -51,7 +50,7 @@ export function PastTurnInsights({
               <p className="text-[12px] font-medium text-content-secondary">
                 {formatTimelineEntry(entry).title}
               </p>
-              <AssistantUiSubagentCall activity={entry.subagent!} />
+              <SubagentActivityBlock subagent={entry.subagent!} />
             </div>
           ))}
         </div>

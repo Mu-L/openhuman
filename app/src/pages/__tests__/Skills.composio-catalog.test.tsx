@@ -222,10 +222,8 @@ describe('Skills page — Composio catalog fallback', () => {
     renderWithProviders(<Skills />, { initialEntries: ['/connections'] });
     openAppsTab();
 
-    // The page-level "stale status" alert moved into the shell's NoticeCenter
-    // (it is account state, not state about this screen), so it is asserted
-    // there — see `components/notices/__tests__/NoticeCenter.test.tsx`. What
-    // stays local, and is what this test is about, is the per-row degradation.
+    expect(screen.getByText('Connections are showing stale status')).toBeInTheDocument();
+    expect(screen.getByText('Backend unavailable')).toBeInTheDocument();
 
     const integrationsSection = screen.getByTestId('composio-integrations-card');
     const gmailTile = within(integrationsSection as HTMLElement).getByRole('button', {
@@ -234,10 +232,7 @@ describe('Skills page — Composio catalog fallback', () => {
     expect(gmailTile).toBeInTheDocument();
     expect(within(gmailTile).getByText('Status unavailable')).toBeInTheDocument();
 
-    // The page-level "Try again" button belonged to the stale-status alert that
-    // moved to NoticeCenter. Retry from a degraded tile still refreshes, which
-    // is the affordance that stayed on this screen.
-    fireEvent.click(gmailTile);
+    fireEvent.click(screen.getAllByRole('button', { name: 'Try again' })[0]);
     expect(composioRefresh).toHaveBeenCalledTimes(1);
   });
 

@@ -5,9 +5,9 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use tempfile::TempDir;
-use tinyinference::message::{AssistantMessage, Message};
-use tinyinference::model::{ChatModel, ModelProfile, ModelRequest, ModelResponse};
-use tinyinference::tool::ToolCall;
+use tinyagents::harness::message::{AssistantMessage, Message};
+use tinyagents::harness::model::{ChatModel, ModelProfile, ModelRequest, ModelResponse};
+use tinyagents::harness::tool::ToolCall;
 
 fn message_role(message: &Message) -> &'static str {
     match message {
@@ -45,20 +45,19 @@ fn tool_call_response(step: Option<usize>) -> ModelResponse {
         raw: None,
         resolved_model: None,
         continue_turn: None,
-        served_from_cache: false,
     }
 }
 
 // Note: the shared bus handler lock and the "install the real agent
 // handler for this test" helper both live in
 // `crate::openhuman::agent::bus` as `BUS_HANDLER_LOCK` (re-exported from
-// `crate::core::bus`) and `use_real_agent_handler` so any
+// `crate::core::event_bus::testing`) and `use_real_agent_handler` so any
 // test in the workspace can drive the real `agent.run_turn` path without
 // depending on channels-specific scaffolding.
 //
 // For stub installations use `mock_agent_run_turn` (also in
 // `crate::openhuman::agent::bus`) or the generic `mock_bus_stub` in
-// `crate::core::bus` for arbitrary bus methods.
+// `crate::core::event_bus::testing` for arbitrary bus methods.
 pub(super) use crate::openhuman::agent::bus::use_real_agent_handler;
 
 pub(super) fn make_workspace() -> TempDir {
@@ -93,7 +92,7 @@ impl ChatModel<()> for DummyModel {
         &self,
         _state: &(),
         _request: ModelRequest,
-    ) -> tinyinference::Result<ModelResponse> {
+    ) -> tinyagents::Result<ModelResponse> {
         Ok(ModelResponse::assistant("ok"))
     }
 }
@@ -182,7 +181,7 @@ impl ChatModel<()> for SlowModel {
         &self,
         _state: &(),
         request: ModelRequest,
-    ) -> tinyinference::Result<ModelResponse> {
+    ) -> tinyagents::Result<ModelResponse> {
         tokio::time::sleep(self.delay).await;
         let message = request
             .messages
@@ -207,7 +206,7 @@ impl ChatModel<()> for ToolCallingModel {
         &self,
         _state: &(),
         request: ModelRequest,
-    ) -> tinyinference::Result<ModelResponse> {
+    ) -> tinyagents::Result<ModelResponse> {
         let has_tool_results = request.messages.iter().any(|message| {
             matches!(message, Message::Tool(_)) || message.text().contains("[Tool results]")
         });
@@ -246,7 +245,7 @@ impl ChatModel<()> for IterativeToolModel {
         &self,
         _state: &(),
         request: ModelRequest,
-    ) -> tinyinference::Result<ModelResponse> {
+    ) -> tinyagents::Result<ModelResponse> {
         let completed_iterations = Self::completed_tool_iterations(&request.messages);
         if completed_iterations >= self.required_tool_iterations {
             Ok(ModelResponse::assistant(format!(
@@ -273,7 +272,7 @@ impl ChatModel<()> for HistoryCaptureModel {
         &self,
         _state: &(),
         request: ModelRequest,
-    ) -> tinyinference::Result<ModelResponse> {
+    ) -> tinyagents::Result<ModelResponse> {
         let snapshot = request
             .messages
             .iter()
@@ -312,7 +311,7 @@ impl ChatModel<()> for ModelCaptureModel {
         &self,
         _state: &(),
         _request: ModelRequest,
-    ) -> tinyinference::Result<ModelResponse> {
+    ) -> tinyagents::Result<ModelResponse> {
         self.call_count.fetch_add(1, Ordering::SeqCst);
         self.models
             .lock()

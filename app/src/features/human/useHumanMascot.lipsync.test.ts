@@ -54,8 +54,6 @@ vi.mock('./voice/audioPlayer', () => ({
       return;
     throw err;
   },
-  isAudioStopped: (err: unknown) =>
-    typeof err === 'object' && err !== null && (err as { stopped?: unknown }).stopped === true,
 }));
 
 let capturedListeners: ChatEventListeners | null = null;

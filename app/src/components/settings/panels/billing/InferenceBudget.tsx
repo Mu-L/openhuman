@@ -27,9 +27,6 @@ const formatCycleEnds = (iso: string, notAvailable: string): string => {
 
 const InferenceBudget = ({ teamUsage, isLoadingCredits }: InferenceBudgetProps) => {
   const { t } = useT();
-  const cycleRemainingUsd = teamUsage
-    ? Math.max(0, teamUsage.cycleBudgetUsd - teamUsage.cycleSpentUsd)
-    : 0;
 
   return (
     <div className="rounded-2xl border border-line bg-surface p-3 space-y-3">
@@ -44,7 +41,7 @@ const InferenceBudget = ({ teamUsage, isLoadingCredits }: InferenceBudgetProps) 
           <span className="text-xs text-content-faint">
             {teamUsage.cycleBudgetUsd > 0
               ? t('settings.billing.inferenceBudget.remainingSummary')
-                  .replace('{remaining}', fmtUsd(cycleRemainingUsd))
+                  .replace('{remaining}', fmtUsd(teamUsage.remainingUsd))
                   .replace('{budget}', fmtUsd(teamUsage.cycleBudgetUsd))
               : t('settings.billing.inferenceBudget.noRecurringPlanBudget')}
           </span>
@@ -58,16 +55,16 @@ const InferenceBudget = ({ teamUsage, isLoadingCredits }: InferenceBudgetProps) 
               <div className="h-1.5 bg-surface-strong rounded-full overflow-hidden">
                 <div
                   className={`h-full rounded-full transition-all duration-300 ${
-                    cycleRemainingUsd <= 0
+                    teamUsage.remainingUsd <= 0
                       ? 'bg-coral-500'
-                      : cycleRemainingUsd / teamUsage.cycleBudgetUsd < 0.2
+                      : teamUsage.remainingUsd / teamUsage.cycleBudgetUsd < 0.2
                         ? 'bg-amber-500'
                         : 'bg-primary-500'
                   }`}
                   style={{
                     width: `${Math.max(
                       0,
-                      Math.min(100, (cycleRemainingUsd / teamUsage.cycleBudgetUsd) * 100)
+                      Math.min(100, (teamUsage.remainingUsd / teamUsage.cycleBudgetUsd) * 100)
                     )}%`,
                   }}
                 />
@@ -89,7 +86,7 @@ const InferenceBudget = ({ teamUsage, isLoadingCredits }: InferenceBudgetProps) 
                   )}
                 </span>
               </div>
-              {cycleRemainingUsd <= 0 && teamUsage.remainingUsd <= 0 && (
+              {teamUsage.remainingUsd <= 0 && (
                 <p className="text-[11px] text-coral-400">
                   {t('settings.billing.inferenceBudget.exhaustedDesc')}
                 </p>
@@ -256,7 +253,7 @@ const TopModels = ({ rows }: { rows: TeamUsageModelRow[] }) => {
               key={`${r.provider}::${r.model}::${i}`}
               className="flex items-center justify-between text-[11px]">
               <span className="text-content-secondary truncate mr-2">{r.model || r.provider}</span>
-              <span className="text-content-muted shrink-0">
+              <span className="text-content-muted flex-shrink-0">
                 {fmtUsd(r.spentUsd)} · {r.calls.toLocaleString()}
               </span>
             </li>
@@ -289,7 +286,7 @@ const TopIntegrations = ({ rows }: { rows: TeamUsageIntegrationRow[] }) => {
                 {r.provider}
                 {r.action ? ` · ${r.action}` : ''}
               </span>
-              <span className="text-content-muted shrink-0">
+              <span className="text-content-muted flex-shrink-0">
                 {fmtUsd(r.spentUsd)} · {r.calls.toLocaleString()}
               </span>
             </li>

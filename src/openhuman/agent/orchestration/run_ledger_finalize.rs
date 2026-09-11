@@ -6,7 +6,7 @@
 //! `spawn_parallel_agents`, `continue_subagent`, `dispatch`) creates an
 //! `agent_runs` row at `status = "running"` and, on completion or user-input
 //! pause, fires **both**:
-//!   * `BUS.publish(DomainEvent::SubagentCompleted/Failed/AwaitingUser)` —
+//!   * `publish_global(DomainEvent::SubagentCompleted/Failed/AwaitingUser)` —
 //!     the global bus,
 //!   * `progress_sink.send(AgentProgress::SubagentCompleted/Failed/AwaitingUser)`
 //!     — the *spawning turn's* progress channel.
@@ -18,7 +18,7 @@
 //! `spawn_async_subagent` runs: they outlive the parent turn, so when they
 //! finish the progress sink is already dropped and `let _ = tx.send(...)` fails
 //! silently. The ledger row stays `running` forever, and every thread reopen
-//! re-renders it as a perpetual agent timeline row.
+//! re-renders it as a perpetual "Tinyplace Agent" timeline row.
 //!
 //! This subscriber closes that gap by settling the ledger from the **global
 //! bus**, which always fires from the detached task regardless of the parent
@@ -29,11 +29,11 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 
-use crate::core::bus::BUS;
-use crate::core::events::DomainEvent;
+use crate::core::event_bus::{subscribe_global, DomainEvent, EventHandler};
+use crate::openhuman::agent::session_db::run_ledger::{
+    transition_agent_run_status, AgentRunStatus,
+};
 use crate::openhuman::config::Config;
-use tinyagents_session::run_ledger::{transition_agent_run_status, AgentRunStatus};
-use tinybus::EventHandler;
 
 const LOG_PREFIX: &str = "[run_ledger][finalize]";
 
@@ -46,7 +46,7 @@ struct RunLedgerFinalizeSubscriber {
 }
 
 #[async_trait]
-impl EventHandler<DomainEvent> for RunLedgerFinalizeSubscriber {
+impl EventHandler for RunLedgerFinalizeSubscriber {
     fn name(&self) -> &str {
         "agent_orchestration::run_ledger_finalize"
     }
@@ -75,14 +75,8 @@ impl EventHandler<DomainEvent> for RunLedgerFinalizeSubscriber {
         // EventHandler "must not block" contract.
         let config = self.config.clone();
         let result = tokio::task::spawn_blocking(move || {
-            transition_agent_run_status(
-                &config.workspace_dir,
-                &task_id,
-                status,
-                error.as_deref(),
-                completed_at,
-            )
-            .map(|run| (task_id, run))
+            transition_agent_run_status(&config, &task_id, status, error.as_deref(), completed_at)
+                .map(|run| (task_id, run))
         })
         .await;
 
@@ -112,7 +106,7 @@ impl EventHandler<DomainEvent> for RunLedgerFinalizeSubscriber {
 /// subscription handle so it lives for the whole process (its `Drop` would
 /// cancel the subscriber). Called once from `register_domain_subscribers`.
 pub(crate) fn register_run_ledger_finalize_subscriber(config: &Config) {
-    if let Some(handle) = BUS.subscribe(Arc::new(RunLedgerFinalizeSubscriber {
+    if let Some(handle) = subscribe_global(Arc::new(RunLedgerFinalizeSubscriber {
         config: config.clone(),
     })) {
         std::mem::forget(handle);

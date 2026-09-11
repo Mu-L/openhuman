@@ -4,7 +4,6 @@ mod parallel;
 mod querit;
 mod searxng;
 mod seltz;
-mod tavily;
 mod tinyfish;
 mod web_search;
 
@@ -24,10 +23,6 @@ pub use searxng::{
     MAX_RESULTS as SEARXNG_MAX_RESULTS,
 };
 pub use seltz::SeltzSearchTool;
-pub use tavily::{
-    TavilyExtractResponse, TavilyExtractResult, TavilyExtractTool, TavilyImage, TavilyResultItem,
-    TavilySearchResponse, TavilySearchTool,
-};
 pub use tinyfish::{TinyFishAgentRunTool, TinyFishFetchTool, TinyFishSearchTool};
 pub use web_search::WebSearchTool;
 // Crate-internal: the `tools.web_search` RPC reuses the same provider

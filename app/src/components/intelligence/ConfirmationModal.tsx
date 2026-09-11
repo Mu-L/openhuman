@@ -1,18 +1,8 @@
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 
 import { useT } from '../../lib/i18n/I18nContext';
 import type { ConfirmationModal as ConfirmationModalType } from '../../types/intelligence';
-import {
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogRoot,
-  AlertDialogTitle,
-} from '../ui/AlertDialog';
-import Checkbox from '../ui/Checkbox';
-import Label from '../ui/Label';
+import Button from '../ui/Button';
 
 interface ConfirmationModalProps {
   modal: ConfirmationModalType;
@@ -22,13 +12,10 @@ interface ConfirmationModalProps {
 export function ConfirmationModal({ modal, onClose }: ConfirmationModalProps) {
   const { t } = useT();
   const [dontShowAgain, setDontShowAgain] = useState(false);
-  // Radix closes an AlertDialog on both Cancel and Action clicks, firing the
-  // same `onOpenChange(false)`. Confirm must not also run the cancel path, so
-  // the confirm handler flags one close as "already handled" before it fires.
-  const skipNextCancelRef = useRef(false);
+
+  if (!modal.isOpen) return null;
 
   const handleConfirm = () => {
-    skipNextCancelRef.current = true;
     modal.onConfirm(dontShowAgain);
     onClose();
 
@@ -47,22 +34,17 @@ export function ConfirmationModal({ modal, onClose }: ConfirmationModalProps) {
   };
 
   return (
-    <AlertDialogRoot
-      open={modal.isOpen}
-      onOpenChange={next => {
-        if (next) return;
-        if (skipNextCancelRef.current) {
-          skipNextCancelRef.current = false;
-          return;
-        }
-        handleCancel();
-      }}>
-      <AlertDialogContent className="max-w-md p-0">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 animate-fade-in"
+      onClick={handleCancel}>
+      <div
+        className="bg-surface rounded-2xl max-w-md w-full shadow-large border border-line animate-slide-up"
+        onClick={e => e.stopPropagation()}>
         {/* Header */}
         <div className="p-6 pb-4">
           <div className="flex items-center gap-3">
             {modal.destructive && (
-              <div className="w-10 h-10 rounded-full bg-coral-50 dark:bg-coral-500/10 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-full bg-coral-50 dark:bg-coral-500/10 flex items-center justify-center flex-shrink-0">
                 <svg
                   className="w-5 h-5 text-coral-400"
                   fill="none"
@@ -78,8 +60,8 @@ export function ConfirmationModal({ modal, onClose }: ConfirmationModalProps) {
               </div>
             )}
             <div className="flex-1">
-              <AlertDialogTitle className="text-lg font-semibold">{modal.title}</AlertDialogTitle>
-              <AlertDialogDescription className="mt-1">{modal.message}</AlertDialogDescription>
+              <h2 className="text-lg font-semibold text-content">{modal.title}</h2>
+              <p className="text-sm text-content-secondary mt-1">{modal.message}</p>
             </div>
           </div>
         </div>
@@ -87,31 +69,32 @@ export function ConfirmationModal({ modal, onClose }: ConfirmationModalProps) {
         {/* Don't show again option */}
         {modal.showDontShowAgain && (
           <div className="px-6 pb-2">
-            <Label
-              htmlFor="confirmation-modal-dont-show-again"
-              className="flex items-center gap-2 text-sm font-normal text-content-secondary cursor-pointer">
-              <Checkbox
-                id="confirmation-modal-dont-show-again"
+            <label className="flex items-center gap-2 text-sm text-content-secondary cursor-pointer">
+              <input
+                type="checkbox"
                 checked={dontShowAgain}
-                onCheckedChange={setDontShowAgain}
+                onChange={e => setDontShowAgain(e.target.checked)}
+                className="rounded border-line-strong bg-surface-subtle text-primary-500 focus:ring-primary-500 focus:ring-offset-0"
               />
               {t('modal.dontShowAgain')}
-            </Label>
+            </label>
           </div>
         )}
 
         {/* Actions */}
-        <AlertDialogFooter className="p-6 pt-4 border-t border-line mt-0">
-          {/* No onClick here: Radix's Cancel already closes the dialog, which
-              routes through the Root's onOpenChange -> handleCancel above. */}
-          <AlertDialogCancel>{modal.cancelText || t('common.cancel')}</AlertDialogCancel>
-          <AlertDialogAction
+        <div className="flex items-center justify-end gap-3 p-6 pt-4 border-t border-line">
+          <Button variant="tertiary" size="md" onClick={handleCancel}>
+            {modal.cancelText || t('common.cancel')}
+          </Button>
+          <Button
+            variant="primary"
+            size="md"
             tone={modal.destructive ? 'danger' : 'default'}
             onClick={handleConfirm}>
             {modal.confirmText || t('common.confirm')}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialogRoot>
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 }

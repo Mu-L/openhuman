@@ -22,11 +22,12 @@ describe('parseVoiceProviderString', () => {
     expect(parseVoiceProviderString('openhuman')).toEqual({ kind: 'cloud' });
   });
 
-  // `"whisper"` selected the removed local engine. It is no longer a local
-  // sentinel, so it parses as an external slug and the factory errors on it by
-  // name rather than silently resolving to something else.
-  it('parses the removed "whisper" sentinel as a plain unknown string', () => {
-    expect(parseVoiceProviderString('whisper')).toEqual({ kind: 'cloud' });
+  it('parses "whisper" to local', () => {
+    expect(parseVoiceProviderString('whisper')).toEqual({
+      kind: 'local',
+      engine: 'whisper',
+      model: '',
+    });
   });
 
   it('parses "piper" to local', () => {
@@ -37,10 +38,10 @@ describe('parseVoiceProviderString', () => {
     });
   });
 
-  it('parses "whisper:large-v3-turbo" as an external slug, not a local engine', () => {
+  it('parses "whisper:large-v3-turbo" to local with model', () => {
     expect(parseVoiceProviderString('whisper:large-v3-turbo')).toEqual({
-      kind: 'external',
-      providerSlug: 'whisper',
+      kind: 'local',
+      engine: 'whisper',
       model: 'large-v3-turbo',
     });
   });
@@ -107,9 +108,9 @@ describe('parseVoiceProviderString', () => {
 
   it('trims whitespace', () => {
     expect(parseVoiceProviderString('  cloud  ')).toEqual({ kind: 'cloud' });
-    expect(parseVoiceProviderString('  piper  ')).toEqual({
+    expect(parseVoiceProviderString('  whisper  ')).toEqual({
       kind: 'local',
-      engine: 'piper',
+      engine: 'whisper',
       model: '',
     });
   });
@@ -118,6 +119,18 @@ describe('parseVoiceProviderString', () => {
 describe('serializeVoiceProviderRef', () => {
   it('serializes cloud', () => {
     expect(serializeVoiceProviderRef({ kind: 'cloud' })).toBe('cloud');
+  });
+
+  it('serializes local whisper without model', () => {
+    expect(serializeVoiceProviderRef({ kind: 'local', engine: 'whisper', model: '' })).toBe(
+      'whisper'
+    );
+  });
+
+  it('serializes local whisper with model', () => {
+    expect(
+      serializeVoiceProviderRef({ kind: 'local', engine: 'whisper', model: 'large-v3-turbo' })
+    ).toBe('whisper:large-v3-turbo');
   });
 
   it('serializes local piper without model', () => {
@@ -146,7 +159,9 @@ describe('serializeVoiceProviderRef', () => {
 describe('parseVoiceProviderString / serializeVoiceProviderRef round-trip', () => {
   const cases: [string, VoiceProviderRef][] = [
     ['cloud', { kind: 'cloud' }],
+    ['whisper', { kind: 'local', engine: 'whisper', model: '' }],
     ['piper', { kind: 'local', engine: 'piper', model: '' }],
+    ['whisper:large-v3-turbo', { kind: 'local', engine: 'whisper', model: 'large-v3-turbo' }],
     ['piper:en_US-lessac-medium', { kind: 'local', engine: 'piper', model: 'en_US-lessac-medium' }],
     ['deepgram:nova-2', { kind: 'external', providerSlug: 'deepgram', model: 'nova-2' }],
     ['openai:whisper-1', { kind: 'external', providerSlug: 'openai', model: 'whisper-1' }],

@@ -51,6 +51,7 @@ export interface LocalAiAssetsStatus {
   chat: LocalAiAssetStatus;
   vision: LocalAiAssetStatus;
   embedding: LocalAiAssetStatus;
+  stt: LocalAiAssetStatus;
   tts: LocalAiAssetStatus;
   quantization: string;
   /**
@@ -85,6 +86,7 @@ export interface LocalAiDownloadsProgress {
   chat: LocalAiDownloadProgressItem;
   vision: LocalAiDownloadProgressItem;
   embedding: LocalAiDownloadProgressItem;
+  stt: LocalAiDownloadProgressItem;
   tts: LocalAiDownloadProgressItem;
   /** Mirrors `LocalAiAssetsStatus.ollama_available` — see that field. */
   ollama_available: boolean;
@@ -199,8 +201,6 @@ export interface InstalledModelInfo {
 
 export interface LocalAiDiagnostics {
   ollama_running: boolean;
-  /** Fine-grained status from the two-phase health probe (#6032). */
-  ollama_status?: 'running' | 'degraded' | 'stopped';
   ollama_runner_ok?: boolean;
   ollama_base_url: string;
   ollama_binary_path: string | null;

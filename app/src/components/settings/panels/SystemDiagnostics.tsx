@@ -15,9 +15,6 @@ import { APP_ENVIRONMENT } from '../../../utils/config';
 // `safeInvoke` (aliased to `invoke`) turns the CEF synchronous IPC throw into a
 // rejected Promise so the `.catch(...)` handlers see a normal failure.
 import { safeInvoke as invoke, isTauri } from '../../../utils/tauriCommands/common';
-import Alert from '../../ui/Alert';
-import Button from '../../ui/Button';
-import Card from '../../ui/Card';
 import { resetWalkthrough } from '../../walkthrough/AppWalkthrough';
 
 const LogsFolderRow = () => {
@@ -44,7 +41,7 @@ const LogsFolderRow = () => {
   if (!isTauri()) return null;
 
   return (
-    <Card className="px-4 py-3">
+    <div className="rounded-xl border border-line bg-surface-muted px-4 py-3">
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
           <div className="text-sm font-semibold text-content">{t('devOptions.appLogs')}</div>
@@ -53,9 +50,11 @@ const LogsFolderRow = () => {
             <div className="mt-1 truncate font-mono text-[11px] text-content-muted">{path}</div>
           )}
         </div>
-        <Button variant="secondary" size="sm" onClick={onClick} className="shrink-0">
+        <button
+          onClick={onClick}
+          className="shrink-0 rounded-md bg-neutral-700 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-neutral-600">
           {t('devOptions.openLogsFolder')}
-        </Button>
+        </button>
       </div>
       {error && (
         <div
@@ -65,7 +64,7 @@ const LogsFolderRow = () => {
           {error}
         </div>
       )}
-    </Card>
+    </div>
   );
 };
 
@@ -90,25 +89,26 @@ const SentryTestRow = () => {
   };
 
   return (
-    <Alert variant="warning">
+    <div className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 dark:border-amber-500/40 dark:bg-amber-500/10">
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
-          <div className="text-sm font-semibold">{t('devOptions.triggerSentryTest')}</div>
-          <div className="mt-0.5 text-xs">{t('devOptions.triggerSentryTestDesc')}</div>
+          <div className="text-sm font-semibold text-amber-900 dark:text-amber-300">
+            {t('devOptions.triggerSentryTest')}
+          </div>
+          <div className="mt-0.5 text-xs text-amber-800 dark:text-amber-200">
+            {t('devOptions.triggerSentryTestDesc')}
+          </div>
         </div>
-        <Button
-          variant="secondary"
-          tone="default"
-          size="sm"
+        <button
           onClick={onClick}
           disabled={status.kind === 'sending'}
-          className="shrink-0">
+          className="shrink-0 rounded-md bg-amber-600 px-3 py-1.5 text-xs font-medium text-content-inverted transition-colors hover:bg-amber-500 disabled:opacity-60">
           {status.kind === 'sending' ? t('devOptions.sending') : t('devOptions.sendTestEvent')}
-        </Button>
+        </button>
       </div>
       <div role="status" aria-live="polite" aria-atomic="true" className="mt-2 text-xs">
         {status.kind === 'sent' && (
-          <span>
+          <span className="text-amber-900 dark:text-amber-300">
             {t('devOptions.eventSent')}.{' '}
             {status.eventId ? (
               <span className="font-mono">id: {status.eventId}</span>
@@ -123,7 +123,7 @@ const SentryTestRow = () => {
           </span>
         )}
       </div>
-    </Alert>
+    </div>
   );
 };
 
@@ -137,7 +137,7 @@ const RestartTourRow = () => {
   };
 
   return (
-    <Card className="px-4 py-3">
+    <div className="rounded-xl border border-line bg-surface-muted px-4 py-3">
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
           <div className="text-sm font-semibold text-content">{t('settings.restartTour')}</div>
@@ -145,11 +145,13 @@ const RestartTourRow = () => {
             {t('settings.restartTourDesc')}
           </div>
         </div>
-        <Button variant="secondary" size="sm" onClick={onClick} className="shrink-0">
+        <button
+          onClick={onClick}
+          className="shrink-0 rounded-md bg-neutral-700 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-neutral-600">
           {t('settings.restartTour')}
-        </Button>
+        </button>
       </div>
-    </Card>
+    </div>
   );
 };
 

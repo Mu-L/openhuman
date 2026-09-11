@@ -7,8 +7,9 @@ import { ToastContainer } from '../../intelligence/Toast';
 import { VaultHealthChecklist } from '../../intelligence/VaultHealthChecklist';
 import PanelPage from '../../layout/PanelPage';
 import MemoryWindowControl from '../components/MemoryWindowControl';
+import SettingsBackButton from '../components/SettingsBackButton';
 import { SettingsSection } from '../controls';
-import SettingsPanel from '../layout/SettingsPanel';
+import { useSettingsNavigation } from '../hooks/useSettingsNavigation';
 
 interface MemoryDataPanelProps {
   /** When true, render without the SettingsHeader chrome (used when embedded
@@ -18,6 +19,7 @@ interface MemoryDataPanelProps {
 
 const MemoryDataPanel = ({ embedded = false }: MemoryDataPanelProps = {}) => {
   const { t } = useT();
+  const { navigateBack } = useSettingsNavigation();
   const [toasts, setToasts] = useState<ToastNotification[]>([]);
 
   const addToast = useCallback((toast: Omit<ToastNotification, 'id'>) => {
@@ -47,9 +49,13 @@ const MemoryDataPanel = ({ embedded = false }: MemoryDataPanelProps = {}) => {
     [addToast, t]
   );
 
-  const body = (
-    <>
-      <div className="space-y-5">
+  return (
+    <PanelPage
+      className="z-10"
+      contentClassName=""
+      description={embedded ? undefined : t('devOptions.memoryInspectionDesc')}
+      leading={embedded ? undefined : <SettingsBackButton onBack={navigateBack} />}>
+      <div className={embedded ? 'space-y-5' : 'p-4 space-y-5'}>
         <SettingsSection title={t('memoryData.howItWorks')}>
           <dl className="space-y-2.5 px-4 py-3">
             <div>
@@ -83,21 +89,8 @@ const MemoryDataPanel = ({ embedded = false }: MemoryDataPanelProps = {}) => {
         <MemoryWorkspace onToast={addToast} />
       </div>
       <ToastContainer notifications={toasts} onRemove={removeToast} />
-    </>
+    </PanelPage>
   );
-
-  // Embedded (the onboarding custom wizard) keeps the headerless PanelPage
-  // branch — that host draws its own step chrome, so a settings page header
-  // here would be a second one.
-  if (embedded) {
-    return (
-      <PanelPage className="z-10" contentClassName="">
-        {body}
-      </PanelPage>
-    );
-  }
-
-  return <SettingsPanel description={t('devOptions.memoryInspectionDesc')}>{body}</SettingsPanel>;
 };
 
 export default MemoryDataPanel;

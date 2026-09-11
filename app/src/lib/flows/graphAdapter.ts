@@ -56,14 +56,8 @@ interface Point {
 }
 
 const DEFAULT_PORT = 'main';
-// Sized against the node card, which is 224px wide and ~76px tall (title band
-// + summary): 240 leaves a 16px gutter between siblings, and 132 leaves ~56px
-// of visible edge between layers — enough for the drop plus a `condition`'s
-// `true` / `false` labels, which hang ~20px below their card. These were 280 /
-// 160, set when the card was 264px wide and its ports sat on the left and
-// right edges.
-const LAYOUT_COLUMN_WIDTH = 240;
-const LAYOUT_ROW_HEIGHT = 132;
+const LAYOUT_COLUMN_WIDTH = 280;
+const LAYOUT_ROW_HEIGHT = 160;
 
 /**
  * Stable, collision-free xyflow edge id for one `WorkflowEdge`. Node ids and
@@ -389,7 +383,7 @@ export function normalizeWorkflowGraphForDirtyCheck(
 
 /**
  * Assigns a `{x, y}` position to every node in `nodes`, via a simple BFS
- * layering over `edges`: `y = depth * 132`, `x = column * 240` where
+ * layering over `edges`: `y = depth * 160`, `x = column * 280` where
  * `column` is the node's index within its depth layer (assigned in
  * declaration order). Roots are nodes with no incoming edge (normally just
  * the trigger); disconnected sub-graphs and cycles still terminate — any

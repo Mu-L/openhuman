@@ -23,8 +23,8 @@ use super::error::CoreError;
 use crate::core::runtime::CoreRuntime;
 
 pub use crate::openhuman::medulla::client::{
-    AbortResult, Message, RosterWorker, SendResult, SessionCreated, SessionDetail, SessionSummary,
-    WireEventEnvelope,
+    AbortResult, EventEnvelope, Message, RosterWorker, SendResult, SessionCreated, SessionDetail,
+    SessionSummary,
 };
 pub use crate::openhuman::medulla::ops::MedullaStatus;
 
@@ -141,7 +141,7 @@ impl Medulla<'_> {
         &self,
         session_id: &str,
         after: Option<i64>,
-    ) -> Result<Vec<WireEventEnvelope>, CoreError> {
+    ) -> Result<Vec<EventEnvelope>, CoreError> {
         call(
             self.0,
             "openhuman.medulla_list_events",

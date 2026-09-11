@@ -3,7 +3,6 @@ import { createPortal } from 'react-dom';
 
 import { useT } from '../../lib/i18n/I18nContext';
 import type { ActionableItem, SnoozeOption } from '../../types/intelligence';
-import Button from '../ui/Button';
 
 interface ActionableCardProps {
   item: ActionableItem;
@@ -89,16 +88,15 @@ function SnoozeDropdownPortal({ isOpen, buttonRef, onClose, onSnooze }: SnoozeDr
     <div
       ref={dropdownRef}
       data-snooze-dropdown
-      className="fixed py-1 bg-surface border border-line rounded-lg shadow-xl min-w-[120px] z-9999 animate-fade-in"
+      className="fixed py-1 bg-surface border border-line rounded-lg shadow-xl min-w-[120px] z-[9999] animate-fade-in"
       style={{ top: position.top, left: position.left }}>
       {SNOOZE_OPTIONS.map(option => (
-        <Button
+        <button
           key={option.label}
-          variant="tertiary"
           onClick={() => onSnooze(option.duration)}
-          className="h-auto w-full justify-start rounded-none px-3 py-1.5 text-xs font-normal dark:bg-surface-muted">
+          className="w-full text-left px-3 py-1.5 text-xs text-content hover:bg-surface-hover dark:bg-surface-muted transition-colors cursor-pointer">
           {option.label}
-        </Button>
+        </button>
       ))}
     </div>,
     document.body
@@ -268,7 +266,7 @@ export function ActionableCard({
         {/* Main content row */}
         <div className="flex items-start gap-3">
           {/* Icon */}
-          <div className="w-8 h-8 flex items-center justify-center text-content-secondary shrink-0 mt-0.5">
+          <div className="w-8 h-8 flex items-center justify-center text-content-secondary flex-shrink-0 mt-0.5">
             {sourceIcon}
           </div>
 
@@ -285,15 +283,11 @@ export function ActionableCard({
               </div>
 
               {/* Action buttons */}
-              <div className="flex items-center gap-1 shrink-0">
+              <div className="flex items-center gap-1 flex-shrink-0">
                 {/* Complete button */}
-                <Button
-                  variant="tertiary"
-                  size="sm"
-                  iconOnly
+                <button
                   onClick={handleComplete}
-                  className="h-6 w-6 text-content-faint hover:text-sage-400 hover:bg-sage-400/10"
-                  aria-label={t('actionable.complete')}
+                  className="w-6 h-6 flex items-center justify-center rounded-md text-content-faint hover:text-sage-400 hover:bg-sage-400/10 transition-all duration-150"
                   title={t('actionable.complete')}>
                   <svg
                     className="w-3.5 h-3.5"
@@ -307,16 +301,12 @@ export function ActionableCard({
                       d="M5 13l4 4L19 7"
                     />
                   </svg>
-                </Button>
+                </button>
 
                 {/* Dismiss button */}
-                <Button
-                  variant="tertiary"
-                  size="sm"
-                  iconOnly
+                <button
                   onClick={handleDismiss}
-                  className="h-6 w-6 text-content-faint hover:text-coral-400 hover:bg-coral-400/10"
-                  aria-label={t('actionable.dismiss')}
+                  className="w-6 h-6 flex items-center justify-center rounded-md text-content-faint hover:text-coral-400 hover:bg-coral-400/10 transition-all duration-150"
                   title={t('actionable.dismiss')}>
                   <svg
                     className="w-3.5 h-3.5"
@@ -330,18 +320,14 @@ export function ActionableCard({
                       d="M6 18L18 6M6 6l12 12"
                     />
                   </svg>
-                </Button>
+                </button>
 
                 {/* Snooze button */}
                 <div className="relative">
-                  <Button
+                  <button
                     ref={snoozeButtonRef}
-                    variant="tertiary"
-                    size="sm"
-                    iconOnly
                     onClick={() => setShowSnoozeMenu(!showSnoozeMenu)}
-                    className="h-6 w-6 text-content-faint hover:text-amber-400 hover:bg-amber-400/10"
-                    aria-label={t('actionable.snooze')}
+                    className="w-6 h-6 flex items-center justify-center rounded-md text-content-faint hover:text-amber-400 hover:bg-amber-400/10 transition-all duration-150"
                     title={t('actionable.snooze')}>
                     <svg
                       className="w-3.5 h-3.5"
@@ -355,7 +341,7 @@ export function ActionableCard({
                         d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                       />
                     </svg>
-                  </Button>
+                  </button>
                 </div>
               </div>
             </div>

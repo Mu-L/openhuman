@@ -37,9 +37,12 @@ describe('Settings - AI & Skills', function () {
     this.timeout(90_000);
     await navigateViaHash('/settings/llm');
 
-    const providersTab = await browser.$('[data-testid="ai-tab-providers"]');
-    await providersTab.waitForExist({ timeout: 15_000 });
-    expect(await providersTab.isDisplayed()).toBe(true);
+    await waitForText('AI', 15_000);
+    const hasAiSurface =
+      (await textExists('Cloud providers')) ||
+      (await textExists('Primary cloud')) ||
+      (await textExists('Reasoning'));
+    expect(hasAiSurface).toBe(true);
   });
 
   it('mounts Tools panel and shows skill toggles (13.3.2)', async () => {

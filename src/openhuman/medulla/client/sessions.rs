@@ -100,7 +100,7 @@ impl MedullaClient {
         &self,
         session_id: &str,
         after: Option<i64>,
-    ) -> Result<Vec<WireEventEnvelope>> {
+    ) -> Result<Vec<EventEnvelope>> {
         let mut req = self
             .http
             .get(self.url(&format!("/medulla/v1/sessions/{session_id}/events")));
@@ -129,7 +129,7 @@ impl MedullaClient {
         &self,
         session_id: &str,
         last_event_id: Option<u64>,
-    ) -> impl Stream<Item = Result<WireEventEnvelope>> {
+    ) -> impl Stream<Item = Result<EventEnvelope>> {
         let url = format!(
             "{}/medulla/v1/sessions/{}/stream?token={}",
             self.base_url,

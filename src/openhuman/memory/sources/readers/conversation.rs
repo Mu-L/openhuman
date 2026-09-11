@@ -1,4 +1,4 @@
-//! Product `Config` adapter for the engine-neutral `conversation` reader.
+//! Product `Config` adapter for the tinycortex conversation reader.
 
 use async_trait::async_trait;
 
@@ -8,7 +8,6 @@ use crate::openhuman::memory::sources::types::{
     MemorySourceEntry, SourceContent, SourceItem, SourceKind,
 };
 
-/// Reads `conversation` sources by delegating to [`tinymemory_sources::readers::conversation`].
 pub struct ConversationReader;
 
 #[async_trait]
@@ -22,10 +21,13 @@ impl SourceReader for ConversationReader {
         source: &MemorySourceEntry,
         config: &Config,
     ) -> Result<Vec<SourceItem>, String> {
-        tinymemory_sources::readers::SourceReader::list_items(
-            &tinymemory_sources::readers::conversation::ConversationReader,
+        tinycortex::memory::sources::SourceReader::list_items(
+            &tinycortex::memory::sources::readers::conversation::ConversationReader,
             source,
-            &config.workspace_dir,
+            &crate::openhuman::memory::tinycortex::memory_config_from(
+                config,
+                config.workspace_dir.clone(),
+            ),
         )
         .await
         .map_err(|error| error.to_string())
@@ -37,11 +39,14 @@ impl SourceReader for ConversationReader {
         item_id: &str,
         config: &Config,
     ) -> Result<SourceContent, String> {
-        tinymemory_sources::readers::SourceReader::read_item(
-            &tinymemory_sources::readers::conversation::ConversationReader,
+        tinycortex::memory::sources::SourceReader::read_item(
+            &tinycortex::memory::sources::readers::conversation::ConversationReader,
             source,
             item_id,
-            &config.workspace_dir,
+            &crate::openhuman::memory::tinycortex::memory_config_from(
+                config,
+                config.workspace_dir.clone(),
+            ),
         )
         .await
         .map_err(|error| error.to_string())

@@ -27,7 +27,6 @@ import { useEffect, useId, useState } from 'react';
 
 import { useT } from '../../../lib/i18n/I18nContext';
 import { agentRegistryApi, type AgentRegistryEntry } from '../../../services/api/agentRegistryApi';
-import { NativeSelect, Input as UiInput } from '../../ui';
 import { configString, SelectField } from './nodeConfig/nodeConfigFields';
 
 const log = createDebug('app:flows:canvas:agentInspector');
@@ -131,10 +130,9 @@ function ManagedModelField({ config, onChange }: AgentNodeInspectorProps) {
         {t('flows.nodeConfig.agent.modelLabel')}
       </label>
       <p className="text-[11px] text-content-muted">{t('flows.nodeConfig.agent.modelHint')}</p>
-      <NativeSelect
+      <select
         id={id}
-        inputSize="sm"
-        className="w-full"
+        className="w-full rounded-lg border border-line bg-surface px-2.5 py-1.5 text-sm text-content focus:border-primary-400 focus:outline-none"
         value={customMode ? CUSTOM_MODEL : value}
         data-testid="node-config-agent-model"
         onChange={e => handleSelect(e.target.value)}>
@@ -147,12 +145,11 @@ function ManagedModelField({ config, onChange }: AgentNodeInspectorProps) {
           ))}
         </optgroup>
         <option value={CUSTOM_MODEL}>{t('flows.nodeConfig.agent.modelCustom')}</option>
-      </NativeSelect>
+      </select>
       {customMode && (
-        <UiInput
+        <input
           type="text"
-          inputSize="sm"
-          className="w-full font-mono"
+          className="w-full rounded-lg border border-line bg-surface px-2.5 py-1.5 font-mono text-sm text-content focus:border-primary-400 focus:outline-none"
           value={value}
           placeholder={t('flows.nodeConfig.agent.modelCustomPlaceholder')}
           aria-label={t('flows.nodeConfig.agent.modelCustomPlaceholder')}

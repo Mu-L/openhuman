@@ -20,10 +20,9 @@
 //! `OPENHUMAN-TAURI-1T` (5,414 Sentry events from one user's
 //! cron-driven LLM calls after session expiry).
 
-use crate::core::events::DomainEvent;
+use crate::core::event_bus::{DomainEvent, EventHandler};
 use crate::openhuman::cron::scheduler_gate;
 use async_trait::async_trait;
-use tinybus::EventHandler;
 
 /// Subscribes to [`DomainEvent::SessionExpired`] and runs the canonical
 /// session-teardown. Singleton — register once at startup.
@@ -42,7 +41,7 @@ impl SessionExpiredSubscriber {
 }
 
 #[async_trait]
-impl EventHandler<DomainEvent> for SessionExpiredSubscriber {
+impl EventHandler for SessionExpiredSubscriber {
     fn name(&self) -> &str {
         "credentials::session_expired_handler"
     }
@@ -122,5 +121,35 @@ impl EventHandler<DomainEvent> for SessionExpiredSubscriber {
 }
 
 #[cfg(test)]
-#[path = "bus_tests.rs"]
-mod tests;
+mod tests {
+    use super::*;
+
+    #[test]
+    fn name_is_stable() {
+        let s = SessionExpiredSubscriber::new();
+        assert_eq!(s.name(), "credentials::session_expired_handler");
+    }
+
+    #[test]
+    fn domain_filter_is_auth() {
+        let s = SessionExpiredSubscriber::new();
+        assert_eq!(s.domains(), Some(&["auth"][..]));
+    }
+
+    #[tokio::test]
+    async fn handle_ignores_non_auth_events() {
+        // Domain filter is advisory — the broadcast bus still delivers all
+        // events to every subscriber. The handler must guard internally.
+        let s = SessionExpiredSubscriber::new();
+        // Reset state we depend on.
+        scheduler_gate::set_signed_out(false);
+        s.handle(&DomainEvent::SystemStartup {
+            component: "test".into(),
+        })
+        .await;
+        assert!(
+            !scheduler_gate::is_signed_out(),
+            "non-auth event must not flip the override"
+        );
+    }
+}

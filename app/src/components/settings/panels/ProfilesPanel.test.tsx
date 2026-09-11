@@ -79,7 +79,8 @@ describe('ProfilesPanel', () => {
     renderPanel();
     await screen.findByText('Writer');
     fireEvent.click(screen.getByText('New profile'));
-    expect(mockNavigate).toHaveBeenCalledWith('/settings/profiles/new');
+    // Second arg carries the backgroundLocation nav state for the desktop modal.
+    expect(mockNavigate).toHaveBeenCalledWith('/settings/profiles/new', expect.anything());
   });
 
   it('sets a non-active profile as active', async () => {
@@ -95,7 +96,10 @@ describe('ProfilesPanel', () => {
     renderPanel();
     await screen.findByText('Writer');
     fireEvent.click(screen.getAllByText('Edit')[0]);
-    expect(mockNavigate).toHaveBeenCalledWith(expect.stringContaining('/settings/profiles/edit/'));
+    expect(mockNavigate).toHaveBeenCalledWith(
+      expect.stringContaining('/settings/profiles/edit/'),
+      expect.anything()
+    );
   });
 
   it('deletes a custom profile after confirmation', async () => {

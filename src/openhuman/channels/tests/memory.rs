@@ -4,12 +4,14 @@ use super::super::context::{
 };
 use super::super::runtime::process_channel_message;
 use super::super::{traits, Channel};
-use super::common::{HistoryCaptureModel, RecordingChannel};
+use super::common::{HistoryCaptureModel, NoopMemory, RecordingChannel};
+use crate::openhuman::inference::embeddings::NoopEmbedding;
 use crate::openhuman::inference::provider;
-use crate::openhuman::memory::Memory;
+use crate::openhuman::memory::store::UnifiedMemory;
+use crate::openhuman::memory::{Memory, MemoryCategory};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
-use tinymemory_api::provider::MemoryCore as _;
+use tempfile::TempDir;
 
 fn conversation_memory_key_uses_message_id() {
     let msg = traits::ChannelMessage {
@@ -53,15 +55,67 @@ fn conversation_memory_key_is_unique_per_message() {
 }
 
 #[tokio::test]
+async fn autosave_keys_preserve_multiple_conversation_facts() {
+    let tmp = TempDir::new().unwrap();
+    let mem = UnifiedMemory::new(tmp.path(), Arc::new(NoopEmbedding), None).unwrap();
+
+    let msg1 = traits::ChannelMessage {
+        id: "msg_1".into(),
+        sender: "U123".into(),
+        reply_target: "C456".into(),
+        content: "I'm Paul".into(),
+        channel: "slack".into(),
+        timestamp: 1,
+        thread_ts: None,
+    };
+    let msg2 = traits::ChannelMessage {
+        id: "msg_2".into(),
+        sender: "U123".into(),
+        reply_target: "C456".into(),
+        content: "I'm 45".into(),
+        channel: "slack".into(),
+        timestamp: 2,
+        thread_ts: None,
+    };
+
+    mem.store(
+        "",
+        &conversation_memory_key(&msg1),
+        &msg1.content,
+        MemoryCategory::Conversation,
+        None,
+    )
+    .await
+    .unwrap();
+    mem.store(
+        "",
+        &conversation_memory_key(&msg2),
+        &msg2.content,
+        MemoryCategory::Conversation,
+        None,
+    )
+    .await
+    .unwrap();
+
+    assert_eq!(mem.count().await.unwrap(), 2);
+
+    let recalled = mem
+        .recall("45", 5, crate::openhuman::memory::RecallOpts::default())
+        .await
+        .unwrap();
+    assert!(recalled.iter().any(|entry| entry.content.contains("45")));
+}
+
+#[tokio::test]
 async fn build_memory_context_includes_recalled_entries() {
-    let (_provider, mem) = crate::openhuman::memory::guard::in_memory::guarded_in_memory();
+    let tmp = TempDir::new().unwrap();
+    let mem = UnifiedMemory::new(tmp.path(), Arc::new(NoopEmbedding), None).unwrap();
     mem.store(
         "",
         "age_fact",
         "Age is 45",
-        tinymemory_api::types::MemoryCategory::Conversation,
+        MemoryCategory::Conversation,
         None,
-        tinymemory_api::types::MemoryTaint::Internal,
     )
     .await
     .unwrap();
@@ -88,9 +142,9 @@ async fn process_channel_message_restores_per_sender_history_on_follow_ups() {
             crate::openhuman::agent::tinyagents::TurnModelSource::from_model(provider_impl.clone()),
         ),
         default_provider: Arc::new("test-provider".to_string()),
-        memory: crate::openhuman::memory::guard::in_memory::FixedRecallProvider::guarded(Vec::new()),
+        memory: Arc::new(NoopMemory),
         tools_registry: Arc::new(vec![]),
-        system_prompt: crate::openhuman::channels::ChannelSystemPrompt::fixed("test-system-prompt"),
+        system_prompt: Arc::new("test-system-prompt".to_string()),
         model: Arc::new("test-model".to_string()),
         temperature: 0.0,
         auto_save_memory: false,
@@ -157,8 +211,6 @@ async fn process_channel_message_restores_per_sender_history_on_follow_ups() {
 }
 
 #[tokio::test]
-#[ignore = "needs a built tinymemory module (OPENHUMAN_MODULE_PATH): the assertion turns on \
-ranked recall finding the autosaved turn, which the in-memory fake\'s substring match cannot do"]
 async fn process_channel_message_uses_autosaved_memory_after_history_is_cleared() {
     let _bus_guard = super::common::use_real_agent_handler().await;
     let channel_impl = Arc::new(RecordingChannel::default());
@@ -168,8 +220,8 @@ async fn process_channel_message_uses_autosaved_memory_after_history_is_cleared(
     channels_by_name.insert(channel.name().to_string(), channel);
 
     let provider_impl = Arc::new(HistoryCaptureModel::default());
-    let (_memory_provider, memory) =
-        crate::openhuman::memory::guard::in_memory::guarded_in_memory();
+    let tmp = TempDir::new().unwrap();
+    let memory = Arc::new(UnifiedMemory::new(tmp.path(), Arc::new(NoopEmbedding), None).unwrap());
 
     let runtime_ctx = Arc::new(ChannelRuntimeContext {
         channels_by_name: Arc::new(channels_by_name),
@@ -179,7 +231,7 @@ async fn process_channel_message_uses_autosaved_memory_after_history_is_cleared(
         default_provider: Arc::new("test-provider".to_string()),
         memory,
         tools_registry: Arc::new(vec![]),
-        system_prompt: crate::openhuman::channels::ChannelSystemPrompt::fixed("test-system-prompt"),
+        system_prompt: Arc::new("test-system-prompt".to_string()),
         model: Arc::new("test-model".to_string()),
         temperature: 0.0,
         auto_save_memory: true,

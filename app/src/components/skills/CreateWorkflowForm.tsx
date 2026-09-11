@@ -47,8 +47,6 @@ import {
   type WorkflowScope,
   type WorkflowSummary,
 } from '../../services/api/skillsApi';
-import { cn } from '../../lib/cn';
-import { Alert, Checkbox, NativeSelect, TextArea, TextField } from '../ui';
 import Button from '../ui/Button';
 
 /** Mirrors `SkillCreateInputDef` shape used as wire payload, with one
@@ -316,7 +314,7 @@ const CreateWorkflowForm = forwardRef<CreateSkillFormHandle, CreateSkillFormProp
             {t('skills.create.name')}
             <span className="text-coral-500"> *</span>
           </label>
-          <TextField
+          <input
             id="create-skill-name"
             ref={firstFieldRef}
             type="text"
@@ -325,12 +323,16 @@ const CreateWorkflowForm = forwardRef<CreateSkillFormHandle, CreateSkillFormProp
             required
             readOnly={isEdit}
             maxLength={128}
-            className={cn('mt-1 shadow-xs', isEdit && 'cursor-not-allowed bg-surface-muted')}
+            className={`mt-1 w-full rounded-lg border border-line px-3 py-2 text-sm text-content shadow-sm transition-colors focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 ${
+              isEdit
+                ? 'cursor-not-allowed bg-surface-muted'
+                : 'bg-surface'
+            }`}
             placeholder={t('skills.create.namePlaceholder')}
           />
           <p className="mt-1 text-[11px] text-content-muted">
             {t('skills.create.slugLabel')}{' '}
-            <code className="rounded bg-surface-subtle px-1 py-px font-mono text-content-secondary">
+            <code className="rounded bg-surface-subtle px-1 py-[1px] font-mono text-content-secondary">
               {slug || '—'}
             </code>
           </p>
@@ -344,14 +346,14 @@ const CreateWorkflowForm = forwardRef<CreateSkillFormHandle, CreateSkillFormProp
             {t('skills.create.description')}
             <span className="text-coral-500"> *</span>
           </label>
-          <TextArea
+          <textarea
             id="create-skill-description"
             value={description}
             onChange={e => setDescription(e.target.value)}
             required
             rows={3}
             maxLength={500}
-            className="mt-1 shadow-xs"
+            className="mt-1 w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-content shadow-sm transition-colors focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30"
             placeholder={t('skills.create.descriptionPlaceholder')}
           />
         </div>
@@ -368,13 +370,13 @@ const CreateWorkflowForm = forwardRef<CreateSkillFormHandle, CreateSkillFormProp
               {t('skills.create.optional')}
             </span>
           </label>
-          <TextArea
+          <textarea
             id="create-skill-when-to-use"
             value={whenToUse}
             onChange={e => setWhenToUse(e.target.value)}
             rows={2}
             maxLength={500}
-            className="mt-1 shadow-xs"
+            className="mt-1 w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-content shadow-sm transition-colors focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30"
             placeholder={t('skills.create.whenToUsePlaceholder')}
           />
           <p className="mt-1 text-[11px] text-content-muted">
@@ -422,19 +424,17 @@ const CreateWorkflowForm = forwardRef<CreateSkillFormHandle, CreateSkillFormProp
                   <div
                     key={row.localId}
                     data-testid={`create-skill-input-row-${row.localId}`}
-                    className="rounded-lg border border-line bg-surface-muted p-3">
+                    className="rounded-lg border border-line bg-surface-muted dark:bg-surface-canvas/40 p-3">
                     <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_1fr_auto]">
                       <div>
-                        <TextField
+                        <input
                           type="text"
                           value={row.name}
                           onChange={e => updateRow(row.localId, { name: e.target.value })}
                           maxLength={64}
-                          inputSize="sm"
-                          invalid={showNameErr}
                           placeholder={t('skills.create.inputs.row.namePlaceholder')}
                           aria-label={t('skills.create.inputs.row.name')}
-                          className="text-xs shadow-xs"
+                          className={`w-full rounded-md border bg-surface px-2 py-1.5 text-xs text-content shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500/30 ${showNameErr ? 'border-coral-400' : 'border-line focus:border-primary-500'}`}
                         />
                         {showNameErr && (
                           <p className="mt-0.5 text-[10px] text-coral-600">
@@ -443,16 +443,14 @@ const CreateWorkflowForm = forwardRef<CreateSkillFormHandle, CreateSkillFormProp
                         )}
                       </div>
                       <div>
-                        <TextField
+                        <input
                           type="text"
                           value={row.description}
                           onChange={e => updateRow(row.localId, { description: e.target.value })}
                           maxLength={256}
-                          inputSize="sm"
-                          invalid={showDescErr}
                           placeholder={t('skills.create.inputs.row.descriptionPlaceholder')}
                           aria-label={t('skills.create.inputs.row.description')}
-                          className="text-xs shadow-xs"
+                          className={`w-full rounded-md border bg-surface px-2 py-1.5 text-xs text-content shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500/30 ${showDescErr ? 'border-coral-400' : 'border-line focus:border-primary-500'}`}
                         />
                         {showDescErr && (
                           <p className="mt-0.5 text-[10px] text-coral-600">
@@ -477,24 +475,24 @@ const CreateWorkflowForm = forwardRef<CreateSkillFormHandle, CreateSkillFormProp
                         <span className="text-content-muted">
                           {t('skills.create.inputs.row.type')}:
                         </span>
-                        <NativeSelect
+                        <select
                           value={row.type}
                           onChange={e =>
                             updateRow(row.localId, { type: e.target.value as InputRow['type'] })
                           }
                           aria-label={t('skills.create.inputs.row.type')}
-                          inputSize="sm"
-                          className="h-6 rounded pl-1.5 pr-5 text-[11px]">
+                          className="rounded border border-line bg-surface px-1 py-0.5 text-[11px] text-content">
                           <option value="string">{t('skills.create.inputs.type.string')}</option>
                           <option value="integer">{t('skills.create.inputs.type.integer')}</option>
                           <option value="boolean">{t('skills.create.inputs.type.boolean')}</option>
-                        </NativeSelect>
+                        </select>
                       </label>
                       <label className="flex items-center gap-1">
-                        <Checkbox
+                        <input
+                          type="checkbox"
                           checked={row.required}
-                          onCheckedChange={next => updateRow(row.localId, { required: next })}
-                          className="h-3 w-3"
+                          onChange={e => updateRow(row.localId, { required: e.target.checked })}
+                          className="h-3 w-3 accent-primary-500"
                         />
                         <span className="text-content-muted">
                           {t('skills.create.inputs.row.required')}
@@ -510,10 +508,12 @@ const CreateWorkflowForm = forwardRef<CreateSkillFormHandle, CreateSkillFormProp
 
         {/* Error */}
         {error ? (
-          <Alert variant="destructive" className="flex-col items-start text-xs">
+          <div
+            role="alert"
+            className="rounded-xl border border-coral-200 bg-coral-50 p-3 text-xs text-coral-900">
             <p className="font-semibold">{t('workflows.create.createError')}</p>
             <p className="mt-1 whitespace-pre-wrap font-mono">{error}</p>
-          </Alert>
+          </div>
         ) : null}
       </form>
     );

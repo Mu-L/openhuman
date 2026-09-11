@@ -21,6 +21,7 @@ function makeCoreState(token: string | null, userId: string | null = null): Core
       onboardingCompleted: false,
       chatOnboardingCompleted: false,
       analyticsEnabled: false,
+      meetAutoOrchestratorHandoff: false,
       localState: { encryptionKey: null, onboardingTasks: null, keyringConsent: null },
       keyringStatus: {
         available: true,

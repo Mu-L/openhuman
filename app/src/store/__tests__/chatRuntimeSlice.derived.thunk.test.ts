@@ -46,7 +46,7 @@ beforeEach(() => {
 });
 
 describe('fetchAndHydrateDerivedTranscript', () => {
-  it('hydrates every settled trail when no request is actively streaming', async () => {
+  it('hydrates settled-turn trails from the projection, skipping the newest turn', async () => {
     const store = configureStore({ reducer });
     mockThreadApi.getDerivedTranscript.mockResolvedValueOnce(
       page(
@@ -66,9 +66,10 @@ describe('fetchAndHydrateDerivedTranscript', () => {
     expect(mockThreadApi.getTurnStateHistory).not.toHaveBeenCalled();
     const timelines = store.getState().turnTimelinesByThread['thread-1'];
     const transcripts = store.getState().turnTranscriptsByThread['thread-1'];
-    expect(Object.keys(transcripts)).toEqual(['req-old', 'req-new']);
+    // Newest turn (req-new) is skipped — rendered by the live anchor.
+    expect(Object.keys(transcripts)).toEqual(['req-old']);
     expect(timelines['req-old']).toHaveLength(1);
-    expect(transcripts['req-new']).toHaveLength(1);
+    expect(transcripts['req-new']).toBeUndefined();
     expect(timelines['req-new']).toBeUndefined();
   });
 
@@ -132,9 +133,9 @@ describe('fetchAndHydrateDerivedTranscript', () => {
     await store.dispatch(fetchAndHydrateDerivedTranscript('thread-1'));
 
     const transcripts = store.getState().turnTranscriptsByThread['thread-1'];
-    // Only the genuinely streaming request is skipped.
-    expect(Object.keys(transcripts)).toEqual(['req-old', 'req-new']);
+    // req-new skipped (newest), req-mid skipped (streaming), req-old kept.
+    expect(Object.keys(transcripts)).toEqual(['req-old']);
     expect(transcripts['req-mid']).toBeUndefined();
-    expect(transcripts['req-new']).toHaveLength(1);
+    expect(transcripts['req-new']).toBeUndefined();
   });
 });

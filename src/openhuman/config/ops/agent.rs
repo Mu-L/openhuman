@@ -133,7 +133,9 @@ pub async fn apply_autonomy_settings(
     config.save().await.map_err(|e| e.to_string())?;
 
     crate::openhuman::security::live_policy::reload_from(&config.autonomy);
-    crate::core::bus::BUS.publish(crate::core::events::DomainEvent::AutonomyConfigChanged);
+    crate::core::event_bus::publish_global(
+        crate::core::event_bus::DomainEvent::AutonomyConfigChanged,
+    );
 
     let snapshot = snapshot_config_json(config)?;
     Ok(RpcOutcome::new(
@@ -470,7 +472,9 @@ pub async fn apply_agent_paths_settings(
         config.save().await.map_err(|e| e.to_string())?;
 
         crate::openhuman::security::live_policy::set_action_dir(config.action_dir.clone());
-        crate::core::bus::BUS.publish(crate::core::events::DomainEvent::AgentPathsChanged);
+        crate::core::event_bus::publish_global(
+            crate::core::event_bus::DomainEvent::AgentPathsChanged,
+        );
 
         log::debug!(
             "[config][agent_paths] action_dir now '{}' (source={})",

@@ -23,13 +23,11 @@ use std::sync::Arc;
 use async_trait::async_trait;
 use serde_json::json;
 
-use crate::openhuman::memory::ops::guard::active_memory_guard;
-use crate::openhuman::memory::safety;
+use crate::openhuman::memory::store::safety;
+use crate::openhuman::memory::{Memory, MemoryCategory};
 use crate::openhuman::security::policy::ToolOperation;
 use crate::openhuman::security::SecurityPolicy;
 use crate::openhuman::tools::traits::{PermissionLevel, Tool, ToolResult};
-use tinymemory_api::provider::MemoryCore as _;
-use tinymemory_api::types::MemoryCategory;
 
 // Namespace constants live in `memory::preferences` so the write path (here),
 // the system-prompt builder (Lane A), and per-turn recall (Lane B) all share a
@@ -84,15 +82,13 @@ impl PrefScope {
 
 /// Agent tool that saves an explicit user preference into the two-lane store.
 pub struct SavePreferenceTool {
-    /// No memory handle: the guarded driver is resolved per call, so building
-    /// the tool registry no longer requires an engine.
+    memory: Arc<dyn Memory>,
     security: Arc<SecurityPolicy>,
 }
 
 impl SavePreferenceTool {
-    #[must_use]
-    pub fn new(security: Arc<SecurityPolicy>) -> Self {
-        Self { security }
+    pub fn new(memory: Arc<dyn Memory>, security: Arc<SecurityPolicy>) -> Self {
+        Self { memory, security }
     }
 }
 
@@ -103,7 +99,16 @@ impl Tool for SavePreferenceTool {
     }
 
     fn description(&self) -> &str {
-        "Save a user preference so it shapes future replies; call this whenever the user states one. `category` \"general\" applies to every reply (tone, language, locale, standing habits); \"situational\" surfaces only when its topic comes up. Re-saving the same `topic` slug overwrites rather than duplicating."
+        "Save a user preference so it shapes future replies. Call this when the user states or \
+         asks to remember a preference. Choose `category`:\n\
+         - \"general\": applies to EVERY reply regardless of topic — tone, language, identity, \
+           standing habits (e.g. \"reply in British English\", \"be terse\", \"I'm in IST\", \
+           \"I'm vegetarian\"). Present in every conversation.\n\
+         - \"situational\": only relevant when its topic comes up (e.g. \"when writing Rust prefer \
+           X\", \"be formal in emails to my manager\", \"my AWS account is Y\"). Surfaced only when \
+           the user's message relates to it.\n\
+         `topic` is a short snake_case slug (e.g. reply_language, email_tone_boss, cuisine); \
+         re-saving the same topic overwrites the previous value — no duplicates are created."
     }
 
     fn parameters_schema(&self) -> serde_json::Value {
@@ -233,23 +238,9 @@ impl Tool for SavePreferenceTool {
             value.len()
         );
 
-        let guard = match active_memory_guard().await {
-            Ok(guard) => guard,
-            Err(e) => {
-                return Ok(ToolResult::error(format!(
-                    "save_preference: memory unavailable: {e}"
-                )))
-            }
-        };
-        match guard
-            .store(
-                namespace,
-                topic,
-                value,
-                MemoryCategory::Core,
-                None,
-                tinymemory_api::types::MemoryTaint::Internal,
-            )
+        match self
+            .memory
+            .store(namespace, topic, value, MemoryCategory::Core, None)
             .await
         {
             Ok(()) => {
@@ -264,7 +255,7 @@ impl Tool for SavePreferenceTool {
                 // re-categorised preference doesn't linger in both lanes. Done
                 // *after* the store (not before) so a store failure can never
                 // leave the user with neither copy.
-                if let Err(e) = guard.forget(category.other_namespace(), topic).await {
+                if let Err(e) = self.memory.forget(category.other_namespace(), topic).await {
                     tracing::debug!(
                         "[tool][save_preference] clearing other-scope copy failed (non-fatal) ns={} topic={}: {e}",
                         category.other_namespace(),
@@ -275,7 +266,10 @@ impl Tool for SavePreferenceTool {
                 // agent (which captured this preference) can spot and resolve a
                 // contradiction itself — no separate model call.
                 let related = crate::openhuman::memory::preferences::recall_related_preferences(
-                    &guard, value, topic, 4,
+                    &self.memory,
+                    value,
+                    topic,
+                    4,
                 )
                 .await;
                 let mut msg = format!("Saved {} preference: {topic} = {value}", category.as_str());

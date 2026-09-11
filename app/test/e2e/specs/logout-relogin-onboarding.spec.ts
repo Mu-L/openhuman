@@ -18,7 +18,12 @@
 import { waitForApp, waitForAppReady, waitForAuthBootstrap } from '../helpers/app-helpers';
 import { callOpenhumanRpc } from '../helpers/core-rpc';
 import { triggerAuthDeepLinkBypass } from '../helpers/deep-link-helpers';
-import { hasAppChrome, waitForWebView, waitForWindowVisible } from '../helpers/element-helpers';
+import {
+  hasAppChrome,
+  textExists,
+  waitForWebView,
+  waitForWindowVisible,
+} from '../helpers/element-helpers';
 import { resetApp } from '../helpers/reset-app';
 import {
   dismissBootCheckGateIfVisible,
@@ -136,23 +141,11 @@ describe('Logout -> re-login onboarding overlay', function () {
     // ── Onboarding must be in clean first-step state ─────────────────────────
     // If stale mid-flow state from session 1 leaked, a later step would render
     // instead of the initial welcome step.
-    await browser.waitUntil(
-      async () =>
-        (await browser.execute(
-          () => document.querySelector('[data-testid="onboarding-welcome-step"]') !== null
-        )) as boolean,
-      { timeout: 10_000, interval: 250, timeoutMsg: 'Onboarding welcome step did not mount' }
+    const onFirstStep = await browser.execute(
+      () => document.querySelector('[data-testid="onboarding-welcome-step"]') !== null
     );
-    const firstStep = await browser.execute(() => {
-      const welcome = document.querySelector('[data-testid="onboarding-welcome-step"]');
-      return {
-        mounted: welcome !== null,
-        heading: welcome?.querySelector('h1')?.textContent?.trim() ?? '',
-        hasCta: welcome?.querySelector('button[aria-label="Get Started"]') !== null,
-      };
-    });
-    expect(firstStep.mounted).toBe(true);
-    expect(firstStep.heading).toBe("Hi. I'm OpenHuman.");
-    expect(firstStep.hasCta).toBe(true);
+    expect(onFirstStep).toBe(true);
+    expect(await textExists("Hi. I'm OpenHuman.")).toBe(true);
+    expect(await textExists('Get Started')).toBe(true);
   });
 });

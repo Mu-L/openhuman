@@ -26,8 +26,6 @@ import {
   memoryTreeWipeAll,
 } from '../../utils/tauriCommands';
 import ChipTabs from '../layout/ChipTabs';
-import Button from '../ui/Button';
-import Separator from '../ui/Separator';
 import { ObsidianVaultSection } from './ObsidianVaultSection';
 
 interface MemoryControlsProps {
@@ -39,6 +37,16 @@ interface MemoryControlsProps {
   /** Absolute content root (from graph export); enables the View vault button. */
   contentRootAbs?: string | null;
 }
+
+// ── Shared button system ──────────────────────────────────────────────────────
+
+const BTN_BASE =
+  'inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus:ring-2';
+const BTN_PRIMARY = `${BTN_BASE} bg-primary-500 text-content-inverted shadow-sm hover:bg-primary-600 focus:ring-primary-200`;
+const BTN_GHOST = `${BTN_BASE} border border-line bg-surface text-content-secondary shadow-sm hover:bg-surface-hover focus:ring-stone-200 dark:focus:ring-neutral-700`;
+// Destructive actions read as proper (bordered) buttons but stay muted until
+// hover, when they reveal their warning tint.
+const BTN_MUTED = `${BTN_BASE} border border-line bg-surface text-content-muted shadow-sm focus:ring-stone-200 dark:focus:ring-neutral-700`;
 
 export function MemoryControls({
   mode,
@@ -62,11 +70,12 @@ export function MemoryControls({
       const resp = await memoryTreeWipeAll();
       onToast?.({
         type: 'success',
-        title: t('workspace.wipeSuccessTitle'),
-        message: t('workspace.wipeSuccessMessage')
-          .replace('{rows}', resp.rows_deleted.toLocaleString())
-          .replace('{dirs}', String(resp.dirs_removed.length))
-          .replace('{cursors}', resp.sync_state_cleared.toLocaleString()),
+        title: 'Memory wiped',
+        message:
+          `Removed ${resp.rows_deleted.toLocaleString()} row(s) and ` +
+          `${resp.dirs_removed.length} folder(s); cleared ` +
+          `${resp.sync_state_cleared.toLocaleString()} sync-state cursor(s). ` +
+          `Click Sync on a connected source to repopulate.`,
       });
       // Re-pull immediately so the canvas reflects the wipe.
       onRefresh();
@@ -74,7 +83,7 @@ export function MemoryControls({
       console.error('[ui-flow][memory-controls] wipe_all failed', err);
       onToast?.({
         type: 'error',
-        title: t('workspace.wipeFailedTitle'),
+        title: 'Reset failed',
         message: err instanceof Error ? err.message : String(err),
       });
     } finally {
@@ -89,11 +98,12 @@ export function MemoryControls({
       const resp = await memoryTreeResetTree();
       onToast?.({
         type: 'success',
-        title: t('workspace.resetTreeSuccessTitle'),
-        message: t('workspace.resetTreeSuccessMessage')
-          .replace('{treeRows}', resp.tree_rows_deleted.toLocaleString())
-          .replace('{chunks}', resp.chunks_requeued.toLocaleString())
-          .replace('{jobs}', resp.jobs_enqueued.toLocaleString()),
+        title: 'Memory tree rebuilding',
+        message:
+          `Cleared ${resp.tree_rows_deleted.toLocaleString()} tree row(s); ` +
+          `requeued ${resp.chunks_requeued.toLocaleString()} chunk(s) ` +
+          `(${resp.jobs_enqueued.toLocaleString()} extract jobs). ` +
+          `The graph will fill back in as the worker drains.`,
       });
       // reset_tree restarts from extract jobs (slower than seal-only) — give the
       // worker a longer head start than build does before re-pulling.
@@ -102,7 +112,7 @@ export function MemoryControls({
       console.error('[ui-flow][memory-controls] reset_tree failed', err);
       onToast?.({
         type: 'error',
-        title: t('workspace.resetTreeFailedTitle'),
+        title: 'Could not reset memory tree',
         message: err instanceof Error ? err.message : String(err),
       });
     } finally {
@@ -130,13 +140,13 @@ export function MemoryControls({
       console.error('[ui-flow][memory-controls] flush_now failed', err);
       onToast?.({
         type: 'error',
-        title: t('workspace.buildTreesFailedTitle'),
+        title: 'Could not build summary trees',
         message: err instanceof Error ? err.message : String(err),
       });
     } finally {
       setBuilding(false);
     }
-  }, [onToast, onRefresh, t]);
+  }, [onToast, onRefresh]);
 
   const handleRefresh = useCallback(async () => {
     if (refreshing) return;
@@ -165,58 +175,54 @@ export function MemoryControls({
 
       <div className="flex flex-wrap items-center gap-2">
         {/* Destructive actions — muted, set apart behind a divider. */}
-        <Button
-          variant="secondary"
-          tone="danger"
-          size="sm"
+        <button
+          type="button"
           onClick={handleWipe}
           disabled={busy}
           data-testid="memory-wipe-all"
-          className="text-content-muted border-line"
-          leadingIcon={wiping ? <Spinner /> : <TrashIcon />}
+          className={`${BTN_MUTED} hover:border-coral-300 hover:bg-coral-50 hover:text-coral-600 dark:hover:border-coral-500/30 dark:hover:bg-coral-500/10 dark:hover:text-coral-300`}
           title={t('workspace.wipeTitle')}>
+          {wiping ? <Spinner /> : <TrashIcon />}
           {wiping ? t('workspace.resetting') : t('workspace.resetMemory')}
-        </Button>
-        <Button
-          variant="secondary"
-          size="sm"
+        </button>
+        <button
+          type="button"
           onClick={handleResetTree}
           disabled={busy}
           data-testid="memory-reset-tree"
-          className="text-content-muted border-line hover:border-amber-300 hover:bg-amber-50 hover:text-amber-700 dark:hover:border-amber-500/30 dark:hover:bg-amber-500/10 dark:hover:text-amber-300"
-          leadingIcon={resetting ? <Spinner /> : <RefreshIcon />}
+          className={`${BTN_MUTED} hover:border-amber-300 hover:bg-amber-50 hover:text-amber-700 dark:hover:border-amber-500/30 dark:hover:bg-amber-500/10 dark:hover:text-amber-300`}
           title={t('workspace.resetTreeTitle')}>
+          {resetting ? <Spinner /> : <RefreshIcon />}
           {resetting ? t('workspace.rebuilding') : t('workspace.resetMemoryTree')}
-        </Button>
+        </button>
 
-        <Separator orientation="vertical" className="mx-1 h-5 self-center bg-surface-strong" />
+        <span aria-hidden className="mx-1 h-5 w-px self-center bg-surface-strong" />
 
         {/* Secondary actions — quiet ghost buttons. */}
-        <Button
-          variant="secondary"
-          size="sm"
+        <button
+          type="button"
           onClick={handleRefresh}
           disabled={refreshing}
           aria-busy={refreshing}
           data-testid="memory-graph-refresh"
-          leadingIcon={refreshing ? <Spinner /> : <RefreshIcon />}
+          className={BTN_GHOST}
           title={t('common.refresh')}>
-          {t('common.refresh')}
-        </Button>
+          {refreshing ? <Spinner /> : <RefreshIcon />} {t('common.refresh')}
+        </button>
         {contentRootAbs ? (
           <ObsidianVaultSection contentRootAbs={contentRootAbs} onToast={onToast} />
         ) : null}
 
         {/* Primary action. */}
-        <Button
-          variant="primary"
-          size="sm"
+        <button
+          type="button"
           onClick={handleBuildTrees}
           disabled={building}
           data-testid="memory-build-trees"
-          leadingIcon={building ? <Spinner /> : <BrainIcon />}>
+          className={BTN_PRIMARY}>
+          {building ? <Spinner /> : <BrainIcon />}
           {building ? t('workspace.building') : t('workspace.buildSummaryTrees')}
-        </Button>
+        </button>
       </div>
     </div>
   );

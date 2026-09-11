@@ -30,7 +30,6 @@ mod rules;
 mod types;
 
 #[cfg(test)]
-#[path = "pii_tests.rs"]
 mod tests;
 
 pub use detector::scan;

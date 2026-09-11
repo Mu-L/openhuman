@@ -11,11 +11,9 @@
  */
 import { useEffect, useMemo, useState } from 'react';
 
-import { cn } from '../../../../lib/cn';
 import { useT } from '../../../../lib/i18n/I18nContext';
 import { listRuntimeTools, type RuntimeTool } from '../../../../services/api/runtimeToolsApi';
-import { NativeSelect, Input as UiInput } from '../../../ui';
-import { Field, MONO_CLASS } from './nodeConfigFields';
+import { Field, INPUT_CLASS, MONO_CLASS } from './nodeConfigFields';
 
 /** The `oh:` prefix that marks a native-tool slug (mirrors the Rust constant). */
 export const NATIVE_TOOL_PREFIX = 'oh:';
@@ -64,10 +62,9 @@ export function NativeToolField({ label, hint, value, onChange, testId }: Native
   if (failed && tools.length === 0) {
     return (
       <Field label={label} hint={hint}>
-        <UiInput
+        <input
           type="text"
-          inputSize="sm"
-          className={cn('w-full', MONO_CLASS)}
+          className={`${INPUT_CLASS} ${MONO_CLASS}`}
           value={current}
           placeholder="web_search"
           data-testid={testId ? `${testId}-custom` : undefined}
@@ -86,9 +83,8 @@ export function NativeToolField({ label, hint, value, onChange, testId }: Native
   return (
     <Field label={label} hint={hint}>
       <div className="space-y-1.5">
-        <NativeSelect
-          inputSize="sm"
-          className="w-full"
+        <select
+          className={INPUT_CLASS}
           value={current}
           disabled={loading}
           data-testid={testId}
@@ -101,7 +97,7 @@ export function NativeToolField({ label, hint, value, onChange, testId }: Native
               {name}
             </option>
           ))}
-        </NativeSelect>
+        </select>
         {selected?.description && (
           <p
             className="text-[11px] leading-snug text-content-muted"

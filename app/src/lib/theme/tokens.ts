@@ -19,11 +19,6 @@ const SURFACE_KEYS = [
   'surface-strong',
   'surface-hover',
   'surface-overlay',
-  // The window chrome: the tinted frame the sidebar sits on, behind the inset
-  // content card. It is the outermost background the user actually sees, and it
-  // was the one surface the editor did not expose — so a custom theme could
-  // restyle every card and panel and leave the frame around them untouched.
-  'surface-chrome',
 ] as const;
 
 /** Text token keys. */
@@ -36,10 +31,7 @@ const CONTENT_KEYS = [
 ] as const;
 
 /** Border token keys. */
-// `line-chrome` is the counterpart to `surface-chrome` — the hairline where the
-// content card meets that frame (and the sidebar rail's drag indicator). Same
-// omission, same consequence: a theme could not touch the app's outer edge.
-const LINE_KEYS = ['line', 'line-strong', 'line-subtle', 'line-chrome'] as const;
+const LINE_KEYS = ['line', 'line-strong', 'line-subtle'] as const;
 
 /** Accent palette family names. Each expands to shades 50…950. */
 export const ACCENT_FAMILIES = ['primary', 'sage', 'amber', 'coral'] as const;

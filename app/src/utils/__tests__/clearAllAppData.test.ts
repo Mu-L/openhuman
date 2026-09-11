@@ -2,10 +2,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { clearAllAppData } from '../clearAllAppData';
 
-const { mockPurge, mockReset, mockRestart } = vi.hoisted(() => ({
+const { mockPurge, mockReset, mockRestart, mockPurgeCef } = vi.hoisted(() => ({
   mockPurge: vi.fn().mockResolvedValue(undefined),
   mockReset: vi.fn().mockResolvedValue(undefined),
   mockRestart: vi.fn().mockResolvedValue(undefined),
+  mockPurgeCef: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock('../../store', () => ({ persistor: { purge: mockPurge } }));
@@ -13,6 +14,7 @@ vi.mock('../../store', () => ({ persistor: { purge: mockPurge } }));
 vi.mock('../tauriCommands', () => ({
   resetOpenHumanDataAndRestartCore: mockReset,
   restartApp: mockRestart,
+  scheduleCefProfilePurge: mockPurgeCef,
 }));
 
 describe('clearAllAppData', () => {
@@ -20,6 +22,7 @@ describe('clearAllAppData', () => {
     mockPurge.mockReset().mockResolvedValue(undefined);
     mockReset.mockReset().mockResolvedValue(undefined);
     mockRestart.mockReset().mockResolvedValue(undefined);
+    mockPurgeCef.mockReset().mockResolvedValue(undefined);
     window.localStorage.clear();
     window.sessionStorage.clear();
   });
@@ -36,6 +39,7 @@ describe('clearAllAppData', () => {
 
     await clearAllAppData({ clearSession, userId: 'user-1' });
 
+    expect(mockPurgeCef).toHaveBeenCalledWith('user-1');
     expect(clearSession).toHaveBeenCalledTimes(1);
     expect(mockReset).toHaveBeenCalledTimes(1);
     // #4950: the reset must receive the signed-in user id so it deletes the
@@ -60,6 +64,7 @@ describe('clearAllAppData', () => {
 
     await clearAllAppData();
 
+    expect(mockPurgeCef).toHaveBeenCalledWith(null);
     // No clearSession was provided — call sequence still completes.
     expect(mockReset).toHaveBeenCalledTimes(1);
     // Pre-login recovery (Welcome screen) has no user id: the reset falls back
@@ -69,6 +74,15 @@ describe('clearAllAppData', () => {
     // Without a userId we have no way to scope, so everything is cleared
     expect(window.localStorage.getItem('user-1:persist:accounts')).toBeNull();
     expect(window.localStorage.getItem('user-2:persist:accounts')).toBeNull();
+  });
+
+  it('continues if scheduleCefProfilePurge fails (best-effort)', async () => {
+    mockPurgeCef.mockRejectedValueOnce(new Error('cef-purge boom'));
+
+    await expect(clearAllAppData()).resolves.toBeUndefined();
+
+    expect(mockReset).toHaveBeenCalledTimes(1);
+    expect(mockRestart).toHaveBeenCalledTimes(1);
   });
 
   it('continues if clearSession fails (best-effort)', async () => {

@@ -17,7 +17,6 @@ import {
   memoryTreeEntityIndexFor,
   type ScoreBreakdown,
 } from '../../utils/tauriCommands';
-import Button from '../ui/Button';
 import { MemoryChunkLetterhead } from './MemoryChunkLetterhead';
 import { MemoryChunkMentioned } from './MemoryChunkMentioned';
 import { MemoryChunkScoreBars } from './MemoryChunkScoreBars';
@@ -123,19 +122,17 @@ export function MemoryChunkDetail({ chunk, onSelectEntity }: MemoryChunkDetailPr
           <footer className="mw-letter-footer">
             {chunk.source_ref && <span>{chunk.source_ref}</span>}
             <span>·</span>
-            <Button
-              variant="tertiary"
-              size="xs"
-              className="h-auto rounded-none px-0"
+            <button
+              type="button"
               onClick={() => void handleCopyId()}
               title={t('intelligence.memoryChunk.detail.copyChunkId')}>
               {t('intelligence.memoryChunk.detail.chunk')} {shortChunkId(chunk.id)}
               {copied && (
-                <span className="ml-1.5 text-sage-600 dark:text-sage-400">
+                <span style={{ marginLeft: 6, color: 'var(--sage)' }}>
                   {t('intelligence.memoryChunk.detail.copiedHint')}
                 </span>
               )}
-            </Button>
+            </button>
             <span>·</span>
             <span>
               {chunk.has_embedding

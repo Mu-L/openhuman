@@ -74,8 +74,7 @@ impl Transcriber for VoiceTranscriber {
             "{LOG_PREFIX} transcribe provider={provider} bytes_b64={}",
             request.audio_base64.len()
         );
-        // Empty model lets a configured external provider use its registry
-        // default; the cloud provider resolves its own backend default.
+        // Empty model → factory substitutes DEFAULT_WHISPER_MODEL.
         let stt = crate::openhuman::voice::create_stt_provider(&provider, "", &self.config)?;
         let outcome = stt
             .transcribe(
@@ -356,8 +355,7 @@ impl EventSink for OpenHumanEventSink {
                 crate::openhuman::web_chat::publish_web_channel_event(event);
             }
             "channel" => {
-                use crate::core::bus::BUS;
-                use crate::core::events::DomainEvent;
+                use crate::core::event_bus::{publish_global, DomainEvent};
                 let event = match kind {
                     "reaction_received" => DomainEvent::ChannelReactionReceived {
                         channel: json_str(&payload, "channel"),
@@ -379,7 +377,7 @@ impl EventSink for OpenHumanEventSink {
                         return Ok(());
                     }
                 };
-                BUS.publish(event);
+                publish_global(event);
             }
             other => tracing::warn!("{LOG_PREFIX} unmapped event domain: {other}"),
         }

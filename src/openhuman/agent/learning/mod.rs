@@ -32,11 +32,6 @@ pub mod scheduler;
 pub mod schemas;
 pub mod stability_detector;
 pub mod startup;
-/// In-memory profile fake for tests.
-///
-/// Not `#[cfg(test)]`: integration tests link the lib without it.
-#[doc(hidden)]
-pub mod test_profile;
 pub mod tool_tracker;
 pub mod tools;
 pub mod transcript_ingest;
@@ -46,10 +41,8 @@ pub use cache::FacetCache;
 pub use candidate::{Buffer, CueFamily, EvidenceRef, FacetClass, LearningCandidate};
 pub use profile_md_renderer::ProfileMdRenderer;
 pub use prompt_sections::{
-    any_tool_offered, load_learned_from_cache, memory_write_instruction, LearnedContextSection,
-    MemoryAccessSection, MemoryWriteSection, UserProfileSection, MEMORY_ACCESS_INSTRUCTION,
-    MEMORY_READ_TOOLS, MEMORY_STORE_TOOL, MEMORY_WRITE_DELEGATE_TOOL, MEMORY_WRITE_TOOLS,
-    SAVE_PREFERENCE_TOOL,
+    load_learned_from_cache, LearnedContextSection, MemoryAccessSection, UserProfileSection,
+    MEMORY_ACCESS_INSTRUCTION,
 };
 pub use reflection::ReflectionHook;
 pub use schemas::{

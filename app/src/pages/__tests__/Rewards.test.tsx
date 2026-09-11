@@ -17,6 +17,10 @@ vi.mock('../../components/rewards/RewardsReferralsTab', () => ({
   default: () => <div>Referral Rewards Section</div>,
 }));
 
+vi.mock('../../components/rewards/RewardsRedeemTab', () => ({
+  default: () => <div>Rewards Coupon Section</div>,
+}));
+
 vi.mock('../../hooks/useUser', () => ({
   useUser: () => ({ user: { subscription: { plan: 'FREE', hasActiveSubscription: false } } }),
 }));
@@ -211,19 +215,20 @@ describe('Rewards page', () => {
       achievements: [],
     });
 
-    // Referrals is its own page now, addressed by `?view=`, not a chip tab on
-    // one page — so the view is entered by URL rather than by clicking a tab.
     render(
-      <MemoryRouter initialEntries={['/?view=referrals']}>
+      <MemoryRouter initialEntries={['/?view=main']}>
         <Rewards />
       </MemoryRouter>
     );
 
+    fireEvent.click(screen.getByRole('tab', { name: 'Referrals' }));
+
     expect(screen.getByText('Referral Rewards Section')).toBeInTheDocument();
+    expect(screen.queryByText('Rewards Coupon Section')).not.toBeInTheDocument();
     expect(screen.queryByText('Earn community roles')).not.toBeInTheDocument();
   });
 
-  it('falls back to community rewards for the retired redeem URL', async () => {
+  it('switches to the redeem tab content', async () => {
     rewardsApi.getMyRewards.mockResolvedValueOnce({
       discord: {
         linked: false,
@@ -251,12 +256,14 @@ describe('Rewards page', () => {
     });
 
     render(
-      <MemoryRouter initialEntries={['/?view=redeem']}>
+      <MemoryRouter initialEntries={['/?view=main']}>
         <Rewards />
       </MemoryRouter>
     );
 
-    expect(await screen.findByText('Earn rewards with OpenHuman')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('tab', { name: 'Redeem' }));
+
+    expect(screen.getByText('Rewards Coupon Section')).toBeInTheDocument();
     expect(screen.queryByText('Referral Rewards Section')).not.toBeInTheDocument();
   });
 

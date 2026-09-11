@@ -7,11 +7,13 @@ import PrivacyPanel from '../PrivacyPanel';
 
 vi.mock('../../../../utils/tauriCommands/aboutApp', () => ({ listCapabilities: vi.fn() }));
 
+const setMeetAutoOrchestratorHandoffMock = vi.fn();
 const setAnalyticsEnabledMock = vi.fn();
 vi.mock('../../../../providers/CoreStateProvider', () => ({
   useCoreState: () => ({
-    snapshot: { analyticsEnabled: false },
+    snapshot: { analyticsEnabled: false, meetAutoOrchestratorHandoff: false },
     setAnalyticsEnabled: (v: boolean) => setAnalyticsEnabledMock(v),
+    setMeetAutoOrchestratorHandoff: (v: boolean) => setMeetAutoOrchestratorHandoffMock(v),
   }),
 }));
 
@@ -64,6 +66,7 @@ describe('PrivacyPanel', () => {
     vi.mocked(listCapabilities).mockResolvedValue([]);
     renderWithProviders(<PrivacyPanel />);
 
+    // Analytics toggle is the first role="switch" on the page (before meet-handoff).
     const toggles = await screen.findAllByRole('switch');
     const toggle = toggles[0];
     expect(toggle.getAttribute('aria-checked')).toBe('false');
@@ -107,7 +110,21 @@ describe('PrivacyPanel', () => {
       expect(screen.getByTestId('privacy-load-error')).toBeTruthy();
     });
     expect(screen.queryByTestId('privacy-capability-list')).toBeNull();
-    // Analytics toggle still rendered
-    expect(screen.getAllByRole('switch').length).toBeGreaterThanOrEqual(1);
+    // Analytics + meet-handoff toggles still rendered
+    expect(screen.getAllByRole('switch').length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('flips the meet auto-handoff toggle from OFF to ON when clicked (#1299)', async () => {
+    vi.mocked(listCapabilities).mockResolvedValue([]);
+    renderWithProviders(<PrivacyPanel />);
+
+    const toggle = await screen.findByTestId('privacy-meet-handoff-toggle');
+    expect(toggle.getAttribute('aria-checked')).toBe('false');
+
+    fireEvent.click(toggle);
+
+    await waitFor(() => {
+      expect(setMeetAutoOrchestratorHandoffMock).toHaveBeenCalledWith(true);
+    });
   });
 });

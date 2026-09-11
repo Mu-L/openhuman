@@ -1,8 +1,6 @@
 //! Tabbed terminal UI — bare `openhuman` or the explicit `tui` / `chat` subcommand.
 //!
-//! A [ratatui]-based agent cockpit with Chat, Logs, Config, and Settings,
-//! persistent thread resume, command/file pickers, approvals, plan review,
-//! task/goal/agent/skill/MCP/artifact views, Git review, and a multiline composer.
+//! A [ratatui]-based terminal front-end with Logs, Chat, Config, and Settings.
 //! Chat uses the **same `web_chat` surface** the desktop app drives (`openhuman.channel_web_chat` /
 //! `openhuman.channel_web_cancel` +
 //! [`web_chat::subscribe_web_channel_events`](crate::openhuman::web_chat::subscribe_web_channel_events)).
@@ -16,8 +14,6 @@
 //! diagnostic for the `tui` and `chat` commands.
 
 mod app;
-mod cockpit;
-mod composer;
 mod controls;
 mod render;
 mod runner;

@@ -12,12 +12,10 @@ use chrono::Utc;
 use serde_json::{json, Map, Value};
 use uuid::Uuid;
 
-use crate::core::bus::BUS;
-use crate::core::events::DomainEvent;
+use crate::core::event_bus::{publish_global, DomainEvent};
 use crate::openhuman::agent::triage::{
-    apply_decision, local_trigger_origin, run_triage, TriageOutcome, TriggerEnvelope, TriggerSource,
+    apply_decision, run_triage, TriageOutcome, TriggerEnvelope, TriggerSource,
 };
-use crate::openhuman::agent::turn_origin::with_origin;
 use crate::openhuman::config::rpc as config_rpc;
 use crate::rpc::RpcOutcome;
 
@@ -161,7 +159,7 @@ pub async fn handle_ingest(params: Map<String, Value>) -> Result<Value, String> 
                                 error = %e,
                                 "[notification_intel] failed to refresh provider settings for routing gate"
                             );
-                            BUS.publish(DomainEvent::NotificationTriaged {
+                            publish_global(DomainEvent::NotificationTriaged {
                                 id: id_for_triage.clone(),
                                 provider: req.provider.clone(),
                                 action: action.clone(),
@@ -177,15 +175,7 @@ pub async fn handle_ingest(params: Map<String, Value>) -> Result<Value, String> 
                     if score >= latest_settings.importance_threshold
                         && latest_settings.route_to_orchestrator
                     {
-                        // Locally initiated: a desktop notification the machine
-                        // already holds, escalated by the user's own routing
-                        // setting. Scoped inside the spawned task because
-                        // `AGENT_TURN_ORIGIN` does not cross `tokio::spawn`
-                        // (#5634).
-                        let origin = local_trigger_origin();
-                        if let Err(e) =
-                            with_origin(origin, apply_decision(triage_run, &envelope)).await
-                        {
+                        if let Err(e) = apply_decision(triage_run, &envelope).await {
                             tracing::warn!(
                                 id = %id_for_triage,
                                 error = %e,
@@ -197,7 +187,7 @@ pub async fn handle_ingest(params: Map<String, Value>) -> Result<Value, String> 
                     }
                 }
 
-                BUS.publish(DomainEvent::NotificationTriaged {
+                publish_global(DomainEvent::NotificationTriaged {
                     id: id_for_triage.clone(),
                     provider: req.provider.clone(),
                     action: action.clone(),

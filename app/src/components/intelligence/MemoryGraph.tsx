@@ -634,7 +634,7 @@ export function MemoryGraph({
           <span>
             {nodes.length} {t('graph.nodes')}
           </span>
-          <span className="text-content-faint">·</span>
+          <span className="text-content-faint dark:text-neutral-600">·</span>
           <span>
             {sim.edges.length}{' '}
             {mode === 'tree' ? t('graph.parentChild') : t('graph.documentContact')}{' '}
@@ -658,7 +658,7 @@ export function MemoryGraph({
             size="xs"
             onClick={resetView}
             data-testid="memory-graph-reset-view"
-            className="text-[11px] shadow-xs">
+            className="text-[11px] shadow-sm">
             {t('graph.resetView')}
           </Button>
         </div>
@@ -823,7 +823,7 @@ export function MemoryGraph({
                     data-testid={`memory-graph-preview-${hovered.id}`}
                     disabled={previewingPath === hoveredSummaryPath}
                     onClick={() => void previewSummary(hovered)}
-                    className="ml-3 text-[11px] shadow-xs">
+                    className="ml-3 text-[11px] shadow-sm">
                     {previewingPath === hoveredSummaryPath
                       ? t('migration.previewRunning')
                       : t('migration.previewAction')}

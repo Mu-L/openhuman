@@ -10,6 +10,7 @@ function makeSnapshot(overrides: Partial<CoreAppSnapshot> = {}): CoreAppSnapshot
     onboardingCompleted: true,
     chatOnboardingCompleted: false,
     analyticsEnabled: false,
+    meetAutoOrchestratorHandoff: false,
     localState: { encryptionKey: null, onboardingTasks: null, keyringConsent: null },
     keyringStatus: {
       available: true,

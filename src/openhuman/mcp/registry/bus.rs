@@ -6,14 +6,13 @@
 
 use async_trait::async_trait;
 
-use crate::core::events::DomainEvent;
-use tinybus::EventHandler;
+use crate::core::event_bus::{DomainEvent, EventHandler};
 
 /// Subscribes to `McpClient` domain events and emits structured log lines.
 pub struct McpClientEventSubscriber;
 
 #[async_trait]
-impl EventHandler<DomainEvent> for McpClientEventSubscriber {
+impl EventHandler for McpClientEventSubscriber {
     fn name(&self) -> &str {
         "mcp_client::lifecycle"
     }
@@ -79,14 +78,67 @@ impl EventHandler<DomainEvent> for McpClientEventSubscriber {
 /// Call this from wherever other domain subscribers are registered
 /// (e.g. alongside `CronDeliverySubscriber::new(...)` in core startup).
 pub fn init() {
-    use crate::core::bus::BUS;
+    use crate::core::event_bus::subscribe_global;
     use std::sync::Arc;
     let sub = Arc::new(McpClientEventSubscriber);
-    if BUS.subscribe(sub).is_none() {
+    if subscribe_global(sub).is_none() {
         tracing::warn!("[mcp-client] event bus not initialized; subscriber not registered");
     }
 }
 
 #[cfg(test)]
-#[path = "bus_tests.rs"]
-mod tests;
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn subscriber_ignores_unrelated_events() {
+        let sub = McpClientEventSubscriber;
+        // Should not panic on unrelated events
+        sub.handle(&DomainEvent::SystemStartup {
+            component: "test".to_string(),
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn subscriber_handles_mcp_installed_event() {
+        let sub = McpClientEventSubscriber;
+        sub.handle(&DomainEvent::McpServerInstalled {
+            server_id: "srv-1".to_string(),
+            qualified_name: "@test/server".to_string(),
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn subscriber_handles_mcp_connected_event() {
+        let sub = McpClientEventSubscriber;
+        sub.handle(&DomainEvent::McpServerConnected {
+            server_id: "srv-1".to_string(),
+            tool_count: 3,
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn subscriber_handles_mcp_disconnected_event() {
+        let sub = McpClientEventSubscriber;
+        sub.handle(&DomainEvent::McpServerDisconnected {
+            server_id: "srv-1".to_string(),
+            reason: Some("user request".to_string()),
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn subscriber_handles_tool_executed_event() {
+        let sub = McpClientEventSubscriber;
+        sub.handle(&DomainEvent::McpClientToolExecuted {
+            server_id: "srv-1".to_string(),
+            tool_name: "search".to_string(),
+            success: true,
+            elapsed_ms: 42,
+        })
+        .await;
+    }
+}

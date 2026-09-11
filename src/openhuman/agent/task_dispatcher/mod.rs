@@ -26,7 +26,6 @@ mod registry;
 mod types;
 
 #[cfg(test)]
-#[path = "task_dispatcher_tests.rs"]
 mod tests;
 
 // ── Public API ────────────────────────────────────────────────────────────────

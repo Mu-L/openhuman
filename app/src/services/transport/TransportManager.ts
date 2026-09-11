@@ -9,7 +9,6 @@
  */
 import debug from 'debug';
 
-import { redactRpcUrlForLog } from '../../utils/redactRpcUrlForLog';
 import { CloudHttpTransport } from './CloudHttpTransport';
 import type { CoreTransport } from './CoreTransport';
 import { LanHttpTransport } from './LanHttpTransport';
@@ -81,7 +80,7 @@ export class TransportManager {
         throw new Error('[transport:manager] cloud profile missing rpcUrl');
       }
       const t = new CloudHttpTransport(rpcUrl, sessionToken ?? null);
-      log('[transport:manager] → CloudHttpTransport rpcUrl=%s', redactRpcUrlForLog(rpcUrl));
+      log('[transport:manager] → CloudHttpTransport rpcUrl=%s', rpcUrl);
       return t;
     }
 
@@ -91,7 +90,7 @@ export class TransportManager {
         throw new Error('[transport:manager] lan profile missing rpcUrl');
       }
       const t = new LanHttpTransport(rpcUrl);
-      log('[transport:manager] → LanHttpTransport rpcUrl=%s', redactRpcUrlForLog(rpcUrl));
+      log('[transport:manager] → LanHttpTransport rpcUrl=%s', rpcUrl);
       return t;
     }
 

@@ -1,6 +1,5 @@
-import { useT } from '../../lib/i18n/I18nContext';
 import ChipTabs from '../layout/ChipTabs';
-import { SKILL_CATEGORY_LABEL_KEYS, type SkillCategory } from './skillCategories';
+import type { SkillCategory } from './skillCategories';
 import {
   skillCategoryChipClassName,
   SkillCategoryIcon,
@@ -14,7 +13,6 @@ interface SkillCategoryFilterProps {
 }
 
 const SkillCategoryFilter = ({ categories, selected, onChange }: SkillCategoryFilterProps) => {
-  const { t } = useT();
   return (
     <ChipTabs<SkillCategory>
       items={categories.map(category => {
@@ -38,14 +36,14 @@ const SkillCategoryFilter = ({ categories, selected, onChange }: SkillCategoryFi
                   }
                 />
               </span>
-              {t(SKILL_CATEGORY_LABEL_KEYS[category])}
+              {category}
             </span>
           ),
         };
       })}
       value={selected}
       onChange={onChange}
-      className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide"
+      className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide"
     />
   );
 };

@@ -15,7 +15,7 @@
 //   (b) CONTROLLER-DOMAIN CHECK — every controller domain registered in
 //       `src/core/all.rs` (via `crate::openhuman::<domain>::all_*_controllers`)
 //       is referenced by >=1 file under `tests/`. Catches RPC domains that
-//       ship with zero integration/E2E coverage (recall_calendar,
+//       ship with zero integration/E2E coverage (recall_calendar, tinyplace,
 //       devices, …).
 //
 // Known-current offenders are seeded into the allowlists below so the check
@@ -61,9 +61,6 @@ const DOMAIN_ALLOWLIST = new Set([
   'mcp_audit',
   'memory_diff',
   'memory_goals',
-  // `medulla_local_e2e` covered the retired local namespace. The remaining
-  // cloud-backed Medulla controllers still need a dedicated RPC round-trip.
-  'medulla',
   'people',
   'plan_review',
   'provider_surfaces',
@@ -74,6 +71,7 @@ const DOMAIN_ALLOWLIST = new Set([
   'task_sources',
   'text_input',
   'thread_goals',
+  'tinyplace',
 ]);
 
 // ─────────────────────────────────────────────────────────────────────────────

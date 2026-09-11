@@ -1,8 +1,6 @@
 import { useInRouterContext, useLocation } from 'react-router-dom';
 
-import { cn } from '../../../lib/cn';
 import { useT } from '../../../lib/i18n/I18nContext';
-import Button from '../../ui/Button';
 import { useSettingsLayout } from '../layout/SettingsLayoutContext';
 
 interface SettingsBackButtonProps {
@@ -51,19 +49,13 @@ const SettingsBackButtonView = ({
   if (!show) return null;
 
   const isTopLevel = pathname.split('/').filter(Boolean).length <= 2;
+  const className =
+    inTwoPaneShell && isTopLevel
+      ? 'md:hidden w-6 h-6 flex items-center justify-center rounded-full hover:bg-surface-hover dark:bg-surface-muted transition-colors mr-2'
+      : 'w-6 h-6 flex items-center justify-center rounded-full hover:bg-surface-hover dark:bg-surface-muted transition-colors mr-2';
 
   return (
-    <Button
-      type="button"
-      variant="tertiary"
-      size="xs"
-      iconOnly
-      onClick={onBack}
-      className={cn(
-        'w-6 h-6 rounded-full dark:bg-surface-muted mr-2',
-        inTwoPaneShell && isTopLevel && 'md:hidden'
-      )}
-      aria-label={t('common.back')}>
+    <button onClick={onBack} className={className} aria-label={t('common.back')}>
       <svg
         className="w-4 h-4 text-content-muted"
         fill="none"
@@ -71,7 +63,7 @@ const SettingsBackButtonView = ({
         viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
       </svg>
-    </Button>
+    </button>
   );
 };
 

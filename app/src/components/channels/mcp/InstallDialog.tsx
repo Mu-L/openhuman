@@ -16,8 +16,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useT } from '../../../lib/i18n/I18nContext';
 import { mcpClientsApi } from '../../../services/api/mcpClientsApi';
 import Button from '../../ui/Button';
-import TextArea from '../../ui/TextArea';
-import TextField from '../../ui/TextField';
 import { mcpRegistryErrorMessage } from './mcpRegistryErrorMessage';
 import { deriveAuthor } from './McpServerCard';
 import type { InstalledServer, SmitheryServerDetail } from './types';
@@ -259,7 +257,7 @@ const InstallDialog = ({ qualifiedName, prefillEnv, onSuccess, onCancel }: Insta
 
         {/* Connections info */}
         {detail.connections.length > 0 && (
-          <div className="rounded-lg border border-line dark:border-line-strong/60 bg-surface-muted p-3">
+          <div className="rounded-lg border border-stone-150 dark:border-line-strong/60 bg-surface-muted p-3">
             <p className="text-xs font-medium text-content-muted mb-2">
               {t('mcp.install.connections')}
             </p>
@@ -375,14 +373,14 @@ const InstallDialog = ({ qualifiedName, prefillEnv, onSuccess, onCancel }: Insta
                 {key}
               </label>
               <div className="flex gap-2">
-                <TextField
+                <input
                   id={`env-${key}`}
                   type={showEnv[key] ? 'text' : 'password'}
                   value={envValues[key] ?? ''}
                   onChange={e => handleEnvChange(key, e.target.value)}
                   placeholder={t('mcp.install.enterValue').replace('{key}', key)}
                   disabled={installing}
-                  className="flex-1"
+                  className="flex-1 rounded-lg border border-line bg-surface px-3 py-2 text-sm text-content placeholder:text-stone-400 dark:placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-primary-500/40 disabled:opacity-50"
                 />
                 <Button
                   variant="secondary"
@@ -400,13 +398,12 @@ const InstallDialog = ({ qualifiedName, prefillEnv, onSuccess, onCancel }: Insta
 
       {/* Advanced: optional JSON config */}
       <div>
-        <Button
-          variant="tertiary"
-          size="xs"
+        <button
+          type="button"
           onClick={() => setShowAdvanced(!showAdvanced)}
-          className="h-auto p-0 text-xs text-content-muted hover:text-content-secondary">
+          className="text-xs text-content-muted hover:text-content-secondary transition-colors">
           {showAdvanced ? '▾' : '▸'} {t('mcp.install.advancedConfig')}
-        </Button>
+        </button>
         {showAdvanced && (
           <div className="mt-2 space-y-1">
             <label
@@ -414,14 +411,14 @@ const InstallDialog = ({ qualifiedName, prefillEnv, onSuccess, onCancel }: Insta
               className="block text-xs font-medium text-content-secondary">
               {t('mcp.install.configLabel')}
             </label>
-            <TextArea
+            <textarea
               id="mcp-config-json"
               value={configJson}
               onChange={e => setConfigJson(e.target.value)}
               disabled={installing}
               rows={4}
               placeholder={t('mcp.install.configPlaceholder')}
-              className="w-full font-mono focus:ring-primary-500/40"
+              className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm font-mono text-content placeholder:text-stone-400 dark:placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-primary-500/40 disabled:opacity-50 resize-y"
             />
           </div>
         )}

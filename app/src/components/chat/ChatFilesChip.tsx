@@ -4,7 +4,6 @@ import { useT } from '../../lib/i18n/I18nContext';
 import { listArtifactsForThread } from '../../services/artifactDownloadService';
 import { upsertArtifactReadyForThread } from '../../store/chatRuntimeSlice';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
-import { Button } from '../ui';
 import ChatFilesPanel from './ChatFilesPanel';
 
 /**
@@ -76,10 +75,9 @@ export default function ChatFilesChip({ threadId }: ChatFilesChipProps) {
 
   return (
     <div className="relative inline-block">
-      <Button
-        variant="secondary"
-        size="sm"
-        analyticsId="chat-files-chip"
+      <button
+        type="button"
+        data-analytics-id="chat-files-chip"
         onClick={() => setOpen(prev => !prev)}
         aria-haspopup="dialog"
         aria-expanded={open}
@@ -87,7 +85,7 @@ export default function ChatFilesChip({ threadId }: ChatFilesChipProps) {
           count === 1 ? 'chat.files.chip.aria.one' : 'chat.files.chip.aria.other'
         ).replace('{count}', String(count))}
         data-testid="chat-files-chip"
-        className="h-7! gap-1.5 text-xs font-medium text-content-secondary">
+        className="h-7 inline-flex items-center gap-1.5 rounded-lg border border-line bg-surface hover:bg-surface-hover text-xs font-medium text-content-secondary transition-colors px-2">
         <svg
           aria-hidden="true"
           className="w-3.5 h-3.5"
@@ -104,7 +102,7 @@ export default function ChatFilesChip({ threadId }: ChatFilesChipProps) {
         <span data-testid="chat-files-chip-count" className="font-mono leading-none">
           {count}
         </span>
-      </Button>
+      </button>
       {open && (
         <ChatFilesPanel
           threadId={normalizedThreadId}

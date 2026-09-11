@@ -41,9 +41,9 @@ use crate::openhuman::skills::schemas::resolve_workspace_dir;
 use crate::openhuman::threads::todos::ops as board_ops;
 use crate::openhuman::threads::todos::ops::{BoardLocation, CardPatch};
 use crate::openhuman::tools::traits::Tool;
-use tinyinference::message::AssistantMessage;
-use tinyinference::model::{ChatModel, ModelProfile, ModelRequest, ModelResponse};
-use tinyinference::tool::ToolCall;
+use tinyagents::harness::message::AssistantMessage;
+use tinyagents::harness::model::{ChatModel, ModelProfile, ModelRequest, ModelResponse};
+use tinyagents::harness::tool::ToolCall;
 
 /// Serialize this module's tests (each touches process-global state).
 fn serial() -> &'static tokio::sync::Mutex<()> {
@@ -108,7 +108,6 @@ fn tool_call_resp(id: &str, name: &str, args: serde_json::Value) -> ModelRespons
         raw: None,
         resolved_model: None,
         continue_turn: None,
-        served_from_cache: false,
     }
 }
 
@@ -118,7 +117,7 @@ impl ChatModel<()> for MockLlm {
         &self,
         _state: &(),
         request: ModelRequest,
-    ) -> tinyinference::Result<ModelResponse> {
+    ) -> tinyagents::Result<ModelResponse> {
         let convo: String = request
             .messages
             .iter()
@@ -451,8 +450,8 @@ impl ChatModel<()> for FailingLlm {
         &self,
         _state: &(),
         _request: ModelRequest,
-    ) -> tinyinference::Result<ModelResponse> {
-        Err(tinyinference::Error::Model(
+    ) -> tinyagents::Result<ModelResponse> {
+        Err(tinyagents::TinyAgentsError::Model(
             "simulated provider failure: model unavailable".to_string(),
         ))
     }

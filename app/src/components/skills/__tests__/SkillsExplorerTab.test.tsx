@@ -78,9 +78,8 @@ const MOCK_DOCKER_ENTRY: CatalogEntry = {
 };
 
 async function switchToInstalled() {
-  const installedTab = screen.getByRole('tab', { name: /Installed/i });
+  const installedTab = screen.getByText('Installed', { selector: 'button' });
   await act(async () => {
-    fireEvent.pointerDown(installedTab, { button: 0 });
     fireEvent.click(installedTab);
   });
 }
@@ -556,7 +555,7 @@ describe('SkillsExplorerTab', () => {
     const closeBtns = screen.getAllByRole('button');
     const closeBtn = closeBtns.find(b => {
       const svg = b.querySelector('svg');
-      return svg !== null && b.closest('[data-slot="dialog-content"]') !== null;
+      return svg !== null && b.closest('[class*="fixed inset-0"]') !== null;
     });
     if (closeBtn) {
       await act(async () => {
@@ -583,14 +582,9 @@ describe('SkillsExplorerTab', () => {
     await waitFor(() => {
       expect(screen.getAllByText('Registry Skill').length).toBeGreaterThan(1);
     });
-    // The detail dialog shows an Install button in its footer. The tile's own
-    // Install button is still mounted but the modal marks the rest of the tree
-    // `aria-hidden`, so the accessibility tree exposes exactly the footer one —
-    // which is the thing this test is about. Assert it sits inside the dialog
-    // rather than counting buttons.
+    // The detail dialog shows a second install button in the footer (in addition to the tile's button)
     const installBtns = screen.getAllByRole('button', { name: 'Install' });
-    expect(installBtns).toHaveLength(1);
-    expect(installBtns[0].closest('[data-slot="dialog-content"]')).not.toBeNull();
+    expect(installBtns.length).toBeGreaterThanOrEqual(2);
   });
 
   it('calls skillRegistryApi.install when the install button in registry tile is clicked', async () => {
@@ -647,7 +641,7 @@ describe('SkillsExplorerTab', () => {
     });
   });
 
-  it('shows source filter options when sources are available', async () => {
+  it('shows source toggle buttons when sources are available', async () => {
     const { skillsApi } = await import('../../../services/api/skillsApi');
     const { skillRegistryApi } = await import('../../../services/api/skillRegistryApi');
     vi.mocked(skillsApi.listWorkflows).mockResolvedValue([]);
@@ -657,14 +651,14 @@ describe('SkillsExplorerTab', () => {
 
     render(<SkillsExplorerTab />);
 
+    // Source toggles are rendered as buttons with their source name text
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'Filter by source' })).toBeInTheDocument();
+      const buttons = screen.getAllByRole('button');
+      const sourceButtons = buttons.filter(
+        b => b.textContent === 'built-in' || b.textContent === 'ClawHub'
+      );
+      expect(sourceButtons.length).toBe(2);
     });
-    await act(async () => {
-      fireEvent.pointerDown(screen.getByRole('button', { name: 'Filter by source' }), { button: 0 });
-    });
-    expect(await screen.findByRole('menuitem', { name: /built-in/i })).toBeInTheDocument();
-    expect(screen.getByRole('menuitem', { name: /ClawHub/i })).toBeInTheDocument();
   });
 
   it('deselecting a source filter triggers search with single active source', async () => {
@@ -677,15 +671,16 @@ describe('SkillsExplorerTab', () => {
 
     render(<SkillsExplorerTab />);
 
+    // Wait for sources to load and buttons to appear
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'Filter by source' })).toBeInTheDocument();
+      const buttons = screen.getAllByRole('button');
+      expect(buttons.some(b => b.textContent === 'ClawHub')).toBe(true);
     });
 
+    // Deselect 'ClawHub' — only 'built-in' remains active → triggers search with source filter
+    const clawhubBtn = screen.getAllByRole('button').find(b => b.textContent === 'ClawHub')!;
     await act(async () => {
-      fireEvent.pointerDown(screen.getByRole('button', { name: 'Filter by source' }), { button: 0 });
-    });
-    await act(async () => {
-      fireEvent.click(await screen.findByRole('menuitem', { name: /ClawHub/i }));
+      fireEvent.click(clawhubBtn);
     });
 
     await waitFor(() => {

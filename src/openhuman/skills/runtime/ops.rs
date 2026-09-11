@@ -84,7 +84,11 @@ async fn resolve_node(config: &Config) -> ResolvedRuntimeSummary {
             error: Some("node runtime disabled".to_string()),
         };
     }
-    let bootstrap = NodeBootstrap::new(std::sync::Arc::new(config.clone()));
+    let bootstrap = NodeBootstrap::new(
+        config.node.clone(),
+        config.workspace_dir.clone(),
+        reqwest::Client::new(),
+    );
     match bootstrap.resolve().await {
         Ok(resolved) => ResolvedRuntimeSummary {
             runtime: "node".to_string(),
@@ -128,7 +132,7 @@ async fn resolve_python(config: &Config) -> ResolvedRuntimeSummary {
             error: Some("python runtime disabled".to_string()),
         };
     }
-    let bootstrap = PythonBootstrap::new(std::sync::Arc::new(config.clone()));
+    let bootstrap = PythonBootstrap::new(config.runtime_python.clone());
     match bootstrap.resolve().await {
         Ok(resolved) => ResolvedRuntimeSummary {
             runtime: "python".to_string(),
@@ -163,5 +167,23 @@ async fn resolve_python(config: &Config) -> ResolvedRuntimeSummary {
 }
 
 #[cfg(test)]
-#[path = "ops_tests.rs"]
-mod tests;
+mod tests {
+    use super::*;
+
+    #[test]
+    fn runtime_requirement_parses_aliases() {
+        assert_eq!(
+            RuntimeRequirement::from_optional(None).unwrap(),
+            RuntimeRequirement::All
+        );
+        assert_eq!(
+            RuntimeRequirement::from_optional(Some("nodejs")).unwrap(),
+            RuntimeRequirement::Node
+        );
+        assert_eq!(
+            RuntimeRequirement::from_optional(Some("python3")).unwrap(),
+            RuntimeRequirement::Python
+        );
+        assert!(RuntimeRequirement::from_optional(Some("ruby")).is_err());
+    }
+}

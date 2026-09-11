@@ -4,7 +4,7 @@ use crate::openhuman::tools::traits::{PermissionLevel, Tool, ToolCallOptions, To
 use async_trait::async_trait;
 use serde_json::json;
 use std::path::PathBuf;
-use tinytools::ToolRunContext;
+use tinyagents::harness::tool::ToolExecutionContext;
 
 /// Runs test suites (cargo test, vitest) and returns pass/fail with output.
 pub struct RunTestsTool {
@@ -16,8 +16,8 @@ impl RunTestsTool {
         Self { workspace_dir }
     }
 
-    fn workspace_dir_for_context(&self, context: Option<&dyn ToolRunContext>) -> PathBuf {
-        if let Some(workspace) = context.and_then(|ctx| ctx.workspace()) {
+    fn workspace_dir_for_context(&self, context: Option<&ToolExecutionContext>) -> PathBuf {
+        if let Some(workspace) = context.and_then(|ctx| ctx.workspace.as_ref()) {
             tracing::debug!(
                 workspace_root = %workspace.root.display(),
                 policy_id = %workspace.policy_id,
@@ -76,7 +76,7 @@ impl Tool for RunTestsTool {
         &self,
         args: serde_json::Value,
         _options: ToolCallOptions,
-        context: Option<&dyn ToolRunContext>,
+        context: Option<&ToolExecutionContext>,
     ) -> anyhow::Result<ToolResult> {
         let workspace_dir = self.workspace_dir_for_context(context);
         let runner = args

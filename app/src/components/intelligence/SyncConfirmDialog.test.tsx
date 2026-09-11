@@ -86,21 +86,9 @@ describe('SyncConfirmDialog', () => {
       <SyncConfirmDialog sourceId="source-1" onConfirm={vi.fn()} onCancel={onCancel} />
     );
 
-    // The dialog is backed by Radix now: focus lands on the first focusable
-    // element inside the panel rather than on the panel itself, and the overlay
-    // is a sibling of the panel rather than its parent.
-    expect(screen.getByRole('dialog').contains(document.activeElement)).toBe(true);
+    expect(screen.getByRole('dialog')).toHaveFocus();
     fireEvent.keyDown(document, { key: 'Escape' });
-    expect(onCancel).toHaveBeenCalledTimes(1);
-
-    // Radix registers its outside-pointer listener in a macrotask (so the click
-    // that opened a dialog cannot immediately close it) and treats an outside
-    // interaction as pointerdown followed by click, so that a drag out of the
-    // panel does not dismiss.
-    await new Promise(resolve => setTimeout(resolve, 0));
-    const overlay = document.querySelector('[data-slot="dialog-overlay"]') as HTMLElement;
-    fireEvent.pointerDown(overlay);
-    fireEvent.click(overlay);
+    fireEvent.pointerDown(screen.getByRole('dialog').parentElement!);
     expect(onCancel).toHaveBeenCalledTimes(2);
 
     unmount();

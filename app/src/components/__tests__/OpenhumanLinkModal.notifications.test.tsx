@@ -6,10 +6,13 @@ import {
   getNotificationPermissionState,
   showNativeNotification,
 } from '../../lib/nativeNotifications/tauriBridge';
-import { isTauri } from '../../utils/tauriCommands/common';
+import { isTauri } from '../../services/webviewAccountService';
 import OpenhumanLinkModal, { OPENHUMAN_LINK_EVENT } from '../OpenhumanLinkModal';
 
-vi.mock('../../utils/tauriCommands/common', () => ({ isTauri: vi.fn(() => false) }));
+vi.mock('../../services/webviewAccountService', () => ({
+  isTauri: vi.fn(() => false),
+  purgeWebviewAccount: vi.fn(),
+}));
 
 vi.mock('../../lib/nativeNotifications/tauriBridge', () => ({
   ensureNotificationPermission: vi.fn(),

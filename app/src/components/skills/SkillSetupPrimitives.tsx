@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-import { Button, CheckIcon, ModalShell } from '../ui';
+import { CheckIcon, ModalShell } from '../ui';
 
 interface SkillSetupModalShellProps {
   children: ReactNode;
@@ -45,7 +45,7 @@ export function SetupNotice({ children, tone = 'sage', icon, className }: SetupN
       className={`rounded-xl border p-3 text-xs ${NOTICE_CLASSES[tone]} ${
         icon ? 'flex items-start gap-2' : ''
       } ${className ?? ''}`}>
-      {icon ? <span className="mt-0.5 shrink-0">{icon}</span> : null}
+      {icon ? <span className="mt-0.5 flex-shrink-0">{icon}</span> : null}
       <div className="min-w-0">{children}</div>
     </div>
   );
@@ -99,20 +99,18 @@ export function SetupSuccess({
       </div>
 
       <div className="flex flex-col gap-2">
-        <Button
-          variant="secondary"
-          size="lg"
+        <button
+          type="button"
           onClick={onSettings}
-          className="w-full rounded-xl border-primary-200 bg-primary-50 text-sm font-medium text-primary-700 hover:bg-primary-100">
+          className="w-full rounded-xl border border-primary-200 bg-primary-50 px-4 py-2.5 text-sm font-medium text-primary-700 hover:bg-primary-100 transition-colors">
           {settingsLabel}
-        </Button>
-        <Button
-          variant="secondary"
-          size="lg"
+        </button>
+        <button
+          type="button"
           onClick={onFinish}
-          className="w-full rounded-xl border-line bg-surface-muted text-sm font-medium text-content-secondary hover:bg-surface-hover dark:bg-surface-muted">
+          className="w-full rounded-xl border border-line bg-surface-muted px-4 py-2.5 text-sm font-medium text-content-secondary hover:bg-surface-hover dark:bg-surface-muted transition-colors">
           {finishLabel}
-        </Button>
+        </button>
       </div>
     </div>
   );

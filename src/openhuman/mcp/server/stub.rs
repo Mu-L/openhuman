@@ -9,7 +9,7 @@
 //!
 //! The signatures MUST match the real ones exactly (return types and
 //! async-ness included). The disabled build
-//! (`cargo check --no-default-features`) is
+//! (`cargo check --no-default-features --features tokenjuice-treesitter`) is
 //! the only thing that catches drift.
 
 use super::tools::McpToolSpec;

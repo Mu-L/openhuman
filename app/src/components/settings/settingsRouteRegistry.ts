@@ -4,11 +4,9 @@ import debug from 'debug';
 // Settings Route Registry
 //
 // Single declarative source of truth for every navigable settings destination.
-// Consumers (SettingsHome, Settings.tsx section arrays, DeveloperOptionsPanel)
-// derive their menus from here so that a route added once automatically appears
-// in navigation and breadcrumbs. `settingsSearchRegistry` was a consumer too,
-// until the settings sidebar's search field was removed and the whole
-// `components/settings/search/` directory went with it.
+// Consumers (SettingsHome, Settings.tsx section arrays, DeveloperOptionsPanel,
+// settingsSearchRegistry) derive their menus from here so that a route added
+// once automatically appears in navigation, breadcrumbs, and search.
 //
 // Section values determine the canonical breadcrumb parent:
 //   'home'      → top-level home menu entry (Settings breadcrumb only)
@@ -45,6 +43,7 @@ type SettingsNavGroup =
   | 'connections'
   | 'knowledgeMemory'
   | 'agentsAutonomy'
+  | 'modelsInference'
   | 'automationIntegrations'
   | 'diagnosticsLogs';
 
@@ -55,6 +54,7 @@ const NAV_GROUP_ORDER: SettingsNavGroup[] = [
   'connections',
   'knowledgeMemory',
   'agentsAutonomy',
+  'modelsInference',
   'automationIntegrations',
   'diagnosticsLogs',
 ];
@@ -68,6 +68,7 @@ export const NAV_GROUP_LABEL_KEY: Record<SettingsNavGroup, string> = {
   // Promoted from the old Developer & Diagnostics sub-sections.
   knowledgeMemory: 'settings.devGroups.knowledgeMemory',
   agentsAutonomy: 'settings.devGroups.agentsAutonomy',
+  modelsInference: 'settings.devGroups.modelsInference',
   automationIntegrations: 'settings.devGroups.automationIntegrations',
   diagnosticsLogs: 'settings.devGroups.diagnosticsLogs',
 };
@@ -148,9 +149,8 @@ export const SETTINGS_ROUTE_REGISTRY: SettingsRegistryEntry[] = [
     navOrder: 0,
   },
   {
-    // appearance hosts the display-language selector (formerly an inline row on
-    // the old settings home list) and the whole former Theme studio page —
-    // palette, fonts, backdrop, import/export. `/settings/theme` redirects here.
+    // appearance also hosts the display-language selector (formerly an inline
+    // row on the old settings home list).
     id: 'appearance',
     titleKey: 'settings.appearance.title',
     descriptionKey: 'settings.appearance.menuDesc',
@@ -162,16 +162,35 @@ export const SETTINGS_ROUTE_REGISTRY: SettingsRegistryEntry[] = [
       'mode',
       'color',
       'colour',
-      'font',
-      'palette',
-      'background',
-      'backdrop',
       'language',
       'locale',
       'translation',
     ],
     navGroup: 'general',
     navOrder: 1,
+  },
+  {
+    // Theme Studio — full colour + font customization on top of the simple
+    // light/dark toggle in Appearance.
+    id: 'theme',
+    titleKey: 'settings.theme.title',
+    descriptionKey: 'settings.theme.menuDesc',
+    section: 'home',
+    searchKeywords: [
+      'theme',
+      'color',
+      'colour',
+      'font',
+      'palette',
+      'customize',
+      'customise',
+      'appearance',
+      'surface',
+      'background',
+      'accent',
+    ],
+    navGroup: 'general',
+    navOrder: 2,
   },
   {
     // devices: real pairing panel (the old "Coming Soon" stub was removed).
@@ -211,13 +230,22 @@ export const SETTINGS_ROUTE_REGISTRY: SettingsRegistryEntry[] = [
   // --- Connections group ---
   // The Integrations settings section was retired — the composio/OAuth grid
   // lives on the Connections page and the task-source/webhook triage surface is
-  // no longer used. Desktop Agent moved to the
+  // no longer used. Desktop Agent and Desktop Companion moved to the
   // Connections page's Desktop group; their slugs redirect there.
 
   // Notifications-hub and crypto hub pages are retired — their slugs redirect
   // to /settings/notifications and /settings/wallet-balances.
 
   // --- About ---
+  {
+    id: 'keyboard-shortcuts',
+    titleKey: 'shortcuts.title',
+    descriptionKey: 'shortcuts.menuDesc',
+    section: 'home',
+    searchKeywords: ['keyboard', 'shortcuts', 'keys', 'hotkeys', 'bindings', 'cheatsheet'],
+    navGroup: 'general',
+    navOrder: 98,
+  },
   {
     // Core connection — promotes cloud-mode remote-core config (persisted
     // RPC URL + token) into a first-class setting plus a live status
@@ -243,19 +271,6 @@ export const SETTINGS_ROUTE_REGISTRY: SettingsRegistryEntry[] = [
     navOrder: 97,
   },
   {
-    // Moved out of its own top-level `/feedback` route: it was reached only
-    // from a sidebar-header icon, and that icon became the command-palette
-    // trigger. A public board is a General-settings subject anyway, next to
-    // About.
-    id: 'feedback',
-    titleKey: 'nav.feedback',
-    descriptionKey: 'feedback.header.desc',
-    section: 'home',
-    searchKeywords: ['feedback', 'bug', 'feature', 'request', 'board', 'vote'],
-    navGroup: 'general',
-    navOrder: 98,
-  },
-  {
     id: 'about',
     titleKey: 'settings.about',
     descriptionKey: 'settings.aboutDesc',
@@ -269,21 +284,21 @@ export const SETTINGS_ROUTE_REGISTRY: SettingsRegistryEntry[] = [
   // =========================================================================
   // ACCOUNT section leaf panels
   // =========================================================================
-  // Teams were removed from the product; the `team` entry went with them. The
-  // route slugs survive as redirects in `settingsRouteElements`.
-  //
-  // Privacy, Security and Migration are their OWN sidebar rows rather than
-  // sub-nav pills under Account (`navParent: 'account'`, as they were): each is
-  // a full page of unrelated controls, and burying three of them behind one
-  // Account row meant the sidebar named one destination for four pages.
+  {
+    id: 'team',
+    titleKey: 'pages.settings.account.team',
+    descriptionKey: 'pages.settings.account.teamDesc',
+    section: 'account',
+    searchKeywords: ['members', 'invites', 'organization', 'organisation', 'workspace'],
+    navParent: 'account',
+  },
   {
     id: 'privacy',
     titleKey: 'pages.settings.account.privacy',
     descriptionKey: 'pages.settings.account.privacyDesc',
     section: 'account',
     searchKeywords: ['telemetry', 'tracking', 'analytics', 'data'],
-    navGroup: 'general',
-    navOrder: 5,
+    navParent: 'account',
   },
   {
     id: 'security',
@@ -291,8 +306,7 @@ export const SETTINGS_ROUTE_REGISTRY: SettingsRegistryEntry[] = [
     descriptionKey: 'pages.settings.account.securityDesc',
     section: 'account',
     searchKeywords: ['keychain', 'secret', 'password', 'encryption', 'credentials'],
-    navGroup: 'general',
-    navOrder: 6,
+    navParent: 'account',
   },
   {
     id: 'migration',
@@ -300,8 +314,7 @@ export const SETTINGS_ROUTE_REGISTRY: SettingsRegistryEntry[] = [
     descriptionKey: 'pages.settings.account.migrationDesc',
     section: 'account',
     searchKeywords: ['import', 'export', 'transfer', 'data'],
-    navGroup: 'general',
-    navOrder: 7,
+    navParent: 'account',
   },
 
   // =========================================================================
@@ -447,6 +460,14 @@ export const SETTINGS_ROUTE_REGISTRY: SettingsRegistryEntry[] = [
     navOrder: 3,
   },
   {
+    // Surfaced on the Connections page (Desktop group); route redirects there.
+    id: 'companion',
+    titleKey: 'pages.settings.features.desktopCompanion',
+    descriptionKey: 'settings.assistant.desktopCompanionDesc',
+    section: 'features',
+    searchKeywords: ['desktop', 'overlay', 'companion'],
+  },
+  {
     // meetings: Meeting Assistant settings (issue #3511 / epic #3505 PR-5).
     // Surfaced on the Connections page (meetings tab, below the meetings list);
     // the route redirects there and it's no longer in the settings sidebar.
@@ -508,7 +529,7 @@ export const SETTINGS_ROUTE_REGISTRY: SettingsRegistryEntry[] = [
   // These live ONLY under Settings → Developer & Diagnostics.
   // Items removed from this list compared to the old DeveloperOptionsPanel:
   //   agents, autonomy, agent-access, sandbox-settings, activity-level,
-  //   tools, voice, embeddings, heartbeat,
+  //   tools, companion, voice, embeddings, heartbeat,
   //   ledger-usage, cost-dashboard, task-sources, composio-routing,
   //   webhooks-triggers, migration, security
   //   (all moved to their canonical section pages).
@@ -545,6 +566,15 @@ export const SETTINGS_ROUTE_REGISTRY: SettingsRegistryEntry[] = [
     devOnly: true,
     navGroup: 'diagnosticsLogs',
   },
+  {
+    id: 'agentbox',
+    titleKey: 'settings.agentbox.title',
+    descriptionKey: 'settings.agentbox.desc',
+    section: 'developer',
+    devOnly: true,
+    navGroup: 'modelsInference',
+    searchKeywords: ['agentbox', 'gmi', 'maas', 'marketplace'],
+  },
   // Automation & Integrations (debug)
   {
     id: 'mcp-server',
@@ -557,6 +587,15 @@ export const SETTINGS_ROUTE_REGISTRY: SettingsRegistryEntry[] = [
   },
   // dev-workflow (the cron-based GitHub dev-automation panel) was retired —
   // superseded by first-level Workflows (/flows) and the skills workflow runner.
+  {
+    id: 'cron-jobs',
+    titleKey: 'settings.developerMenu.cronJobs.title',
+    descriptionKey: 'settings.developerMenu.cronJobs.desc',
+    section: 'developer',
+    devOnly: true,
+    navGroup: 'automationIntegrations',
+    searchKeywords: ['cron', 'schedule', 'jobs'],
+  },
   // Composio trigger-triage config merged into the Connections Composio page.
   // Agent Chat + Local Model Debug are now chips on the Connections → LLM page.
   {

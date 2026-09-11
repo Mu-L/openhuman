@@ -31,7 +31,7 @@
 //! tree).
 //!
 //! Signatures in [`stub`] must match the real ones exactly — the disabled
-//! build (`cargo check --no-default-features`)
+//! build (`cargo check --no-default-features --features tokenjuice-treesitter`)
 //! is the only thing that catches drift.
 
 // Type carve-out: always compiled, both feature directions. See module docs.

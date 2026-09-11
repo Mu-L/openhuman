@@ -64,9 +64,7 @@ describe('findEntryById', () => {
   });
 
   it('returns the correct section for a developer-only entry', () => {
-    // `cron-jobs` used to stand in here; it left the registry when the cron
-    // surface moved to `/flows?view=schedules`. `event-log` is the same shape.
-    const entry = findEntryById('event-log');
+    const entry = findEntryById('cron-jobs');
     expect(entry).toBeDefined();
     expect(entry!.section).toBe('developer');
     expect(entry!.devOnly).toBe(true);

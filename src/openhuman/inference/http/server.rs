@@ -33,8 +33,8 @@ use serde_json::json;
 use std::collections::HashSet;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
-use tinyinference::message::Message;
-use tinyinference::model::{ModelRequest, ModelStreamItem};
+use tinyagents::harness::message::Message;
+use tinyagents::harness::model::{ModelRequest, ModelStreamItem};
 use tracing::{debug, warn};
 
 use super::types::{
@@ -145,12 +145,9 @@ async fn chat_completions_handler(
     let completion_id = format!("chatcmpl-{}", uuid::Uuid::new_v4());
     let created = chrono::Utc::now().timestamp();
     let model_name = req.model.clone();
-    let mut model_request = ModelRequest::new(messages)
+    let model_request = ModelRequest::new(messages)
         .with_model(model_id.clone())
         .with_temperature(temperature);
-    if let Some(tokens) = req.max_completion_tokens.or(req.max_tokens) {
-        model_request = model_request.with_max_tokens(tokens);
-    }
 
     if req.stream {
         let model_stream = match chat_model.stream(&(), model_request).await {
@@ -393,5 +390,5 @@ pub(crate) fn strip_temperature_suffix(model: &str) -> &str {
 }
 
 #[cfg(test)]
-#[path = "http_tests.rs"]
+#[path = "tests.rs"]
 mod tests;

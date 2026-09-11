@@ -42,6 +42,7 @@ import {
   waitForAssistantReplyContaining,
   waitForSocketConnected,
 } from '../helpers/chat-harness';
+import { callOpenhumanRpc } from '../helpers/core-rpc';
 import { textExists } from '../helpers/element-helpers';
 import { resetApp } from '../helpers/reset-app';
 import { navigateViaHash } from '../helpers/shared-flows';
@@ -73,7 +74,7 @@ function seedHarnessComposioState(): void {
 // Shared helpers
 // ---------------------------------------------------------------------------
 
-/** Navigate to /chat, open a fresh thread, wait for the socket, then send a
+/** Navigate to /chat, open a new thread, wait for the socket, then send a
  *  message and return. The calling test is responsible for asserting outcomes. */
 async function navigateChatAndSend(prompt: string): Promise<void> {
   await navigateViaHash('/chat');
@@ -85,29 +86,24 @@ async function navigateChatAndSend(prompt: string): Promise<void> {
     },
     { timeout: 15_000, timeoutMsg: 'Chat surface did not mount' }
   );
-  // Each scenario is independent. Keeping prior tool-call turns in the same
-  // conversation makes the last scenario exercise an unrelated, cumulative
-  // renderer state instead of its own action flow.
-  const previousThreadId = await getSelectedThreadId();
-  const clicked =
-    (await clickByTitle('New thread', 8_000)) ||
-    (await clickByTitle('New thread (/new)', 3_000)) ||
-    (await browser.execute(() => {
-      const btn = Array.from(document.querySelectorAll('button')).find(
-        button => (button.textContent ?? '').trim() === 'New'
-      ) as HTMLButtonElement | undefined;
-      if (!btn) return false;
-      btn.click();
-      return true;
-    }));
-  expect(clicked).toBe(true);
-  await browser.waitUntil(
-    async () => {
-      const selectedThreadId = await getSelectedThreadId();
-      return Boolean(selectedThreadId && selectedThreadId !== previousThreadId);
-    },
-    { timeout: 8_000, timeoutMsg: 'a fresh thread.selectedThreadId never populated' }
-  );
+  if (!(await getSelectedThreadId())) {
+    const clicked =
+      (await clickByTitle('New thread', 8_000)) ||
+      (await clickByTitle('New thread (/new)', 3_000)) ||
+      (await browser.execute(() => {
+        const btn = Array.from(document.querySelectorAll('button')).find(
+          button => (button.textContent ?? '').trim() === 'New'
+        ) as HTMLButtonElement | undefined;
+        if (!btn) return false;
+        btn.click();
+        return true;
+      }));
+    expect(clicked).toBe(true);
+    await browser.waitUntil(async () => await getSelectedThreadId(), {
+      timeout: 8_000,
+      timeoutMsg: 'thread.selectedThreadId never populated',
+    });
+  }
 
   await typeIntoComposer(prompt);
   const socketReady = await waitForSocketConnected(30_000);
@@ -134,6 +130,10 @@ describe('Harness — Composio tool-call prompt flow', () => {
     await startMockServer();
     await waitForApp();
     await resetApp(USER_ID);
+    const superContext = await callOpenhumanRpc('openhuman.config_set_super_context_enabled', {
+      value: false,
+    });
+    expect(superContext.ok).toBe(true);
     console.log(`${LOG_PREFIX} Suite setup complete`);
   });
 

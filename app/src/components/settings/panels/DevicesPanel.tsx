@@ -1,12 +1,11 @@
 import createDebug from 'debug';
-import { useCallback, useEffect, useId, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useT } from '../../../lib/i18n/I18nContext';
 import { callCoreRpc } from '../../../services/coreRpcClient';
 import type { ToastNotification } from '../../../types/intelligence';
 import { ToastContainer } from '../../intelligence/Toast';
 import Button from '../../ui/Button';
-import { ModalShell } from '../../ui/ModalShell';
 import {
   SettingsBadge,
   SettingsEmptyState,
@@ -86,7 +85,7 @@ function PeerDot({ online }: { online: boolean | null }) {
     <span
       title={isOnline ? t('devices.online') : t('devices.offline')}
       data-testid={isOnline ? 'peer-status-online' : 'peer-status-offline'}
-      className={`inline-block w-2 h-2 rounded-full shrink-0 ${isOnline ? 'bg-sage-500' : 'bg-content-faint'}`}
+      className={`inline-block w-2 h-2 rounded-full flex-shrink-0 ${isOnline ? 'bg-sage-500' : 'bg-neutral-300'}`}
     />
   );
 }
@@ -129,16 +128,16 @@ function ConfirmRevokeDialog({
   onCancel: () => void;
 }) {
   const { t } = useT();
-  const titleId = useId();
 
   return (
-    <ModalShell
-      title={t('devices.confirmRevokeTitle')}
-      titleId={titleId}
-      onClose={onCancel}
-      maxWidthClassName="max-w-sm"
-      contentClassName="px-6 py-5"
-      footer={
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30">
+      <div className="bg-surface rounded-2xl max-w-sm w-full p-6 border border-line shadow-large">
+        <h3 className="text-base font-semibold text-content mb-2">
+          {t('devices.confirmRevokeTitle')}
+        </h3>
+        <p className="text-sm text-content-secondary mb-5">
+          {t('devices.confirmRevokeBody').replace('{label}', device.label)}
+        </p>
         <div className="flex gap-3">
           <Button type="button" variant="secondary" size="md" onClick={onCancel} className="flex-1">
             {t('common.cancel')}
@@ -154,11 +153,8 @@ function ConfirmRevokeDialog({
             {t('devices.revoke')}
           </Button>
         </div>
-      }>
-      <p className="text-sm text-content-secondary">
-        {t('devices.confirmRevokeBody').replace('{label}', device.label)}
-      </p>
-    </ModalShell>
+      </div>
+    </div>
   );
 }
 

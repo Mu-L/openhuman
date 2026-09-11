@@ -17,8 +17,7 @@
 use std::cell::RefCell;
 use std::collections::HashSet;
 
-use crate::core::bus::BUS;
-use crate::core::events::DomainEvent;
+use crate::core::event_bus::{publish_global, DomainEvent};
 
 use super::types::EgressDescriptor;
 
@@ -112,7 +111,7 @@ pub fn emit_external_transfer(descriptor: EgressDescriptor) {
         thread_id.is_some() && client_id.is_some(),
     );
 
-    BUS.publish(DomainEvent::ExternalTransferPending {
+    publish_global(DomainEvent::ExternalTransferPending {
         descriptor,
         thread_id,
         client_id,

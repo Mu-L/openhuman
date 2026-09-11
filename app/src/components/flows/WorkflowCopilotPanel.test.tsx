@@ -26,20 +26,7 @@ vi.mock('../../features/conversations/components/ChatThreadView', () => ({
 // stub the store hook rather than wrapping every render in a real Redux
 // `Provider`, since these tests only assert which card renders, not the
 // decide/connect flow those components own (covered by their own test files).
-// `useAppSelector` is stubbed too: the panel now nests its own
-// `AssistantUiRuntimeProvider` (scoped to the copilot's dedicated thread),
-// which projects the thread's transcript out of the store. These tests stub
-// `ChatThreadView`, so nothing under that runtime is asserted here — it just
-// needs a store shape it can read. The runtime's real behaviour is covered by
-// `WorkflowCopilotPanel.assistantUiRuntime.test.tsx`, against a real store.
-vi.mock('../../store/hooks', () => ({
-  useAppDispatch: () => vi.fn(),
-  useAppSelector: (selector: (state: unknown) => unknown) =>
-    selector({
-      thread: { selectedThreadId: null, messagesByThreadId: {} },
-      chatRuntime: { streamingAssistantByThread: {}, inferenceTurnLifecycleByThread: {} },
-    }),
-}));
+vi.mock('../../store/hooks', () => ({ useAppDispatch: () => vi.fn() }));
 // Neither card calls this on mount (only on Approve/Deny/Connect click), but
 // stub it defensively so a real network call can never sneak into a render
 // test.
@@ -94,6 +81,7 @@ describe('WorkflowCopilotPanel', () => {
         onProposal={vi.fn()}
         onAccept={vi.fn()}
         onReject={vi.fn()}
+        onClose={vi.fn()}
       />
     );
     // The copilot now uses the shared ChatComposer (textarea by placeholder,
@@ -129,6 +117,7 @@ describe('WorkflowCopilotPanel', () => {
         onProposal={vi.fn()}
         onAccept={vi.fn()}
         onReject={vi.fn()}
+        onClose={vi.fn()}
       />
     );
 
@@ -189,6 +178,7 @@ describe('WorkflowCopilotPanel', () => {
         onProposal={onProposal}
         onAccept={vi.fn()}
         onReject={vi.fn()}
+        onClose={vi.fn()}
       />
     );
     expect(onProposal).toHaveBeenCalledWith(hookState.proposal);
@@ -206,6 +196,7 @@ describe('WorkflowCopilotPanel', () => {
         onProposal={vi.fn()}
         onAccept={onAccept}
         onReject={vi.fn()}
+        onClose={vi.fn()}
       />
     );
     fireEvent.click(screen.getByTestId('workflow-copilot-accept'));
@@ -228,6 +219,7 @@ describe('WorkflowCopilotPanel', () => {
         onProposal={vi.fn()}
         onAccept={onAccept}
         onReject={vi.fn()}
+        onClose={vi.fn()}
       />
     );
 
@@ -253,6 +245,7 @@ describe('WorkflowCopilotPanel', () => {
         onProposal={vi.fn()}
         onAccept={onAccept}
         onReject={vi.fn()}
+        onClose={vi.fn()}
       />
     );
 
@@ -277,6 +270,7 @@ describe('WorkflowCopilotPanel', () => {
           onProposal={vi.fn()}
           onAccept={onAccept}
           onReject={vi.fn()}
+          onClose={vi.fn()}
         />
       );
       fireEvent.click(screen.getByTestId('workflow-copilot-accept-and-enable'));
@@ -297,6 +291,7 @@ describe('WorkflowCopilotPanel', () => {
           onProposal={vi.fn()}
           onAccept={onAccept}
           onReject={vi.fn()}
+          onClose={vi.fn()}
         />
       );
 
@@ -325,6 +320,7 @@ describe('WorkflowCopilotPanel', () => {
           onProposal={vi.fn()}
           onAccept={onAccept}
           onReject={vi.fn()}
+          onClose={vi.fn()}
         />
       );
 
@@ -351,6 +347,7 @@ describe('WorkflowCopilotPanel', () => {
           onProposal={vi.fn()}
           onAccept={onAccept}
           onReject={vi.fn()}
+          onClose={vi.fn()}
         />
       );
 
@@ -378,6 +375,7 @@ describe('WorkflowCopilotPanel', () => {
         onProposal={vi.fn()}
         onAccept={onAccept}
         onReject={onReject}
+        onClose={vi.fn()}
       />
     );
 
@@ -404,6 +402,7 @@ describe('WorkflowCopilotPanel', () => {
         onProposal={vi.fn()}
         onAccept={onAccept}
         onReject={onReject}
+        onClose={vi.fn()}
       />
     );
     fireEvent.click(screen.getByTestId('workflow-copilot-reject'));
@@ -420,6 +419,7 @@ describe('WorkflowCopilotPanel', () => {
         onProposal={vi.fn()}
         onAccept={vi.fn()}
         onReject={vi.fn()}
+        onClose={vi.fn()}
       />
     );
     expect(screen.getByTestId('workflow-copilot-capped')).toBeInTheDocument();
@@ -434,6 +434,7 @@ describe('WorkflowCopilotPanel', () => {
         onProposal={vi.fn()}
         onAccept={vi.fn()}
         onReject={vi.fn()}
+        onClose={vi.fn()}
       />
     );
     expect(screen.queryByTestId('workflow-copilot-capped')).not.toBeInTheDocument();
@@ -452,6 +453,7 @@ describe('WorkflowCopilotPanel', () => {
         onProposal={vi.fn()}
         onAccept={vi.fn()}
         onReject={vi.fn()}
+        onClose={vi.fn()}
       />
     );
     expect(screen.queryByTestId('workflow-copilot-capped')).not.toBeInTheDocument();
@@ -465,6 +467,7 @@ describe('WorkflowCopilotPanel', () => {
         onProposal={vi.fn()}
         onAccept={vi.fn()}
         onReject={vi.fn()}
+        onClose={vi.fn()}
       />
     );
     fireEvent.click(screen.getByTestId('workflow-copilot-continue'));
@@ -489,6 +492,7 @@ describe('WorkflowCopilotPanel', () => {
         onProposal={vi.fn()}
         onAccept={vi.fn()}
         onReject={vi.fn()}
+        onClose={vi.fn()}
       />
     );
     fireEvent.click(screen.getByTestId('workflow-copilot-continue'));
@@ -506,6 +510,7 @@ describe('WorkflowCopilotPanel', () => {
         onProposal={vi.fn()}
         onAccept={vi.fn()}
         onReject={vi.fn()}
+        onClose={vi.fn()}
         repairSeed={{ runId: 'run-7', error: 'boom', graph: baseGraph }}
       />
     );
@@ -525,6 +530,7 @@ describe('WorkflowCopilotPanel', () => {
         onProposal={vi.fn()}
         onAccept={vi.fn()}
         onReject={vi.fn()}
+        onClose={vi.fn()}
         buildSeed={{ description: 'digest my Slack every morning' }}
       />
     );
@@ -548,6 +554,7 @@ describe('WorkflowCopilotPanel', () => {
         onProposal={vi.fn()}
         onAccept={vi.fn()}
         onReject={vi.fn()}
+        onClose={vi.fn()}
         buildSeed={{ description: 'digest my Slack every morning' }}
       />
     );
@@ -563,6 +570,7 @@ describe('WorkflowCopilotPanel', () => {
         onProposal={vi.fn()}
         onAccept={vi.fn()}
         onReject={vi.fn()}
+        onClose={vi.fn()}
         buildSeed={{ description: 'digest my Slack every morning' }}
         onBuildSeedConsumed={onBuildSeedConsumed}
       />
@@ -586,6 +594,7 @@ describe('WorkflowCopilotPanel', () => {
         onProposal={vi.fn()}
         onAccept={vi.fn()}
         onReject={vi.fn()}
+        onClose={vi.fn()}
         buildSeed={{ description: 'digest my Slack every morning' }}
         onBuildSeedConsumed={onBuildSeedConsumed}
       />
@@ -611,6 +620,7 @@ describe('WorkflowCopilotPanel', () => {
         onProposal={vi.fn()}
         onAccept={vi.fn()}
         onReject={vi.fn()}
+        onClose={vi.fn()}
         buildSeed={{ description: 'digest my Slack every morning' }}
         onBuildSeedConsumed={onBuildSeedConsumed}
       />
@@ -629,6 +639,7 @@ describe('WorkflowCopilotPanel', () => {
         onProposal={vi.fn()}
         onAccept={vi.fn()}
         onReject={vi.fn()}
+        onClose={vi.fn()}
         buildSeed={{ description: 'digest my Slack every morning' }}
         onBuildSeedConsumed={onBuildSeedConsumed}
       />
@@ -647,6 +658,7 @@ describe('WorkflowCopilotPanel', () => {
         onProposal={vi.fn()}
         onAccept={vi.fn()}
         onReject={vi.fn()}
+        onClose={vi.fn()}
         buildSeed={{ description: 'digest my Slack every morning' }}
         onBuildSeedConsumed={onBuildSeedConsumed}
       />
@@ -666,6 +678,7 @@ describe('WorkflowCopilotPanel', () => {
         onProposal={vi.fn()}
         onAccept={vi.fn()}
         onReject={vi.fn()}
+        onClose={vi.fn()}
         buildSeed={null}
         onBuildSeedConsumed={onBuildSeedConsumed}
       />
@@ -690,6 +703,7 @@ describe('WorkflowCopilotPanel', () => {
         onProposal={vi.fn()}
         onAccept={vi.fn()}
         onReject={vi.fn()}
+        onClose={vi.fn()}
         buildSeed={{ description: 'post a daily summary to slack' }}
       />
     );
@@ -722,6 +736,7 @@ describe('WorkflowCopilotPanel', () => {
         onProposal={vi.fn()}
         onAccept={vi.fn()}
         onReject={vi.fn()}
+        onClose={vi.fn()}
         prefillSeed={{ text: 'Build a workflow that files receipts.' }}
       />
     );
@@ -742,6 +757,7 @@ describe('WorkflowCopilotPanel', () => {
         onProposal={vi.fn()}
         onAccept={vi.fn()}
         onReject={vi.fn()}
+        onClose={vi.fn()}
         prefillSeed={{ text: 'Build a workflow that files receipts.' }}
         onPrefillSeedConsumed={onPrefillSeedConsumed}
       />
@@ -758,6 +774,7 @@ describe('WorkflowCopilotPanel', () => {
         onProposal={vi.fn()}
         onAccept={vi.fn()}
         onReject={vi.fn()}
+        onClose={vi.fn()}
         prefillSeed={{ text: 'Build a workflow that files receipts.' }}
         onPrefillSeedConsumed={onPrefillSeedConsumed}
       />
@@ -777,6 +794,7 @@ describe('WorkflowCopilotPanel', () => {
         onProposal={vi.fn()}
         onAccept={vi.fn()}
         onReject={vi.fn()}
+        onClose={vi.fn()}
         prefillSeed={{ text: 'Build a workflow that files receipts.' }}
         onPrefillSeedConsumed={onPrefillSeedConsumed}
       />
@@ -797,6 +815,7 @@ describe('WorkflowCopilotPanel', () => {
         onProposal={vi.fn()}
         onAccept={vi.fn()}
         onReject={vi.fn()}
+        onClose={vi.fn()}
         prefillSeed={{ text: 'Build a workflow that files receipts.' }}
         onPrefillSeedConsumed={onPrefillSeedConsumed}
       />
@@ -814,6 +833,7 @@ describe('WorkflowCopilotPanel', () => {
         onProposal={vi.fn()}
         onAccept={vi.fn()}
         onReject={vi.fn()}
+        onClose={vi.fn()}
         prefillSeed={null}
         onPrefillSeedConsumed={onPrefillSeedConsumed}
       />
@@ -830,6 +850,7 @@ describe('WorkflowCopilotPanel', () => {
         onProposal={vi.fn()}
         onAccept={vi.fn()}
         onReject={vi.fn()}
+        onClose={vi.fn()}
         prefillSeed={{ text: 'Build a workflow that files receipts.', mode: 'build' }}
       />
     );
@@ -854,6 +875,7 @@ describe('WorkflowCopilotPanel', () => {
         onProposal={vi.fn()}
         onAccept={vi.fn()}
         onReject={vi.fn()}
+        onClose={vi.fn()}
         prefillSeed={{ text: 'Build a workflow that files receipts.', mode: 'build' }}
       />
     );
@@ -878,6 +900,7 @@ describe('WorkflowCopilotPanel', () => {
         onProposal={vi.fn()}
         onAccept={vi.fn()}
         onReject={vi.fn()}
+        onClose={vi.fn()}
         prefillSeed={{ text: 'Build a workflow that files receipts.' }}
       />
     );
@@ -894,6 +917,7 @@ describe('WorkflowCopilotPanel', () => {
         onProposal={vi.fn()}
         onAccept={vi.fn()}
         onReject={vi.fn()}
+        onClose={vi.fn()}
         prefillSeed={{ text: 'Build a workflow that files receipts.', mode: 'build' }}
       />
     );
@@ -927,6 +951,7 @@ describe('WorkflowCopilotPanel', () => {
           onProposal={vi.fn()}
           onAccept={vi.fn()}
           onReject={vi.fn()}
+          onClose={vi.fn()}
         />
       );
       expect(screen.queryByTestId('workflow-copilot-approval')).not.toBeInTheDocument();
@@ -940,6 +965,7 @@ describe('WorkflowCopilotPanel', () => {
           onProposal={vi.fn()}
           onAccept={vi.fn()}
           onReject={vi.fn()}
+          onClose={vi.fn()}
         />
       );
       expect(screen.getByTestId('workflow-copilot-approval')).toBeInTheDocument();
@@ -959,6 +985,7 @@ describe('WorkflowCopilotPanel', () => {
           onProposal={vi.fn()}
           onAccept={vi.fn()}
           onReject={vi.fn()}
+          onClose={vi.fn()}
         />
       );
       const surface = screen.getByTestId('workflow-copilot-approval');
@@ -983,6 +1010,7 @@ describe('WorkflowCopilotPanel', () => {
           onProposal={vi.fn()}
           onAccept={vi.fn()}
           onReject={vi.fn()}
+          onClose={vi.fn()}
         />
       );
       expect(screen.queryByTestId('workflow-copilot-approval')).not.toBeInTheDocument();

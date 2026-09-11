@@ -17,18 +17,9 @@
  * subsequent `fetchStatuses()` refresh; this component only orchestrates
  * the user intent.
  */
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { useT } from '../../../lib/i18n/I18nContext';
-import {
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogRoot,
-  AlertDialogTitle,
-} from '../../ui/AlertDialog';
 import Button from '../../ui/Button';
 import type { ConnStatus } from './types';
 
@@ -97,9 +88,18 @@ const McpConnectionHealthToolbar = ({
 
   const counts = useMemo(() => computeHealthCounts(statuses), [statuses]);
 
-  // Escape closing the "Disconnect all" confirmation WITHOUT firing the bulk
-  // RPC is now `AlertDialog` / Radix's own default behavior — no hand-rolled
-  // listener needed.
+  // Escape closes the "Disconnect all" confirmation WITHOUT firing the bulk
+  // RPC — the standard modal-dismiss affordance, matching the other MCP
+  // dialogs. The listener is only attached while the dialog is open. (Must
+  // be declared before the early return below to satisfy the rules of hooks.)
+  useEffect(() => {
+    if (!confirmDisconnect) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setConfirmDisconnect(false);
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [confirmDisconnect]);
 
   // Nothing to summarise — match the parent's existing "hide chrome when
   // there's nothing installed" pattern.
@@ -140,32 +140,30 @@ const McpConnectionHealthToolbar = ({
         </span>
         <div className="flex items-center gap-2">
           {counts.errorCount > 0 && (
-            <Button
-              variant="tertiary"
-              size="xs"
+            <button
+              type="button"
               onClick={() => void runRetryAll()}
               disabled={isOperating}
               aria-label={t('mcp.health.retryAllAria').replace(
                 '{count}',
                 String(counts.errorCount)
               )}
-              className="h-auto p-0 text-[10px] font-medium text-amber-700 hover:underline disabled:no-underline disabled:opacity-50 dark:text-amber-300">
+              className="text-[10px] font-medium text-amber-700 dark:text-amber-300 hover:underline disabled:opacity-50 disabled:no-underline">
               {t('mcp.health.retryAll').replace('{count}', String(counts.errorCount))}
-            </Button>
+            </button>
           )}
           {counts.connectedCount > 0 && (
-            <Button
-              variant="tertiary"
-              size="xs"
+            <button
+              type="button"
               onClick={() => setConfirmDisconnect(true)}
               disabled={isOperating}
               aria-label={t('mcp.health.disconnectAllAria').replace(
                 '{count}',
                 String(counts.connectedCount)
               )}
-              className="h-auto p-0 text-[10px] font-medium text-content-secondary hover:underline disabled:no-underline disabled:opacity-50">
+              className="text-[10px] font-medium text-content-secondary hover:underline disabled:opacity-50 disabled:no-underline">
               {t('mcp.health.disconnectAll').replace('{count}', String(counts.connectedCount))}
-            </Button>
+            </button>
           )}
         </div>
       </div>
@@ -205,27 +203,32 @@ const McpConnectionHealthToolbar = ({
       {opError && (
         <p
           role="alert"
-          className="mt-1.5 text-[10px] text-coral-700 dark:text-coral-300 wrap-break-word">
+          className="mt-1.5 text-[10px] text-coral-700 dark:text-coral-300 break-words">
           {opError}
         </p>
       )}
 
-      <AlertDialogRoot open={confirmDisconnect} onOpenChange={setConfirmDisconnect}>
-        <AlertDialogContent>
-          <AlertDialogTitle>{t('mcp.health.disconnectConfirm.title')}</AlertDialogTitle>
-          <AlertDialogDescription>
-            {t('mcp.health.disconnectConfirm.body').replace(
-              '{count}',
-              String(counts.connectedCount)
-            )}
-          </AlertDialogDescription>
-          <AlertDialogFooter>
-            <AlertDialogCancel asChild>
-              <Button variant="secondary" size="sm">
+      {confirmDisconnect && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="mcp-disconnect-all-title"
+          aria-describedby="mcp-disconnect-all-body"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div className="bg-surface rounded-xl shadow-xl max-w-sm w-full p-4">
+            <h2 id="mcp-disconnect-all-title" className="text-sm font-semibold text-content mb-2">
+              {t('mcp.health.disconnectConfirm.title')}
+            </h2>
+            <p id="mcp-disconnect-all-body" className="text-xs text-content-secondary mb-4">
+              {t('mcp.health.disconnectConfirm.body').replace(
+                '{count}',
+                String(counts.connectedCount)
+              )}
+            </p>
+            <div className="flex justify-end gap-2">
+              <Button variant="secondary" size="sm" onClick={() => setConfirmDisconnect(false)}>
                 {t('mcp.health.disconnectConfirm.cancel')}
               </Button>
-            </AlertDialogCancel>
-            <AlertDialogAction asChild>
               <Button
                 variant="primary"
                 tone="danger"
@@ -233,10 +236,10 @@ const McpConnectionHealthToolbar = ({
                 onClick={() => void runDisconnectAll()}>
                 {t('mcp.health.disconnectConfirm.confirm')}
               </Button>
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialogRoot>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

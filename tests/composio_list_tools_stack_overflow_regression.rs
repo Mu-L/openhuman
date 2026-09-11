@@ -121,9 +121,9 @@ use parking_lot::Mutex;
 use serde_json::json;
 use std::sync::Arc;
 use tempfile::tempdir;
-use tinyinference::message::AssistantMessage;
-use tinyinference::model::{ChatModel, ModelProfile, ModelRequest, ModelResponse};
-use tinyinference::tool::ToolCall;
+use tinyagents::harness::message::AssistantMessage;
+use tinyagents::harness::model::{ChatModel, ModelProfile, ModelRequest, ModelResponse};
+use tinyagents::harness::tool::ToolCall;
 
 // ── env serialisation (config-rs reads process env) ──────────────────
 
@@ -206,7 +206,7 @@ impl ChatModel<()> for StubModel {
         &self,
         _state: &(),
         _request: ModelRequest,
-    ) -> tinyinference::Result<ModelResponse> {
+    ) -> tinyagents::Result<ModelResponse> {
         let mut count = self.iter.lock();
         *count += 1;
         if *count == 1 {
@@ -226,7 +226,6 @@ impl ChatModel<()> for StubModel {
                 raw: None,
                 resolved_model: None,
                 continue_turn: None,
-                served_from_cache: false,
             })
         } else {
             Ok(ModelResponse::assistant("done"))
@@ -343,10 +342,6 @@ async fn drive_subagent() {
             openhuman_core::openhuman::agent::tinyagents::TurnModelSource::from_model(model),
         all_tools: Arc::new(vec![]),
         all_tool_specs: Arc::new(vec![]),
-        // #6145: empty means "same surface as `all_tool_specs`" — the
-        // catalogue falls back to it, so these stubs keep the behaviour
-        // they had before the parent's visible set became its own field.
-        visible_tool_specs: Arc::new(Vec::new()),
         visible_tool_names: std::collections::HashSet::new(),
         subagent_tool_ceiling_names: std::collections::HashSet::new(),
         model_name: "test-model".into(),

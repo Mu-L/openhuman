@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import type { ToastNotification } from '../../types/intelligence';
-import { Button, CloseIcon } from '../ui';
 
 interface ToastProps {
   notification: ToastNotification;
@@ -103,7 +102,7 @@ function Toast({ notification, onRemove }: ToastProps) {
           ${styles}
         `}>
         {/* Icon */}
-        <div className={`shrink-0 ${iconStyle}`}>{icon}</div>
+        <div className={`flex-shrink-0 ${iconStyle}`}>{icon}</div>
 
         {/* Content */}
         <div className="flex-1 min-w-0">
@@ -115,25 +114,26 @@ function Toast({ notification, onRemove }: ToastProps) {
 
         {/* Action button */}
         {notification.action && (
-          <Button
-            variant="tertiary"
-            size="xs"
+          <button
             onClick={notification.action.handler}
-            className="underline hover:no-underline shrink-0 px-0 h-auto">
+            className="text-xs font-medium underline hover:no-underline flex-shrink-0">
             {notification.action.label}
-          </Button>
+          </button>
         )}
 
         {/* Close button */}
-        <Button
-          variant="tertiary"
-          size="xs"
-          iconOnly
-          aria-label="Dismiss notification"
+        <button
           onClick={handleRemove}
-          className="shrink-0 text-content-faint hover:text-content-secondary">
-          <CloseIcon className="w-4 h-4" />
-        </Button>
+          className="flex-shrink-0 text-content-faint hover:text-content-secondary transition-colors">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
       </div>
     </div>
   );

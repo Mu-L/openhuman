@@ -20,7 +20,7 @@ import { useState } from 'react';
 import { createBlankWorkflowGraph } from '../../lib/flows/newFlow';
 import { type FlowTemplate, templateNameKey } from '../../lib/flows/templates';
 import { useT } from '../../lib/i18n/I18nContext';
-import { Alert, AlertDescription, Button, ModalShell } from '../ui';
+import { ModalShell } from '../ui/ModalShell';
 import FlowTemplateGallery from './FlowTemplateGallery';
 import { BLANK_FLOW_KEY, useCreateFlow } from './useCreateFlow';
 
@@ -45,16 +45,15 @@ function ChooserOption({
   onClick: () => void;
 }) {
   return (
-    <Button
+    <button
       type="button"
-      variant="secondary"
       data-testid={testId}
       disabled={disabled}
       onClick={onClick}
-      className="h-auto w-full flex-col items-start gap-0.5 rounded-2xl p-4 text-left font-normal hover:border-primary-300 hover:bg-primary-50/40 dark:hover:bg-primary-500/10">
+      className="flex w-full flex-col items-start gap-0.5 rounded-2xl border border-line bg-surface p-4 text-left transition-colors hover:border-primary-300 hover:bg-primary-50/40 disabled:cursor-not-allowed disabled:opacity-60 dark:hover:bg-primary-500/10">
       <span className="text-sm font-semibold text-content">{title}</span>
       <span className="text-xs leading-relaxed text-content-muted">{description}</span>
-    </Button>
+    </button>
   );
 }
 
@@ -101,9 +100,12 @@ export default function NewWorkflowModal({ onClose }: NewWorkflowModalProps) {
       maxWidthClassName={view === 'gallery' ? 'max-w-2xl' : 'max-w-md'}>
       <div className="space-y-3" data-testid="new-workflow-modal">
         {error && (
-          <Alert variant="destructive" density="compact" data-testid="new-workflow-error">
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
+          <p
+            role="alert"
+            data-testid="new-workflow-error"
+            className="rounded-xl border border-coral-200 bg-coral-50 px-3 py-2 text-xs text-coral-700 dark:border-coral-500/30 dark:bg-coral-500/10 dark:text-coral-300">
+            {error}
+          </p>
         )}
 
         {view === 'chooser' ? (
@@ -125,15 +127,13 @@ export default function NewWorkflowModal({ onClose }: NewWorkflowModalProps) {
           </>
         ) : (
           <>
-            <Button
+            <button
               type="button"
-              variant="tertiary"
-              size="xs"
               data-testid="new-workflow-gallery-back"
               onClick={backToChooser}
-              className="h-auto px-0 text-xs font-medium text-primary-600 hover:bg-transparent hover:underline dark:text-primary-400">
+              className="text-xs font-medium text-primary-600 hover:underline dark:text-primary-400">
               {t('flows.templates.back')}
-            </Button>
+            </button>
             <FlowTemplateGallery onSelect={startFromTemplate} busyId={busyKey} />
           </>
         )}

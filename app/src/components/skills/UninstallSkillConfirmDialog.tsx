@@ -24,7 +24,8 @@
  * `.claude/rules/15-settings-modal-system.md`.
  */
 import debug from 'debug';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 import { useT } from '../../lib/i18n/I18nContext';
 import { trackEvent } from '../../services/analytics';
@@ -33,7 +34,6 @@ import {
   skillsApi,
   type WorkflowSummary,
 } from '../../services/api/skillsApi';
-import { ModalShell } from '../ui';
 import Button from '../ui/Button';
 
 const log = debug('skills:uninstall-dialog');
@@ -53,6 +53,27 @@ export default function UninstallSkillConfirmDialog({ skill, onClose, onUninstal
   const { t } = useT();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const cancelBtnRef = useRef<HTMLButtonElement | null>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    previousFocusRef.current = document.activeElement as HTMLElement | null;
+    cancelBtnRef.current?.focus();
+    return () => {
+      previousFocusRef.current?.focus();
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !submitting) {
+        e.preventDefault();
+        onClose();
+      }
+    };
+    document.addEventListener('keydown', handleKey);
+    return () => document.removeEventListener('keydown', handleKey);
+  }, [onClose, submitting]);
 
   const handleConfirm = useCallback(async () => {
     log('confirm: id=%s name=%s', skill.id, skill.name);
@@ -75,23 +96,42 @@ export default function UninstallSkillConfirmDialog({ skill, onClose, onUninstal
     }
   }, [skill.id, skill.name, onUninstalled, onClose, t]);
 
-  return (
-    <ModalShell
-      onClose={() => {
-        if (!submitting) onClose();
-      }}
-      title={
-        <>
+  return createPortal(
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="uninstall-skill-title"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+      onMouseDown={e => {
+        if (e.target === e.currentTarget && !submitting) onClose();
+      }}>
+      <div className="w-[420px] max-w-[90vw] rounded-2xl bg-surface p-5 shadow-2xl">
+        <h2
+          id="uninstall-skill-title"
+          className="text-base font-semibold text-content">
           {t('common.delete')} {skill.name}?
-        </>
-      }
-      titleId="uninstall-skill-title"
-      maxWidthClassName="max-w-[420px]"
-      contentClassName="px-5 pb-1 pt-4"
-      closePolicy={submitting ? { escape: false, backdrop: false, button: false } : undefined}
-      footer={
-        <div className="flex items-center justify-end gap-2">
-          <Button variant="secondary" size="sm" disabled={submitting} onClick={onClose}>
+        </h2>
+        <p className="mt-2 text-sm text-content-secondary">
+          {t('skills.uninstall.description')}
+        </p>
+        {skill.location && (
+          <p className="mt-3 break-all rounded-lg bg-surface-muted px-3 py-2 font-mono text-[11px] text-content-secondary">
+            {skill.location.replace(/\/(WORKFLOW|SKILL)\.md$/i, '')}
+          </p>
+        )}
+        {error && (
+          <div className="mt-3 rounded-lg border border-coral-200 bg-coral-50 px-3 py-2 text-xs text-coral-700">
+            <div className="font-medium">{t('workflows.deleteError')}</div>
+            <div className="mt-1 break-words font-mono text-[11px] text-coral-700/90">{error}</div>
+          </div>
+        )}
+        <div className="mt-5 flex items-center justify-end gap-2">
+          <Button
+            ref={cancelBtnRef}
+            variant="secondary"
+            size="sm"
+            disabled={submitting}
+            onClick={onClose}>
             {t('common.cancel')}
           </Button>
           <Button
@@ -104,19 +144,8 @@ export default function UninstallSkillConfirmDialog({ skill, onClose, onUninstal
             {submitting ? t('team.deleting') : t('common.delete')}
           </Button>
         </div>
-      }>
-      <p className="text-sm text-content-secondary">{t('skills.uninstall.description')}</p>
-      {skill.location && (
-        <p className="mt-3 break-all rounded-lg bg-surface-muted px-3 py-2 font-mono text-[11px] text-content-secondary">
-          {skill.location.replace(/\/(WORKFLOW|SKILL)\.md$/i, '')}
-        </p>
-      )}
-      {error && (
-        <div className="mt-3 rounded-lg border border-coral-200 bg-coral-50 px-3 py-2 text-xs text-coral-700">
-          <div className="font-medium">{t('workflows.deleteError')}</div>
-          <div className="mt-1 wrap-break-word font-mono text-[11px] text-coral-700/90">{error}</div>
-        </div>
-      )}
-    </ModalShell>
+      </div>
+    </div>,
+    document.body
   );
 }

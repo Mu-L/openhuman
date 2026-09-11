@@ -33,11 +33,16 @@ export interface Theme {
    */
   gradient?: { canvas?: string };
   /**
-   * App backdrop layer. `solid` (default) shows just the flat/gradient canvas;
-   * `mesh` opts into the animated WebGL mesh gradient; `image` paints
+   * App backdrop layer. `mesh` (default) renders the animated WebGL mesh
+   * gradient; `solid` shows just the flat/gradient canvas; `image` paints
    * `imageUrl` (cover). Controlled in the Theme Studio.
    */
-  backdrop?: { kind: 'mesh' | 'solid' | 'image'; imageUrl?: string };
+  backdrop?: {
+    kind: 'mesh' | 'solid' | 'image';
+    imageUrl?: string;
+    /** Show the dotted-canvas overlay (default true when omitted). */
+    dots?: boolean;
+  };
 }
 
 export type BackdropKind = 'mesh' | 'solid' | 'image';

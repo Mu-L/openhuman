@@ -176,6 +176,7 @@ else
     echo "Next steps:"
     echo "1) Push and create PR"
     echo "2) Run additional quality checks first"
+    echo "3) Update memory with learnings"
     echo ""
 
     while true; do
@@ -227,8 +228,21 @@ ${body}
           fi
           break
           ;;
+        3)
+          echo "[deep-work] 🧠 calling memory-keeper..."
+          repo=$(resolve_deep_work_repo)
+          issue_json=$(gh issue view "$issue" -R "$repo" --json title)
+          title=$(jq -r '.title' <<<"$issue_json")
+
+          memory_prompt="Update project memory with learnings from issue #${issue}: \"${title}\".
+
+Review the recent commits and changes to extract useful insights for future development."
+
+          claude "$memory_prompt" --task memory-keeper
+          break
+          ;;
         *)
-          echo "Please enter 1 or 2"
+          echo "Please enter 1, 2, or 3"
           continue
           ;;
       esac

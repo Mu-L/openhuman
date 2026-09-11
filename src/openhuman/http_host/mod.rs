@@ -13,7 +13,6 @@ mod path_utils;
 pub mod rpc;
 mod schemas;
 #[cfg(test)]
-#[path = "http_host_tests.rs"]
 mod tests;
 mod types;
 

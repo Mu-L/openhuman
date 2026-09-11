@@ -7,7 +7,6 @@
  */
 import { useT } from '../../lib/i18n/I18nContext';
 import type { EntityRef } from '../../utils/tauriCommands';
-import Button from '../ui/Button';
 
 interface MemoryChunkMentionedProps {
   entities: EntityRef[];
@@ -23,10 +22,10 @@ export function MemoryChunkMentioned({ entities, onSelectEntity }: MemoryChunkMe
       <h3 className="mw-mentioned-heading">{t('intelligence.memoryChunk.mentioned.heading')}</h3>
       <div className="mw-mentioned-table">
         {entities.map(ent => (
-          <Button
-            variant="tertiary"
+          <button
+            type="button"
             key={ent.entity_id}
-            className="mw-mentioned-row h-auto w-full justify-start rounded-none px-0"
+            className="mw-mentioned-row"
             onClick={() => onSelectEntity(ent)}>
             <span className="mw-mentioned-kind">{ent.kind}</span>
             <span className="mw-mentioned-surface">{ent.surface}</span>
@@ -38,7 +37,7 @@ export function MemoryChunkMentioned({ entities, onSelectEntity }: MemoryChunkMe
                     String(ent.count)
                   )}
             </span>
-          </Button>
+          </button>
         ))}
       </div>
     </section>

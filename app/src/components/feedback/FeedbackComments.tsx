@@ -4,9 +4,8 @@ import { useEffect, useRef, useState } from 'react';
 import { useUser } from '../../hooks/useUser';
 import { useT } from '../../lib/i18n/I18nContext';
 import { feedbackApi } from '../../services/api/feedbackApi';
-import { messageForApiError } from '../../services/apiError';
 import type { FeedbackComment } from '../../types/feedback';
-import { Button, TextArea } from '../ui';
+import Button from '../ui/Button';
 
 const log = debugFactory('feedback:comments');
 
@@ -54,7 +53,7 @@ export default function FeedbackComments({ feedbackId, onCommentAdded }: Feedbac
       .catch((error: unknown) => {
         if (requestId !== loadRequestIdRef.current) return;
         log('load comments failed id=%s error=%O', feedbackId, error);
-        setLoadError(messageForApiError(error, t('feedback.comments.loadError')));
+        setLoadError(error instanceof Error ? error.message : t('feedback.comments.loadError'));
       })
       .finally(() => {
         if (requestId === loadRequestIdRef.current) setIsLoading(false);
@@ -76,7 +75,7 @@ export default function FeedbackComments({ feedbackId, onCommentAdded }: Feedbac
       onCommentAdded();
     } catch (error) {
       log('post comment failed id=%s error=%O', feedbackId, error);
-      setPostError(messageForApiError(error, t('feedback.comments.postError')));
+      setPostError(error instanceof Error ? error.message : t('feedback.comments.postError'));
     } finally {
       setPosting(false);
     }
@@ -95,7 +94,9 @@ export default function FeedbackComments({ feedbackId, onCommentAdded }: Feedbac
           {comments.map(comment => {
             const isMine = user?._id === comment.user;
             return (
-              <li key={comment.id} className="rounded-xl bg-surface-muted px-3 py-2">
+              <li
+                key={comment.id}
+                className="rounded-xl bg-surface-muted px-3 py-2 dark:bg-white/[0.03]">
                 <div className="flex items-center gap-2 text-xs text-content-faint">
                   <span className="font-medium text-content-secondary">
                     {isMine
@@ -105,7 +106,7 @@ export default function FeedbackComments({ feedbackId, onCommentAdded }: Feedbac
                   <span>·</span>
                   <span>{formatDate(comment.createdAt)}</span>
                 </div>
-                <p className="mt-1 whitespace-pre-wrap wrap-break-word text-sm text-content-secondary">
+                <p className="mt-1 whitespace-pre-wrap break-words text-sm text-content-secondary">
                   {comment.body}
                 </p>
               </li>
@@ -115,14 +116,14 @@ export default function FeedbackComments({ feedbackId, onCommentAdded }: Feedbac
       )}
 
       <div className="flex items-start gap-2">
-        <TextArea
+        <textarea
           value={input}
           maxLength={COMMENT_MAX}
           onChange={e => setInput(e.target.value)}
           placeholder={t('feedback.comments.placeholder')}
           disabled={posting}
           rows={2}
-          className="flex-1 resize-y bg-surface-muted"
+          className="flex-1 resize-y rounded-xl border border-line bg-surface-muted px-3 py-2 text-sm text-content placeholder:text-neutral-400 transition-all focus:border-primary-500/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500/30 dark:border-line-strong dark:bg-white/[0.03] dark:placeholder:text-neutral-500"
         />
         <Button
           variant="primary"

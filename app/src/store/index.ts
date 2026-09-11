@@ -5,7 +5,6 @@ import {
   FLUSH,
   PAUSE,
   PERSIST,
-  type PersistConfig,
   persistReducer,
   persistStore,
   PURGE,
@@ -22,14 +21,16 @@ import {
   filterArtifactsForPersist,
   rehydrateArtifactsFromPersist,
 } from './artifactsPersistFilter';
+import backendMeetReducer from './backendMeetSlice';
 import channelConnectionsReducer from './channelConnectionsSlice';
 import chatRuntimeReducer from './chatRuntimeSlice';
+import companionReducer from './companionSlice';
 import connectivityReducer from './connectivitySlice';
 import coreModeReducer from './coreModeSlice';
 import githubStarReducer from './githubStarSlice';
 import layoutReducer from './layoutSlice';
 import localeReducer from './localeSlice';
-import mascotReducer, { migrateLegacySpeakReplies } from './mascotSlice';
+import mascotReducer from './mascotSlice';
 import notificationReducer from './notificationSlice';
 import personaReducer from './personaSlice';
 import providerSurfacesReducer from './providerSurfaceSlice';
@@ -160,32 +161,14 @@ const persistedThreadReducer = persistReducer(threadPersistConfig, threadReducer
 const layoutPersistConfig = { key: 'layout', storage, whitelist: ['panels'] };
 const persistedLayoutReducer = persistReducer(layoutPersistConfig, layoutReducer);
 
-// Persist the mascot appearance fields, the custom GIF override, the selected
-// mascot id (so the chosen GitHub-manifest mascot survives a reload — the
-// slice's REHYDRATE guard re-validates it), and the chosen voice mode (so
-// realtime doesn't reset to classic on restart). `chatMascotExpanded` and
-// `speakReplies` join them so the merged chat surface reopens in the mode the
-// user left it in; `chatMascotListening` is deliberately excluded (transient mic
-// state — see the field docs in mascotSlice). Other mascot fields stay as
+// Persist the mascot appearance fields, the custom GIF override, and the
+// selected mascot id (so the chosen GitHub-manifest mascot survives a reload —
+// the slice's REHYDRATE guard re-validates it). Other mascot fields stay as
 // runtime state.
 const mascotPersistConfig = {
   key: 'mascot',
   storage,
-  whitelist: [
-    'color',
-    'voiceId',
-    'customMascotGifUrl',
-    'selectedMascotId',
-    'voiceMode',
-    'chatMascotExpanded',
-    'chatMascotDismissed',
-    'speakReplies',
-  ],
-  // Folds the pre-Redux `human.speakReplies` localStorage key into the blob
-  // before REHYDRATE. Lives here rather than in the reducer so the reducer stays
-  // a pure function of (state, action) — see migrateLegacySpeakReplies.
-  migrate: (async (state?: Record<string, unknown>) =>
-    migrateLegacySpeakReplies(state)) as PersistConfig<unknown>['migrate'],
+  whitelist: ['color', 'voiceId', 'customMascotGifUrl', 'selectedMascotId'],
 };
 const persistedMascotReducer = persistReducer(mascotPersistConfig, mascotReducer);
 
@@ -244,11 +227,13 @@ const persistedGithubStarReducer = persistReducer(githubStarPersistConfig, githu
 
 export const store = configureStore({
   reducer: {
+    backendMeet: backendMeetReducer,
     socket: socketReducer,
     connectivity: connectivityReducer,
     thread: persistedThreadReducer,
     layout: persistedLayoutReducer,
     chatRuntime: persistedChatRuntimeReducer,
+    companion: companionReducer,
     agentProfiles: agentProfileReducer,
     channelConnections: persistedChannelConnectionsReducer,
     accounts: persistedAccountsReducer,

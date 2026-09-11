@@ -130,7 +130,9 @@ const ApprovalHistoryPanel = () => {
             <SettingsEmptyState label={t('settings.approvalHistory.emptyState')} />
           </div>
         ) : (
-          <ul className="divide-y divide-line-subtle" data-testid="approval-history-list">
+          <ul
+            className="divide-y divide-line-subtle dark:divide-neutral-800"
+            data-testid="approval-history-list">
             {entries.map(entry => (
               <li
                 key={entry.request_id}
@@ -140,7 +142,7 @@ const ApprovalHistoryPanel = () => {
                   <span className="font-mono text-xs text-content truncate">{entry.tool_name}</span>
                   <span
                     data-testid={`approval-history-decision-${entry.decision}`}
-                    className="shrink-0">
+                    className="flex-shrink-0">
                     <SettingsBadge variant={DECISION_BADGE_VARIANT[entry.decision]}>
                       {t(DECISION_LABEL_KEY[entry.decision])}
                     </SettingsBadge>
