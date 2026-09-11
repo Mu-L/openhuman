@@ -115,9 +115,6 @@ pub async fn mcp_clients_add_custom(
         provenance: ServerProvenance::Custom,
     };
 
-    let reg = registry(config)?;
-    let store = reg.store();
-
     // `allocate_qualified_name` and this insert are separate statements, so a
     // concurrent add can take the slug in between. Surface that instead of
     // refreshing onto the winner the way `mcp_clients_install` does: two custom
@@ -126,15 +123,16 @@ pub async fn mcp_clients_add_custom(
     // Row and env commit together: a row that lands without its env is a server
     // the caller was told did not save, holding the name and relaunched by the
     // supervisor every tick with no credentials.
-    store
-        .insert_server(&server)
-        .map_err(|e| format!("failed to create the server record: {e}"))?;
-
-    // Store the env values.
-    let env_map: std::collections::BTreeMap<String, String> = env.into_iter().collect();
-    store
-        .set_env_values(&server_id, &env_map)
-        .map_err(|e| format!("failed to store credentials: {e}"))?;
+    if !crate::openhuman::mcp::registry::store::insert_custom_server_with_env(
+        config, &server, &env,
+    )
+    .map_err(|e| format!("failed to create the server record: {e}"))?
+    {
+        return Err(format!(
+            "custom server name `{}` was claimed concurrently; retry the add",
+            server.qualified_name
+        ));
+    }
 
     tracing::debug!(
         "[mcp-custom] add ok server_id={} qualified_name={}",
