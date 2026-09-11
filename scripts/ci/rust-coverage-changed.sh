@@ -73,9 +73,9 @@ llvm_cov() {
   bash scripts/ci-cancel-aware.sh cargo llvm-cov --features "${PRODUCT_FEATURES}" "$@"
 }
 
-# The TUI is a separate package and has no copy of the core's product feature
-# vocabulary. Its dependency on openhuman-core uses the contributor defaults.
-llvm_cov_tui() {
+# Workspace facade packages have no copy of the core's product feature
+# vocabulary. Their dependency on openhuman-core uses the contributor defaults.
+llvm_cov_package() {
   bash scripts/ci-cancel-aware.sh cargo llvm-cov "$@"
 }
 
@@ -250,7 +250,8 @@ run_full() {
   llvm_cov clean --workspace
   llvm_cov --no-report --no-fail-fast -p openhuman --lib
   llvm_cov --no-report --no-fail-fast -p openhuman --bins
-  llvm_cov_tui --no-report --no-fail-fast -p openhuman-tui --all-targets
+  llvm_cov_package --no-report --no-fail-fast -p openhuman-embed --all-targets
+  llvm_cov_package --no-report --no-fail-fast -p openhuman-tui --all-targets
   while IFS= read -r target; do
     [ -n "${target}" ] || continue
     log "running full-suite integration target: ${target}"
@@ -308,6 +309,12 @@ for f in "${files[@]}"; do
   fi
   original_f="${f}"
   case "${f}" in
+    crates/openhuman-embed/src/* | crates/openhuman-embed/tests/*)
+      lib_filters_raw="${lib_filters_raw}__openhuman_embed__
+"
+      log "${original_f} → openhuman-embed test suite"
+      continue
+      ;;
     crates/openhuman-core/src/*)
       src_changed=true
       f="src/${f#crates/openhuman-core/src/}"
@@ -432,22 +439,27 @@ llvm_cov clean --workspace
 
 if [ "${#lib_filters[@]}" -gt 0 ]; then
   declare -a core_filters=()
+  run_embed=false
   run_tui=false
   for filter in "${lib_filters[@]}"; do
-    if [ "${filter}" = "__openhuman_tui__" ]; then
-      run_tui=true
-    else
-      core_filters+=("${filter}")
-    fi
+    case "${filter}" in
+      __openhuman_embed__) run_embed=true ;;
+      __openhuman_tui__) run_tui=true ;;
+      *) core_filters+=("${filter}") ;;
+    esac
   done
   if [ "${#core_filters[@]}" -gt 0 ]; then
     log "running scoped lib unit tests with filters: ${core_filters[*]}"
     # libtest ORs multiple positional filters — one run covers all domains.
     run_counted llvm_cov --no-report --no-fail-fast -p openhuman --lib -- "${core_filters[@]}"
   fi
+  if [ "${run_embed}" = true ]; then
+    log "running openhuman-embed tests"
+    run_counted llvm_cov_package --no-report --no-fail-fast -p openhuman-embed --all-targets
+  fi
   if [ "${run_tui}" = true ]; then
     log "running openhuman-tui tests"
-    run_counted llvm_cov_tui --no-report --no-fail-fast -p openhuman-tui --all-targets
+    run_counted llvm_cov_package --no-report --no-fail-fast -p openhuman-tui --all-targets
   fi
 fi
 
