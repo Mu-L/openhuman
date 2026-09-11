@@ -63,3 +63,24 @@ test("package-manager consumers install and expose the TUI", () => {
   assert.match(installer, /openhuman-tui\.exe/);
   assert.ok(fs.existsSync(path.join(repoRoot, "packages/npm/bin/openhuman-tui.js")));
 });
+
+test("Debian packages install both commands", () => {
+  const work = fs.mkdtempSync(path.join(os.tmpdir(), "openhuman-deb-package-"));
+  const core = path.join(work, "core-fixture");
+  const tui = path.join(work, "tui-fixture");
+  fs.writeFileSync(core, "core");
+  fs.writeFileSync(tui, "tui");
+
+  execFileSync(
+    "bash",
+    [path.join(repoRoot, "packages/deb/build.sh"), core, tui, "0.0.0", "amd64"],
+    { cwd: work },
+  );
+  const contents = execFileSync(
+    "dpkg-deb",
+    ["--contents", path.join(work, "openhuman_0.0.0_amd64.deb")],
+    { encoding: "utf8" },
+  );
+  assert.match(contents, /\.\/usr\/bin\/openhuman\n/);
+  assert.match(contents, /\.\/usr\/bin\/openhuman-tui\n/);
+});
