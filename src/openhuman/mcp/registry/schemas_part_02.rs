@@ -132,6 +132,45 @@ fn handle_set_enabled(params: Map<String, Value>) -> ControllerFuture {
     })
 }
 
+fn custom_input(
+    params: &Map<String, Value>,
+) -> Result<crate::openhuman::mcp::registry::custom::CustomServerInput, String> {
+    Ok(crate::openhuman::mcp::registry::custom::CustomServerInput {
+        display_name: read_required(params, "display_name")?,
+        transport: read_required(params, "transport")?,
+        command: read_optional(params, "command")?,
+        args: read_optional(params, "args")?.unwrap_or_default(),
+        url: read_optional(params, "url")?,
+        env: read_optional(params, "env")?.unwrap_or_default(),
+        description: read_optional(params, "description")?,
+    })
+}
+
+fn handle_add_custom(params: Map<String, Value>) -> ControllerFuture {
+    Box::pin(async move {
+        let config = config_rpc::load_config_with_timeout().await?;
+        let input = custom_input(&params)?;
+        to_json(
+            crate::openhuman::mcp::registry::custom::ops::mcp_clients_add_custom(&config, input)
+                .await?,
+        )
+    })
+}
+
+fn handle_update_custom(params: Map<String, Value>) -> ControllerFuture {
+    Box::pin(async move {
+        let config = config_rpc::load_config_with_timeout().await?;
+        let server_id = read_required::<String>(&params, "server_id")?;
+        let input = custom_input(&params)?;
+        to_json(
+            crate::openhuman::mcp::registry::custom::ops::mcp_clients_update_custom(
+                &config, server_id, input,
+            )
+            .await?,
+        )
+    })
+}
+
 fn handle_status(params: Map<String, Value>) -> ControllerFuture {
     Box::pin(async move {
         let _ = params;

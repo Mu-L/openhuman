@@ -26,6 +26,8 @@ pub fn all_controller_schemas() -> Vec<ControllerSchema> {
         schemas("registry_settings_get"),
         schemas("registry_settings_set"),
         schemas("set_enabled"),
+        schemas("add_custom"),
+        schemas("update_custom"),
         // Setup-agent surface (mcp_setup namespace, lives in setup_ops.rs).
         setup_schemas("search"),
         setup_schemas("get"),
@@ -101,6 +103,14 @@ pub fn all_registered_controllers() -> Vec<RegisteredController> {
         RegisteredController {
             schema: schemas("set_enabled"),
             handler: handle_set_enabled,
+        },
+        RegisteredController {
+            schema: schemas("add_custom"),
+            handler: handle_add_custom,
+        },
+        RegisteredController {
+            schema: schemas("update_custom"),
+            handler: handle_update_custom,
         },
         RegisteredController {
             schema: setup_schemas("search"),
