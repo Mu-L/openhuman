@@ -147,10 +147,10 @@ raw_coverage_modules() {
     sort
 }
 
-# `required-features` of each `[[test]]` target in Cargo.toml, as
+# `required-features` of each `[[test]]` target in the core package manifest, as
 # "<name><TAB><comma-separated gates>". Targets without the key are omitted.
 #
-# Parsed from Cargo.toml rather than `cargo metadata` so this stays a
+# Parsed from the package manifest rather than `cargo metadata` so this stays a
 # dependency-free awk/bash script (no jq, no python) on bash 3.2 and 5.x alike.
 test_target_required_features() {
   awk '
@@ -165,7 +165,7 @@ test_target_required_features() {
       gsub(/[" ]/, "", line); req=line; next
     }
     END { if (name != "" && req != "") print name "\t" req }
-  ' Cargo.toml
+  ' crates/openhuman-core/Cargo.toml
 }
 
 TEST_TARGET_REQS="$(test_target_required_features)"
@@ -308,7 +308,10 @@ for f in "${files[@]}"; do
   fi
   original_f="${f}"
   case "${f}" in
-    crates/openhuman-core/src/*) f="src/${f#crates/openhuman-core/src/}" ;;
+    crates/openhuman-core/src/*)
+      src_changed=true
+      f="src/${f#crates/openhuman-core/src/}"
+      ;;
     crates/openhuman-tui/src/*)
       lib_filters_raw="${lib_filters_raw}__openhuman_tui__
 "
