@@ -7518,6 +7518,199 @@ const messages: TranslationMap = {
   'mcp.custom.form.save': 'Speichern',
   'mcp.custom.form.add': 'Server hinzufügen',
   'mcp.custom.form.saving': 'Wird gespeichert…',
+  'settings.mcpServer.tools.listSubagents': 'Listet verfügbare Subagenten auf',
+  'settings.mcpServer.tools.runSubagent':
+    'Führt einen Subagenten mit einer Eingabeaufforderung aus',
+  'settings.mcpServer.tools.memorySearch': 'Durchsucht den Speicher per semantischer Abfrage',
+  'settings.mcpServer.tools.memoryRecall': 'Ruft bestimmte Erinnerungen anhand der ID ab',
+  'settings.mcpServer.tools.treeReadChunk': 'Liest einen Abschnitt des Speicherbaums',
+  'settings.mcpServer.tools.treeBrowse': 'Durchsucht die Struktur des Speicherbaums',
+  'settings.mcpServer.tools.treeTopEntities':
+    'Ruft die wichtigsten Entitäten aus dem Speicherbaum ab',
+  'settings.mcpServer.tools.treeListSources': 'Listet die Quellen des Speicherbaums auf',
+  'settings.notifications.category.messages.title': 'Nachrichten',
+  'settings.notifications.category.messages.desc':
+    'Neue Nachrichten von eingebetteten Webview-Konten (Slack, WhatsApp, …).',
+  'settings.notifications.category.agents.title': 'Agentenaktivität',
+  'settings.notifications.category.agents.desc':
+    'Abgeschlossene Agentenaufgaben und lang laufende Antworten.',
+  'settings.notifications.category.skills.title': 'Skills',
+  'settings.notifications.category.skills.desc':
+    'Skill-Synchronisierungsereignisse und OAuth-Statusänderungen.',
+  'settings.notifications.category.system.title': 'System',
+  'settings.notifications.category.system.desc':
+    'Verbindungsprobleme, Fehler im Hintergrundprozess, Aktualisierungen.',
+  'settings.notifications.category.meetings.title': 'Meetings',
+  'settings.notifications.category.meetings.desc':
+    'Anstehende Meetings und vom Heartbeat erkannte Kalenderereignisse.',
+  'settings.notifications.category.reminders.title': 'Erinnerungen',
+  'settings.notifications.category.reminders.desc':
+    'Anstehende Erinnerungen und geplante Aufgaben aus Cron-Jobs.',
+  'settings.notifications.category.important.title': 'Wichtige Ereignisse',
+  'settings.notifications.category.important.desc':
+    'Dringende oder zeitkritische Ereignisse aus verbundenen Quellen.',
+  'settings.notifications.categoryToggleAria':
+    'Benachrichtigungen für {name} ein- oder ausschalten',
+  'settings.cron.jobs.runFinishedAt': '{status} um {time}',
+  'settings.cron.jobs.scheduleAt': 'um {time}',
+  'settings.gateway.binaryRequired': 'Gib den Pfad zu openhuman-core auf diesem Rechner an.',
+  'settings.gateway.portInvalid': 'Der SSH-Port muss eine Zahl sein.',
+  'devOptions.gateway': 'Ort',
+  'devOptions.provisionedCore': 'Von dieser App gestarteter Kern',
+  'devOptions.gatewayId': 'Ort',
+  // S9 i18n audit fixes (hardcoded English in files that already hold useT()).
+  'settings.ai.picker.title': 'Anbieter und Modell wählen',
+  'settings.ai.picker.subtitle': 'Konfigurierte Anbieter und verfügbare Modelle durchsuchen.',
+  'settings.ai.picker.useThisModel': 'Dieses Modell verwenden',
+  'settings.ai.picker.searchPlaceholder': 'Anbieter und Modelle suchen',
+  'settings.ai.picker.providersLabel': 'Anbieter',
+  'settings.ai.picker.modelIdPlaceholder': 'Modell-ID eingeben',
+  'settings.ai.picker.claudeCodeHint':
+    'Verwende einen Claude-Code-Modellalias oder eine Modell-ID.',
+  'settings.ai.loops.memoryTreeWorkers.name': 'Speicherbaum-Worker',
+  'settings.ai.loops.cadence.queue': 'Warteschlange',
+  'settings.ai.loops.memoryTreeWorkers.work':
+    'Extrahiert Abschnitte, versiegelt Zweige, erstellt tägliche Zusammenfassungen und ordnet Themen zu.',
+  'settings.ai.loops.memoryTreeWorkers.risk':
+    '{workers} Worker fragen alle {seconds}s ab; das LLM wird nur aufgerufen, wenn die Warteschlange Extrahier-, Versiegel-, Zusammenfassungs- oder Themenaufgaben enthält.',
+  'settings.ai.loops.reflectionRebuild.name': 'Reflexions-Neuaufbau',
+  'settings.ai.loops.cadence.thirtyMin': '30 Min.',
+  'settings.ai.loops.reflectionRebuild.work':
+    'Aktualisiert den Reflexionsstatus nach Speicheraktivität.',
+  'settings.ai.loops.reflectionRebuild.risk':
+    '{count} Aufwachvorgänge/Woche; das LLM arbeitet nur, wenn der Neuaufbau Reflexion benötigt.',
+  'settings.ai.loops.composioSync.name': 'Composio-Synchronisierung',
+  'settings.ai.loops.cadence.twentyMin': '20 Min.',
+  'settings.ai.loops.composioSync.route': 'Integrations-APIs',
+  'settings.ai.loops.composioSync.work':
+    'Fragt verbundene Tools ab, wenn eine Anbieter-Synchronisierung fällig ist.',
+  'settings.ai.loops.composioSync.risk':
+    '{count} Aufwachvorgänge/Woche; durchsucht {active} aktive Verbindung(en).',
+  'settings.ai.openaiOauthCompleteError':
+    'Die ChatGPT-Anmeldung wurde nicht abgeschlossen. Prüfe die Weiterleitungs-URL und versuche es erneut.',
+  'settings.ai.openaiOauthCallbackRequired':
+    'Füge nach der Anmeldung die Weiterleitungs-URL aus deinem Browser ein.',
+  'settings.ai.openaiOauthDisconnectError':
+    'Die ChatGPT-Verbindung konnte nicht getrennt werden. Bitte versuche es erneut.',
+  'memorySources.codingSessions.importAll': 'Alle Sitzungen importieren',
+  'memorySources.codingSessions.draining': 'Import läuft… Durchlauf {passes}',
+  'memorySources.codingSessions.stop': 'Stopp',
+  'memorySources.codingSessions.progress':
+    '{processed} Sitzungen importiert · {observations} Beobachtungen',
+  'memorySources.codingSessions.remaining': 'noch etwa {remaining}',
+  'memorySources.codingSessions.stopped': 'Import angehalten',
+  'memorySources.codingSessions.stoppedMessage':
+    '{processed} Sitzungen importiert. Starten Sie den Import erneut, um die restlichen {remaining} fortzusetzen.',
+  'memorySources.codingSessions.stillRunning': 'Import läuft noch',
+  'memorySources.codingSessions.stillRunningMessage':
+    'Bisher importierte Sitzungen: {processed}. Der Import wurde nicht innerhalb seines Zeitbudgets fertig, läuft aber im Hintergrund weiter. Schauen Sie in einer Minute noch einmal nach, statt ihn neu zu starten.',
+  'sync.pipeline.vectorsPending':
+    'Brocken, die auf Vektoren warten: {count}. Die semantische Suche deckt sie in Kürze ab.',
+  'chat.sources.usedCount': '{n} Quellen verwendet',
+  // Gateways: cores this app provisions and runs elsewhere.
+  'settings.gateway.title': 'Den Kern woanders ausführen',
+  'settings.gateway.description':
+    'Der Kern kann in einem Container laufen, auf einem anderen Rechner über SSH oder in einem Container auf einem anderen Rechner. OpenHuman startet ihn, verbindet sich und fährt ihn herunter, sobald du wechselst.',
+  'settings.gateway.add': 'Ort hinzufügen',
+  'settings.gateway.save': 'Ort speichern',
+  'settings.gateway.remove': 'Entfernen',
+  'settings.gateway.use': 'Diesen verwenden',
+  'settings.gateway.inUse': 'In Verwendung',
+  'settings.gateway.activating': 'Verbinden…',
+  'settings.gateway.activatingStep': 'Verbinden: {step}',
+  'settings.gateway.connected': 'Verbunden unter {endpoint}',
+  'settings.gateway.failed': 'Verbindung nicht möglich: {reason}',
+  'settings.developerMenu.eventLog.workspaceScopeActive': 'Dieser Arbeitsbereich',
+  'settings.developerMenu.eventLog.workspaceScopeAll': 'Alle Arbeitsbereiche',
+  'settings.developerMenu.eventLog.waitingHint':
+    'Ereignisse erscheinen hier, sobald Agenten, Tools und das System arbeiten. Bisher ist nichts passiert.',
+  'settings.developerMenu.eventLog.notConnectedHint':
+    'Verbinden Sie sich erneut mit dem Core, um den Stream fortzusetzen.',
+  'settings.appearance.showChatMascot': 'Tiny am Nachrichtenfeld anzeigen',
+  'settings.appearance.showChatMascotDesc':
+    'Das Maskottchen bleibt auf dem Eingabefeld stehen. Ausgeblendet ist der Chat nur Text, bis du dies wieder einschaltest.',
+  'settings.mascot.customGifUpload': 'Bild hochladen',
+  'settings.mascot.customGifInvalidType':
+    'Nicht unterstützter Dateityp. Lade ein PNG-, GIF-, JPEG-, WebP- oder BMP-Bild hoch.',
+  'settings.mascot.customGifTooLarge': 'Bild ist zu groß. Lade eine Datei bis 1,5 MB hoch.',
+  'settings.mascot.customGifReadError':
+    'Bild konnte nicht gelesen werden. Bitte versuche eine andere Datei.',
+  'walletBalances.colNetwork': 'Netzwerk',
+  'walletBalances.colAddress': 'Adresse',
+  'walletBalances.colBalance': 'Guthaben',
+  'walletBalances.colActions': 'Aktionen',
+  'settings.agents.editor.modelManaged': 'Verwaltete Modelle',
+  'keyring.settings.mode.localEncryptedFile': 'Verschlüsselte Datei',
+  'keyring.settings.mode.localPlaintextFile': 'Unverschlüsselte Datei',
+  'memoryTree.status.statusBudgetExhausted': 'Pausiert: Embedding-Budget erreicht',
+  'composer.humanMode': 'Mensch-Modus',
+  'userErrors.action.openConnections': 'Verbindungen öffnen',
+  'userErrors.integrationDegraded.title': 'Verbindungen zeigen einen veralteten Status',
+  'userErrors.integrationDegraded.body':
+    'Eine verbundene Integration liefert Fehler, daher ist der in der App angezeigte Verbindungsstatus möglicherweise nicht aktuell.',
+  'userErrors.action.openEmbeddingsSettings': 'Embeddings einrichten',
+  'userErrors.localModelUnavailable.title': 'Lokales Modell nicht verfügbar',
+  'userErrors.localModelUnavailable.body':
+    'Ollama ist unter dem konfigurierten Endpunkt nicht erreichbar, oder das benötigte Modell ist dort nicht installiert. Starte Ollama und lade das Modell auf diesem Endpunkt, oder verlagere diese Arbeit auf einen Cloud-Anbieter.',
+  'memorySources.repair.title': 'Ältere Erinnerungen reparieren?',
+  'memorySources.repair.message':
+    'Bis zu {scanned} synchronisierte Dokumente wurden gespeichert, bevor die Ablage im Gedächtnisbaum korrigiert wurde, und sind im Gedächtnisgraphen unsichtbar. Das Ablegen verbraucht Embedding-Guthaben. Bereits abgelegte Dokumente werden übersprungen.',
+  'memorySources.repair.confirm': 'Reparieren',
+  'memorySources.repair.cancel': 'Nicht jetzt',
+  'memorySources.repair.nothing':
+    'Nichts zu reparieren. Keine synchronisierten Dokumente warten auf die Ablage.',
+  'memorySources.repair.success':
+    '{ingested} im Gedächtnisbaum abgelegt ({already} bereits vorhanden, {skipped} übersprungen).',
+  'memorySources.repair.morePending':
+    'Es sind noch weitere übrig. Erneut auf „Ältere Erinnerungen reparieren“ klicken.',
+  'memorySources.repair.failed': 'Ältere Erinnerungen konnten nicht repariert werden.',
+  'welcome.gatewaySessionErrorFallback':
+    'Die Anmeldung konnte gerade nicht abgeschlossen werden. Der Sitzungsspeicher hat nicht rechtzeitig geantwortet (auch nach erneutem Versuch). Bitte starten Sie OpenHuman neu und versuchen Sie es erneut.',
+  'composio.colApp': 'App',
+  'composio.colStatus': 'Status',
+  'composio.colAccounts': 'Konten',
+  'conversations.composer.context.title': 'Kontextfenster',
+  'conversations.composer.context.input': 'Eingabe',
+  'conversations.composer.context.cached': 'Zwischengespeicherte Eingabe',
+  'conversations.composer.context.output': 'Ausgabe',
+  'conversations.composer.context.cost': 'Kosten',
+  'conversations.composer.command.clear': 'Unterhaltung leeren',
+  'conversations.composer.command.goal': 'Ziel des Threads festlegen oder bearbeiten',
+  'conversations.subagent.awaitingTitle': 'Wartet auf deine Antwort',
+  'conversations.subagent.answerPlaceholder': 'Antwort eingeben',
+  'conversations.subagent.answerSend': 'Antwort senden',
+  'conversations.subagent.answerSent': 'Antwort gesendet',
+  'flows.canvas.description':
+    'Erstellen Sie diese Automatisierung Schritt für Schritt, speichern Sie sie und führen Sie sie aus.',
+  'settings.ai.providers.groupCloud': 'Cloud',
+  'brain.refreshError':
+    'Dein Gehirn konnte nicht aktualisiert werden. Angezeigt werden die zuletzt geladenen Daten.',
+  'common.working': 'Wird ausgeführt…',
+  'common.noResults': 'Keine Ergebnisse',
+  'common.filter': 'Filter',
+  'skills.explorer.colSkill': 'Skill',
+  'skills.explorer.colDescription': 'Beschreibung',
+  'skills.explorer.colProvider': 'Anbieter',
+  'skills.explorer.colAction': 'Aktion',
+  'sync.status.partial': 'Abgerufen, Speicherung im Gedächtnis fehlgeschlagen',
+  'notices.title': 'Benachrichtigungen',
+  'settings.clearAppDataIrreversible': 'Dies kann nicht rückgängig gemacht werden.',
+  'settings.clearAppDataAction': 'Daten löschen',
+  'chat.conversationsHeading': 'Unterhaltungen',
+  'chat.newWindowPrompt': 'Wie kann ich dir heute helfen?',
+  'skills.explorer.sourceFilterAria': 'Nach Quelle filtern',
+  'memoryTree.status.storedItemsTile': 'Gespeicherte Elemente',
+  'memoryTree.status.retryFailed': 'Fehlgeschlagene Jobs erneut ausführen',
+  'memoryTree.status.retryFailedBusy': 'Wird wiederholt...',
+  'memoryTree.status.retryFailedDone': 'Fehlgeschlagene Jobs neu eingereiht',
+  'memoryTree.status.retryFailedCount': 'Erneut eingereihte Jobs: {count}.',
+  'memoryTree.status.retryFailedError':
+    'Die fehlgeschlagenen Jobs konnten nicht neu eingereiht werden',
+  'settings.search.engineTavilyLabel': 'Tavily',
+  'settings.search.engineTavilyDesc':
+    'Web-, Nachrichten- und Finanzsuche von Tavily. Erfordert deinen eigenen Tavily-API-Schlüssel. Fügt Werkzeuge für Suche und Seitenextraktion hinzu.',
+  'settings.search.tavilyKeyLabel': 'Tavily-API-Schlüssel',
+  'settings.search.placeholderTavily': 'tvly-...',
 };
 
 export default messages;
