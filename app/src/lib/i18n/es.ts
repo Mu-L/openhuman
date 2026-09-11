@@ -7464,6 +7464,72 @@ const messages: TranslationMap = {
   'mcp.custom.form.save': 'Guardar',
   'mcp.custom.form.add': 'Añadir servidor',
   'mcp.custom.form.saving': 'Guardando…',
+  'settings.mcpServer.tools.listSubagents': 'Lista los subagentes disponibles',
+  'settings.mcpServer.tools.runSubagent': 'Ejecuta un subagente con una instrucción',
+  'settings.mcpServer.tools.memorySearch': 'Busca en la memoria mediante consulta semántica',
+  'settings.mcpServer.tools.memoryRecall': 'Recupera memorias específicas por ID',
+  'settings.mcpServer.tools.treeReadChunk': 'Lee un fragmento del árbol de memoria',
+  'settings.mcpServer.tools.treeBrowse': 'Explora la estructura del árbol de memoria',
+  'settings.mcpServer.tools.treeTopEntities':
+    'Obtiene las entidades principales del árbol de memoria',
+  'settings.mcpServer.tools.treeListSources': 'Lista las fuentes del árbol de memoria',
+  'settings.notifications.category.messages.title': 'Mensajes',
+  'settings.notifications.category.messages.desc':
+    'Mensajes nuevos de cuentas de webview integradas (Slack, WhatsApp, …).',
+  'settings.notifications.category.agents.title': 'Actividad de los agentes',
+  'settings.notifications.category.agents.desc':
+    'Tareas de agentes completadas y respuestas de larga duración.',
+  'settings.notifications.category.skills.title': 'Habilidades',
+  'settings.notifications.category.skills.desc':
+    'Eventos de sincronización de habilidades y cambios de estado de OAuth.',
+  'settings.notifications.category.system.title': 'Sistema',
+  'settings.notifications.category.system.desc':
+    'Problemas de conexión, errores del proceso en segundo plano, actualizaciones.',
+  'settings.notifications.category.meetings.title': 'Reuniones',
+  'settings.notifications.category.meetings.desc':
+    'Próximas reuniones y eventos de calendario detectados por el heartbeat.',
+  'settings.notifications.category.reminders.title': 'Recordatorios',
+  'settings.notifications.category.reminders.desc':
+    'Próximos recordatorios y tareas programadas de trabajos cron.',
+  'settings.notifications.category.important.title': 'Eventos importantes',
+  'settings.notifications.category.important.desc':
+    'Eventos urgentes o sensibles al tiempo procedentes de fuentes conectadas.',
+  'settings.notifications.categoryToggleAria': 'Activar o desactivar las notificaciones de {name}',
+  'settings.cron.jobs.runFinishedAt': '{status} a las {time}',
+  'settings.cron.jobs.scheduleAt': 'a las {time}',
+  'settings.gateway.binaryRequired': 'Indica la ruta a openhuman-core en esa máquina.',
+  'settings.gateway.portInvalid': 'El puerto SSH debe ser un número.',
+  'devOptions.gateway': 'Ubicación',
+  'devOptions.provisionedCore': 'Núcleo iniciado por esta aplicación',
+  'devOptions.gatewayId': 'ID de la ubicación',
+  // S9 i18n audit fixes (hardcoded English in files that already hold useT()).
+  'settings.ai.picker.title': 'Elegir proveedor y modelo',
+  'settings.ai.picker.subtitle':
+    'Busca entre los proveedores configurados y los modelos disponibles.',
+  'settings.ai.picker.useThisModel': 'Usar este modelo',
+  'settings.ai.picker.searchPlaceholder': 'Buscar proveedores y modelos',
+  'settings.ai.picker.providersLabel': 'Proveedores',
+  'settings.ai.picker.modelIdPlaceholder': 'Introduce el ID del modelo',
+  'settings.ai.picker.claudeCodeHint': 'Usa un alias de modelo de Claude Code o un ID de modelo.',
+  'settings.ai.loops.memoryTreeWorkers.name': 'Trabajadores del árbol de memoria',
+  'settings.ai.loops.cadence.queue': 'cola',
+  'settings.ai.loops.memoryTreeWorkers.work':
+    'Extrae fragmentos, sella ramas, genera resúmenes diarios y enruta temas.',
+  'settings.ai.loops.memoryTreeWorkers.risk':
+    '{workers} trabajadores sondean cada {seconds}s; el LLM solo se invoca cuando la cola tiene tareas de extracción, sellado, resumen o tema.',
+  'settings.ai.loops.reflectionRebuild.name': 'Reconstrucción de reflexión',
+  'settings.ai.loops.cadence.thirtyMin': '30 min',
+  'settings.ai.loops.reflectionRebuild.work':
+    'Actualiza el estado de reflexión tras la actividad de memoria.',
+  'settings.ai.loops.reflectionRebuild.risk':
+    '{count} activaciones por semana; el LLM solo trabaja cuando la reconstrucción necesita reflexión.',
+  'settings.ai.loops.composioSync.name': 'Sincronización de Composio',
+  'settings.ai.loops.cadence.twentyMin': '20 min',
+  'settings.ai.loops.composioSync.route': 'APIs de integración',
+  'settings.ai.loops.composioSync.work':
+    'Consulta las herramientas conectadas cuando toca sincronizar con el proveedor.',
+  'settings.ai.loops.composioSync.risk':
+    '{count} activaciones por semana; explora {active} conexión(es) activa(s).',
   'settings.ai.openaiOauthCompleteError':
     'No se completó el inicio de sesión con ChatGPT. Comprueba la URL de redirección e inténtalo de nuevo.',
   'settings.ai.openaiOauthCallbackRequired':
