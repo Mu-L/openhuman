@@ -547,6 +547,8 @@ const messages: TranslationMap = {
   'settings.clearAppData': 'Borrar datos de la app',
   'settings.clearAppDataDesc':
     'Cerrar sesión y eliminar permanentemente todos los datos locales de la app',
+  'settings.clearAppDataIrreversible': 'Esto no se puede deshacer.',
+  'settings.clearAppDataAction': 'Borrar datos',
   'settings.logOut': 'Cerrar sesión',
   'settings.logOutDesc': 'Salir de tu cuenta',
   'settings.exitLocalSession': 'Salir de la sesión local',
@@ -5041,6 +5043,10 @@ const messages: TranslationMap = {
   'settings.developerMenu.eventLog.live': 'Vivir',
   'settings.developerMenu.eventLog.disconnected': 'desconectado',
   'settings.developerMenu.eventLog.waiting': 'Esperando eventos...',
+  'settings.developerMenu.eventLog.waitingHint':
+    'Los eventos aparecen aquí a medida que los agentes, las herramientas y el sistema trabajan. Todavía no ha ocurrido nada.',
+  'settings.developerMenu.eventLog.notConnectedHint':
+    'Vuelve a conectar con el core para reanudar el flujo.',
   'settings.developerMenu.eventLog.notConnected': 'No conectado al núcleo',
   'settings.developerMenu.eventLog.jumpToLatest': 'Saltar a lo más reciente',
   'settings.developerMenu.eventLog.badge.tool': 'TOOL',
@@ -6203,6 +6209,7 @@ const messages: TranslationMap = {
   'settings.agents.editor.modelHints': 'Sugerencias de enrutamiento',
   'settings.agents.editor.modelTiers': 'Niveles de modelo',
   'settings.agents.editor.modelCustom': 'ID de modelo personalizado…',
+  'settings.agents.editor.modelManaged': 'Modelos gestionados',
   'settings.agents.editor.modelCustomPlaceholder': 'ej. anthropic/claude-sonnet-4',
   'settings.agents.editor.selectTools': 'Agregar herramientas',
   'settings.agents.editor.toolsAllSelected': 'Todas las herramientas',
@@ -6747,6 +6754,27 @@ const messages: TranslationMap = {
   'flows.delete.confirm': 'Eliminar',
   'flows.delete.deleting': 'Eliminando…',
   'flows.canvas.renameLabel': 'Cambiar el nombre del flujo de trabajo',
+  'settings.ai.openaiOauthTitle': 'Iniciar sesión con ChatGPT',
+  'settings.ai.openaiOauthDescription':
+    'Inicia sesión con tu cuenta de ChatGPT para usar modelos de OpenAI sin una clave de API.',
+  'settings.ai.openaiOauthConnect': 'Iniciar sesión con ChatGPT',
+  'settings.ai.openaiOauthConnected': 'Conectado con ChatGPT',
+  'settings.ai.openaiOauthOpening': 'Abriendo el inicio de sesión…',
+  'settings.ai.openaiOauthCallbackHint':
+    'Después de iniciar sesión, pega la URL de redirección completa de tu navegador (comienza por http://127.0.0.1:1455/).',
+  'settings.ai.openaiOauthCallbackPlaceholder':
+    'http://127.0.0.1:1455/auth/callback?code=...&state=...',
+  'settings.ai.openaiOauthFinish': 'Completar el inicio de sesión con ChatGPT',
+  'settings.ai.openaiOauthDisconnect': 'Desconectar ChatGPT',
+  'settings.ai.openaiOauthDesktopOnly':
+    'El inicio de sesión con ChatGPT solo está disponible en la aplicación de escritorio.',
+  'settings.ai.openaiOauthStartError':
+    'No se pudo iniciar la sesión con ChatGPT. Inténtalo de nuevo o usa una clave de API.',
+  'settings.ai.openaiOauthCompleteError':
+    'No se completó el inicio de sesión con ChatGPT. Comprueba la URL de redirección e inténtalo de nuevo.',
+  'settings.ai.openaiOauthCallbackRequired':
+    'Pega la URL de redirección de tu navegador después de iniciar sesión.',
+  'settings.ai.openaiOauthDisconnectError': 'No se pudo desconectar ChatGPT. Inténtalo de nuevo.',
   'memorySources.codingSessions.title': 'Sesiones de agentes de programación',
   'memorySources.codingSessions.description':
     'Convierte tus decisiones y correcciones de Codex y Claude Code en memoria privada de personalidad.',

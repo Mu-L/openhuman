@@ -528,6 +528,8 @@ const messages: TranslationMap = {
   'settings.developerMode.enabledByBuild': '개발 빌드에서 항상 활성화',
   'settings.clearAppData': '앱 데이터 삭제',
   'settings.clearAppDataDesc': '로그아웃하고 모든 로컬 앱 데이터를 영구적으로 삭제',
+  'settings.clearAppDataIrreversible': '되돌릴 수 없습니다.',
+  'settings.clearAppDataAction': '데이터 삭제',
   'settings.logOut': '로그아웃',
   'settings.logOutDesc': '계정에서 로그아웃',
   'settings.exitLocalSession': '로컬 세션 종료',
@@ -4896,6 +4898,9 @@ const messages: TranslationMap = {
   'settings.developerMenu.eventLog.live': '실시간',
   'settings.developerMenu.eventLog.disconnected': '연결 끊김',
   'settings.developerMenu.eventLog.waiting': '이벤트 대기 중...',
+  'settings.developerMenu.eventLog.waitingHint':
+    '에이전트, 도구, 시스템이 작업하면 여기에 이벤트가 나타납니다. 아직 아무 일도 없었습니다.',
+  'settings.developerMenu.eventLog.notConnectedHint': '스트림을 재개하려면 코어에 다시 연결하세요.',
   'settings.developerMenu.eventLog.notConnected': '코어에 연결되지 않음',
   'settings.developerMenu.eventLog.jumpToLatest': '최신으로 이동',
   'settings.developerMenu.eventLog.badge.tool': 'TOOL',
@@ -6007,6 +6012,7 @@ const messages: TranslationMap = {
   'settings.agents.editor.modelHints': '라우트 힌트',
   'settings.agents.editor.modelTiers': '모델 등급',
   'settings.agents.editor.modelCustom': '사용자 정의 모델 ID…',
+  'settings.agents.editor.modelManaged': '관리형 모델',
   'settings.agents.editor.modelCustomPlaceholder': '예: anthropic/claude-sonnet-4',
   'settings.agents.editor.selectTools': '도구 추가',
   'settings.agents.editor.toolsAllSelected': '모든 도구',
@@ -6529,6 +6535,25 @@ const messages: TranslationMap = {
   'flows.delete.confirm': '삭제',
   'flows.delete.deleting': '삭제 중…',
   'flows.canvas.renameLabel': '워크플로 이름 바꾸기',
+  'settings.ai.openaiOauthTitle': 'ChatGPT로 로그인',
+  'settings.ai.openaiOauthDescription':
+    'API 키 없이 OpenAI 모델을 사용하려면 ChatGPT 계정으로 로그인하세요.',
+  'settings.ai.openaiOauthConnect': 'ChatGPT로 로그인',
+  'settings.ai.openaiOauthConnected': 'ChatGPT에 연결됨',
+  'settings.ai.openaiOauthOpening': '로그인 페이지를 여는 중…',
+  'settings.ai.openaiOauthCallbackHint':
+    '로그인 후 브라우저의 전체 리디렉션 URL을 붙여넣으세요(http://127.0.0.1:1455/ 로 시작).',
+  'settings.ai.openaiOauthCallbackPlaceholder':
+    'http://127.0.0.1:1455/auth/callback?code=...&state=...',
+  'settings.ai.openaiOauthFinish': 'ChatGPT 로그인 완료',
+  'settings.ai.openaiOauthDisconnect': 'ChatGPT 연결 해제',
+  'settings.ai.openaiOauthDesktopOnly': 'ChatGPT 로그인은 데스크톱 앱에서만 사용할 수 있습니다.',
+  'settings.ai.openaiOauthStartError':
+    'ChatGPT 로그인을 시작할 수 없습니다. 다시 시도하거나 API 키를 사용하세요.',
+  'settings.ai.openaiOauthCompleteError':
+    'ChatGPT 로그인이 완료되지 않았습니다. 리디렉션 URL을 확인하고 다시 시도하세요.',
+  'settings.ai.openaiOauthCallbackRequired': '로그인 후 브라우저의 리디렉션 URL을 붙여넣으세요.',
+  'settings.ai.openaiOauthDisconnectError': 'ChatGPT 연결을 해제할 수 없습니다. 다시 시도하세요.',
   'memorySources.codingSessions.title': '코딩 에이전트 세션',
   'memorySources.codingSessions.description':
     'Codex와 Claude Code의 결정 및 수정 사항을 비공개 페르소나 메모리로 변환합니다.',

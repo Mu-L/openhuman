@@ -542,6 +542,8 @@ const messages: TranslationMap = {
   'settings.developerMode.enabledByBuild': 'Selalu aktif di build pengembangan',
   'settings.clearAppData': 'Bersihkan Data Aplikasi',
   'settings.clearAppDataDesc': 'Keluar dan hapus permanen semua data aplikasi lokal',
+  'settings.clearAppDataIrreversible': 'Tindakan ini tidak dapat dibatalkan.',
+  'settings.clearAppDataAction': 'Hapus data',
   'settings.logOut': 'Keluar',
   'settings.logOutDesc': 'Keluar dari akun Anda',
   'settings.exitLocalSession': 'Keluar dari sesi lokal',
@@ -4979,6 +4981,10 @@ const messages: TranslationMap = {
   'settings.developerMenu.eventLog.live': 'Live',
   'settings.developerMenu.eventLog.disconnected': 'Terputus',
   'settings.developerMenu.eventLog.waiting': 'Menunggu peristiwa...',
+  'settings.developerMenu.eventLog.waitingHint':
+    'Peristiwa muncul di sini saat agen, alat, dan sistem bekerja. Belum ada yang terjadi.',
+  'settings.developerMenu.eventLog.notConnectedHint':
+    'Hubungkan kembali ke core untuk melanjutkan aliran.',
   'settings.developerMenu.eventLog.notConnected': 'Tidak terhubung ke inti',
   'settings.developerMenu.eventLog.jumpToLatest': 'Lompat ke terbaru',
   'settings.developerMenu.eventLog.badge.tool': 'TOOL',
@@ -6107,6 +6113,7 @@ const messages: TranslationMap = {
   'settings.agents.editor.modelHints': 'Petunjuk rute',
   'settings.agents.editor.modelTiers': 'Tingkatan model',
   'settings.agents.editor.modelCustom': 'ID model kustom…',
+  'settings.agents.editor.modelManaged': 'Model terkelola',
   'settings.agents.editor.modelCustomPlaceholder': 'mis. anthropic/claude-sonnet-4',
   'settings.agents.editor.selectTools': 'Tambah alat',
   'settings.agents.editor.toolsAllSelected': 'Semua alat',
@@ -6639,6 +6646,25 @@ const messages: TranslationMap = {
   'flows.delete.confirm': 'Hapus',
   'flows.delete.deleting': 'Menghapus…',
   'flows.canvas.renameLabel': 'Ganti nama alur kerja',
+  'settings.ai.openaiOauthTitle': 'Masuk dengan ChatGPT',
+  'settings.ai.openaiOauthDescription':
+    'Masuk dengan akun ChatGPT untuk menggunakan model OpenAI tanpa kunci API.',
+  'settings.ai.openaiOauthConnect': 'Masuk dengan ChatGPT',
+  'settings.ai.openaiOauthConnected': 'Terhubung ke ChatGPT',
+  'settings.ai.openaiOauthOpening': 'Membuka proses masuk…',
+  'settings.ai.openaiOauthCallbackHint':
+    'Setelah masuk, tempel URL pengalihan lengkap dari browser Anda (diawali dengan http://127.0.0.1:1455/).',
+  'settings.ai.openaiOauthCallbackPlaceholder':
+    'http://127.0.0.1:1455/auth/callback?code=...&state=...',
+  'settings.ai.openaiOauthFinish': 'Selesaikan proses masuk ChatGPT',
+  'settings.ai.openaiOauthDisconnect': 'Putuskan ChatGPT',
+  'settings.ai.openaiOauthDesktopOnly': 'Masuk dengan ChatGPT hanya tersedia di aplikasi desktop.',
+  'settings.ai.openaiOauthStartError':
+    'Tidak dapat memulai proses masuk ChatGPT. Coba lagi atau gunakan kunci API.',
+  'settings.ai.openaiOauthCompleteError':
+    'Proses masuk ChatGPT tidak selesai. Periksa URL pengalihan lalu coba lagi.',
+  'settings.ai.openaiOauthCallbackRequired': 'Tempel URL pengalihan dari browser setelah masuk.',
+  'settings.ai.openaiOauthDisconnectError': 'Tidak dapat memutuskan ChatGPT. Silakan coba lagi.',
   'memorySources.codingSessions.title': 'Sesi agen pemrograman',
   'memorySources.codingSessions.description':
     'Ubah keputusan dan koreksi Codex serta Claude Code menjadi memori persona pribadi.',

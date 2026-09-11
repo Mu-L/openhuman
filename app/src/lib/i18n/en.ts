@@ -338,8 +338,11 @@ const en: TranslationMap = {
   'settings.developerMode.title': 'Developer mode',
   'settings.developerMode.description': 'Show advanced developer & diagnostic tools',
   'settings.developerMode.enabledByBuild': 'Always on in development builds',
-  'settings.clearAppData': 'Clear App Data',
-  'settings.clearAppDataDesc': 'Sign out and permanently clear all local app data',
+  'settings.clearAppData': 'Clear app data',
+  'settings.clearAppDataDesc':
+    'Signs you out and deletes every thread, setting, and cached file stored on this device.',
+  'settings.clearAppDataIrreversible': 'This cannot be undone.',
+  'settings.clearAppDataAction': 'Clear data',
   'settings.logOut': 'Log out',
   'settings.logOutDesc': 'Sign out of your account',
   'settings.exitLocalSession': 'Exit local session',
@@ -430,7 +433,7 @@ const en: TranslationMap = {
   'settings.ai.llmProviderDesc': 'Choose and configure your AI provider',
 
   // Clear App Data modal
-  'clearData.title': 'Clear App Data',
+  'clearData.title': 'Clear app data',
   'clearData.warning': 'This will sign you out and permanently delete local app data including:',
   'clearData.bulletSettings': 'App settings and conversations',
   'clearData.bulletCache': 'All local integration cache data',
@@ -5062,6 +5065,26 @@ const en: TranslationMap = {
   'settings.ai.openRouterOauthDescription':
     'Sign in with OpenRouter and import a user-controlled API key using PKCE.',
   'settings.ai.connecting': 'Connecting...',
+  'settings.ai.openaiOauthTitle': 'Sign in with ChatGPT',
+  'settings.ai.openaiOauthDescription':
+    'Sign in with your ChatGPT account to use OpenAI models without an API key.',
+  'settings.ai.openaiOauthConnect': 'Sign in with ChatGPT',
+  'settings.ai.openaiOauthConnected': 'Connected with ChatGPT',
+  'settings.ai.openaiOauthOpening': 'Opening sign-in…',
+  'settings.ai.openaiOauthCallbackHint':
+    'After signing in, paste the full redirect URL from your browser (starts with http://127.0.0.1:1455/).',
+  'settings.ai.openaiOauthCallbackPlaceholder':
+    'http://127.0.0.1:1455/auth/callback?code=...&state=...',
+  'settings.ai.openaiOauthFinish': 'Finish ChatGPT sign-in',
+  'settings.ai.openaiOauthDisconnect': 'Disconnect ChatGPT',
+  'settings.ai.openaiOauthDesktopOnly': 'ChatGPT sign-in is only available in the desktop app.',
+  'settings.ai.openaiOauthStartError':
+    'Could not start ChatGPT sign-in. Try again or use an API key.',
+  'settings.ai.openaiOauthCompleteError':
+    'ChatGPT sign-in did not complete. Check the redirect URL and try again.',
+  'settings.ai.openaiOauthCallbackRequired':
+    'Paste the redirect URL from your browser after signing in.',
+  'settings.ai.openaiOauthDisconnectError': 'Could not disconnect ChatGPT. Please try again.',
   'settings.ai.codexAuthButton': 'Connect Codex',
   'settings.ai.codexAuthHelper': 'Uses the existing Codex CLI login from ~/.codex/auth.json.',
   'settings.ai.backgroundLoops': 'Background loops',
@@ -5654,6 +5677,9 @@ const en: TranslationMap = {
   'settings.developerMenu.eventLog.live': 'Live',
   'settings.developerMenu.eventLog.disconnected': 'Disconnected',
   'settings.developerMenu.eventLog.waiting': 'Waiting for events...',
+  'settings.developerMenu.eventLog.waitingHint':
+    'Events appear here as agents, tools, and the system do work. Nothing has happened yet.',
+  'settings.developerMenu.eventLog.notConnectedHint': 'Reconnect to the core to resume the stream.',
   'settings.developerMenu.eventLog.notConnected': 'Not connected to core',
   'settings.developerMenu.eventLog.jumpToLatest': 'Jump to latest',
   'settings.developerMenu.eventLog.badge.tool': 'TOOL',
@@ -6872,6 +6898,7 @@ const en: TranslationMap = {
   'settings.agents.editor.modelHints': 'Route hints',
   'settings.agents.editor.modelTiers': 'Model tiers',
   'settings.agents.editor.modelCustom': 'Custom model id…',
+  'settings.agents.editor.modelManaged': 'Managed models',
   'settings.agents.editor.modelCustomPlaceholder': 'e.g. anthropic/claude-sonnet-4',
   'settings.agents.editor.selectTools': 'Add tools',
   'settings.agents.editor.toolsAllSelected': 'All tools',

@@ -521,6 +521,8 @@ const messages: TranslationMap = {
   'settings.developerMode.enabledByBuild': 'مفعّل دائمًا في إصدارات التطوير',
   'settings.clearAppData': 'مسح بيانات التطبيق',
   'settings.clearAppDataDesc': 'تسجيل الخروج وحذف جميع البيانات المحلية للتطبيق نهائيًا',
+  'settings.clearAppDataIrreversible': 'لا يمكن التراجع عن هذا الإجراء.',
+  'settings.clearAppDataAction': 'حذف البيانات',
   'settings.logOut': 'تسجيل الخروج',
   'settings.logOutDesc': 'تسجيل الخروج من حسابك',
   'settings.exitLocalSession': 'الخروج من الجلسة المحلية',
@@ -4838,6 +4840,9 @@ const messages: TranslationMap = {
   'settings.developerMenu.eventLog.live': 'الحياة',
   'settings.developerMenu.eventLog.disconnected': 'مفصولة',
   'settings.developerMenu.eventLog.waiting': 'ننتظر الأحداث...',
+  'settings.developerMenu.eventLog.waitingHint':
+    'تظهر الأحداث هنا عندما تعمل الوكلاء والأدوات والنظام. لم يحدث شيء بعد.',
+  'settings.developerMenu.eventLog.notConnectedHint': 'أعد الاتصال بالنواة لاستئناف البث.',
   'settings.developerMenu.eventLog.notConnected': 'غير متصل بالنواة',
   'settings.developerMenu.eventLog.jumpToLatest': 'اقفز على آخر',
   'settings.developerMenu.eventLog.badge.tool': 'TOOL',
@@ -5936,6 +5941,7 @@ const messages: TranslationMap = {
   'settings.agents.editor.modelHints': 'تلميحات التوجيه',
   'settings.agents.editor.modelTiers': 'مستويات النموذج',
   'settings.agents.editor.modelCustom': 'معرّف نموذج مخصص…',
+  'settings.agents.editor.modelManaged': 'النماذج المُدارة',
   'settings.agents.editor.modelCustomPlaceholder': 'مثال: anthropic/claude-sonnet-4',
   'settings.agents.editor.selectTools': 'إضافة أدوات',
   'settings.agents.editor.toolsAllSelected': 'كل الأدوات',
@@ -6452,6 +6458,25 @@ const messages: TranslationMap = {
   'flows.delete.confirm': 'حذف',
   'flows.delete.deleting': 'جارٍ الحذف…',
   'flows.canvas.renameLabel': 'إعادة تسمية سير العمل',
+  'settings.ai.openaiOauthTitle': 'تسجيل الدخول باستخدام ChatGPT',
+  'settings.ai.openaiOauthDescription':
+    'سجّل الدخول بحساب ChatGPT لاستخدام نماذج OpenAI من دون مفتاح API.',
+  'settings.ai.openaiOauthConnect': 'تسجيل الدخول باستخدام ChatGPT',
+  'settings.ai.openaiOauthConnected': 'متصل بـ ChatGPT',
+  'settings.ai.openaiOauthOpening': 'جارٍ فتح تسجيل الدخول…',
+  'settings.ai.openaiOauthCallbackHint':
+    'بعد تسجيل الدخول، الصق عنوان URL الكامل لإعادة التوجيه من متصفحك (يبدأ بـ http://127.0.0.1:1455/).',
+  'settings.ai.openaiOauthCallbackPlaceholder':
+    'http://127.0.0.1:1455/auth/callback?code=...&state=...',
+  'settings.ai.openaiOauthFinish': 'إكمال تسجيل الدخول إلى ChatGPT',
+  'settings.ai.openaiOauthDisconnect': 'قطع الاتصال بـ ChatGPT',
+  'settings.ai.openaiOauthDesktopOnly': 'تسجيل الدخول إلى ChatGPT متاح فقط في تطبيق سطح المكتب.',
+  'settings.ai.openaiOauthStartError':
+    'تعذّر بدء تسجيل الدخول إلى ChatGPT. حاول مجددًا أو استخدم مفتاح API.',
+  'settings.ai.openaiOauthCompleteError':
+    'لم يكتمل تسجيل الدخول إلى ChatGPT. تحقّق من عنوان إعادة التوجيه وحاول مجددًا.',
+  'settings.ai.openaiOauthCallbackRequired': 'الصق عنوان إعادة التوجيه من متصفحك بعد تسجيل الدخول.',
+  'settings.ai.openaiOauthDisconnectError': 'تعذّر قطع الاتصال بـ ChatGPT. يُرجى المحاولة مجددًا.',
   'memorySources.codingSessions.title': 'جلسات وكلاء البرمجة',
   'memorySources.codingSessions.description':
     'حوّل قرارات وتصحيحات Codex وClaude Code إلى ذاكرة شخصية خاصة.',

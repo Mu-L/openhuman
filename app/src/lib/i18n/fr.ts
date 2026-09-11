@@ -559,6 +559,8 @@ const messages: TranslationMap = {
   'settings.clearAppData': "Effacer les données de l'app",
   'settings.clearAppDataDesc':
     'Se déconnecter et supprimer définitivement toutes les données locales',
+  'settings.clearAppDataIrreversible': 'Cette action est irréversible.',
+  'settings.clearAppDataAction': 'Effacer les données',
   'settings.logOut': 'Se déconnecter',
   'settings.logOutDesc': 'Se déconnecter de ton compte',
   'settings.exitLocalSession': 'Quitter le local session',
@@ -5068,6 +5070,10 @@ const messages: TranslationMap = {
   'settings.developerMenu.eventLog.live': 'Vivre',
   'settings.developerMenu.eventLog.disconnected': 'Déconnecté',
   'settings.developerMenu.eventLog.waiting': 'En attente des événements...',
+  'settings.developerMenu.eventLog.waitingHint':
+    'Les événements apparaissent ici quand les agents, les outils et le système travaillent. Rien pour le moment.',
+  'settings.developerMenu.eventLog.notConnectedHint':
+    'Reconnectez-vous au core pour reprendre le flux.',
   'settings.developerMenu.eventLog.notConnected': 'Non connecté au noyau',
   'settings.developerMenu.eventLog.jumpToLatest': 'Aller au plus récent',
   'settings.developerMenu.eventLog.badge.tool': 'TOOL',
@@ -6229,6 +6235,7 @@ const messages: TranslationMap = {
   'settings.agents.editor.modelHints': 'Conseils de routage',
   'settings.agents.editor.modelTiers': 'Niveaux de modèle',
   'settings.agents.editor.modelCustom': 'Identifiant de modèle personnalisé…',
+  'settings.agents.editor.modelManaged': 'Modèles gérés',
   'settings.agents.editor.modelCustomPlaceholder': 'ex. anthropic/claude-sonnet-4',
   'settings.agents.editor.selectTools': 'Ajouter des outils',
   'settings.agents.editor.toolsAllSelected': 'Tous les outils',
@@ -6774,6 +6781,28 @@ const messages: TranslationMap = {
   'flows.delete.confirm': 'Supprimer',
   'flows.delete.deleting': 'Suppression…',
   'flows.canvas.renameLabel': 'Renommer le workflow',
+  'settings.ai.openaiOauthTitle': 'Se connecter avec ChatGPT',
+  'settings.ai.openaiOauthDescription':
+    'Connectez-vous avec votre compte ChatGPT pour utiliser les modèles OpenAI sans clé API.',
+  'settings.ai.openaiOauthConnect': 'Se connecter avec ChatGPT',
+  'settings.ai.openaiOauthConnected': 'Connecté à ChatGPT',
+  'settings.ai.openaiOauthOpening': 'Ouverture de la connexion…',
+  'settings.ai.openaiOauthCallbackHint':
+    'Après la connexion, collez l’URL de redirection complète de votre navigateur (elle commence par http://127.0.0.1:1455/).',
+  'settings.ai.openaiOauthCallbackPlaceholder':
+    'http://127.0.0.1:1455/auth/callback?code=...&state=...',
+  'settings.ai.openaiOauthFinish': 'Terminer la connexion à ChatGPT',
+  'settings.ai.openaiOauthDisconnect': 'Déconnecter ChatGPT',
+  'settings.ai.openaiOauthDesktopOnly':
+    'La connexion à ChatGPT est disponible uniquement dans l’application de bureau.',
+  'settings.ai.openaiOauthStartError':
+    'Impossible de démarrer la connexion à ChatGPT. Réessayez ou utilisez une clé API.',
+  'settings.ai.openaiOauthCompleteError':
+    'La connexion à ChatGPT n’a pas abouti. Vérifiez l’URL de redirection et réessayez.',
+  'settings.ai.openaiOauthCallbackRequired':
+    'Collez l’URL de redirection de votre navigateur après la connexion.',
+  'settings.ai.openaiOauthDisconnectError':
+    'Impossible de déconnecter ChatGPT. Veuillez réessayer.',
   'memorySources.codingSessions.title': 'Sessions d’agents de programmation',
   'memorySources.codingSessions.description':
     'Transformez vos décisions et corrections Codex et Claude Code en mémoire de persona privée.',

@@ -535,6 +535,8 @@ const messages: TranslationMap = {
   'settings.developerMode.enabledByBuild': 'ডেভেলপমেন্ট বিল্ডে সবসময় চালু',
   'settings.clearAppData': 'অ্যাপ ডেটা মুছুন',
   'settings.clearAppDataDesc': 'সাইন আউট করুন এবং সব লোকাল ডেটা স্থায়ীভাবে মুছুন',
+  'settings.clearAppDataIrreversible': 'এটি আর ফেরানো যাবে না।',
+  'settings.clearAppDataAction': 'ডেটা মুছুন',
   'settings.logOut': 'লগ আউট',
   'settings.logOutDesc': 'আপনার অ্যাকাউন্ট থেকে সাইন আউট করুন',
   'settings.exitLocalSession': 'স্থানীয় সেশন থেকে প্রস্থান করুন',
@@ -4950,6 +4952,10 @@ const messages: TranslationMap = {
   'settings.developerMenu.eventLog.live': 'লাইভ',
   'settings.developerMenu.eventLog.disconnected': 'বিচ্ছিন্ন',
   'settings.developerMenu.eventLog.waiting': 'ইভেন্টের অপেক্ষা করা হচ্ছে...',
+  'settings.developerMenu.eventLog.waitingHint':
+    'এজেন্ট, টুল ও সিস্টেম কাজ করলে ঘটনাগুলি এখানে দেখা যাবে। এখনও কিছু ঘটেনি।',
+  'settings.developerMenu.eventLog.notConnectedHint':
+    'স্ট্রিম আবার চালু করতে কোরের সঙ্গে পুনরায় সংযোগ করুন।',
   'settings.developerMenu.eventLog.notConnected': 'সংযুক্ত নয়',
   'settings.developerMenu.eventLog.jumpToLatest': 'সর্বশেষ গুরুত্বপূর্ণ',
   'settings.developerMenu.eventLog.badge.tool': 'TOOL',
@@ -6078,6 +6084,7 @@ const messages: TranslationMap = {
   'settings.agents.editor.modelHints': 'রুট হিন্টস',
   'settings.agents.editor.modelTiers': 'মডেল স্তর',
   'settings.agents.editor.modelCustom': 'কাস্টম মডেল আইডি…',
+  'settings.agents.editor.modelManaged': 'পরিচালিত মডেল',
   'settings.agents.editor.modelCustomPlaceholder': 'যেমন anthropic/claude-sonnet-4',
   'settings.agents.editor.selectTools': 'টুল যোগ করুন',
   'settings.agents.editor.toolsAllSelected': 'সব টুল',
@@ -6603,6 +6610,26 @@ const messages: TranslationMap = {
   'flows.delete.confirm': 'মুছুন',
   'flows.delete.deleting': 'মুছে ফেলা হচ্ছে…',
   'flows.canvas.renameLabel': 'ওয়ার্কফ্লো পুনঃনামকরণ করুন',
+  'settings.ai.openaiOauthTitle': 'ChatGPT দিয়ে সাইন ইন করুন',
+  'settings.ai.openaiOauthDescription':
+    'API কী ছাড়াই OpenAI মডেল ব্যবহার করতে আপনার ChatGPT অ্যাকাউন্ট দিয়ে সাইন ইন করুন।',
+  'settings.ai.openaiOauthConnect': 'ChatGPT দিয়ে সাইন ইন করুন',
+  'settings.ai.openaiOauthConnected': 'ChatGPT-এর সাথে সংযুক্ত',
+  'settings.ai.openaiOauthOpening': 'সাইন-ইন খোলা হচ্ছে…',
+  'settings.ai.openaiOauthCallbackHint':
+    'সাইন ইন করার পর ব্রাউজার থেকে সম্পূর্ণ রিডাইরেক্ট URL পেস্ট করুন (http://127.0.0.1:1455/ দিয়ে শুরু)।',
+  'settings.ai.openaiOauthCallbackPlaceholder':
+    'http://127.0.0.1:1455/auth/callback?code=...&state=...',
+  'settings.ai.openaiOauthFinish': 'ChatGPT সাইন-ইন সম্পূর্ণ করুন',
+  'settings.ai.openaiOauthDisconnect': 'ChatGPT সংযোগ বিচ্ছিন্ন করুন',
+  'settings.ai.openaiOauthDesktopOnly': 'ChatGPT সাইন-ইন শুধু ডেস্কটপ অ্যাপে পাওয়া যায়।',
+  'settings.ai.openaiOauthStartError':
+    'ChatGPT সাইন-ইন শুরু করা যায়নি। আবার চেষ্টা করুন অথবা একটি API কী ব্যবহার করুন।',
+  'settings.ai.openaiOauthCompleteError':
+    'ChatGPT সাইন-ইন সম্পূর্ণ হয়নি। রিডাইরেক্ট URL পরীক্ষা করে আবার চেষ্টা করুন।',
+  'settings.ai.openaiOauthCallbackRequired':
+    'সাইন ইন করার পর ব্রাউজার থেকে রিডাইরেক্ট URL পেস্ট করুন।',
+  'settings.ai.openaiOauthDisconnectError': 'ChatGPT সংযোগ বিচ্ছিন্ন করা যায়নি। আবার চেষ্টা করুন।',
   'memorySources.codingSessions.title': 'কোডিং-এজেন্ট সেশন',
   'memorySources.codingSessions.description':
     'Codex ও Claude Code-এর সিদ্ধান্ত এবং সংশোধনকে ব্যক্তিগত পারসোনা মেমরিতে রূপ দিন।',
