@@ -133,8 +133,10 @@ pub(crate) fn extract_provider_error_detail(err: &str) -> Option<String> {
     let after_colon = after_key.trim_start_matches(|c: char| c != '"');
     let stripped = after_colon.strip_prefix('"')?;
 
-    // Manual unescape — handle `\"` and `\\` only; everything else passes
-    // through. Sufficient for OpenAI/Anthropic/etc. error bodies.
+    // Manual unescape over the standard JSON escape set. `\uXXXX` is
+    // deliberately left alone rather than decoded: this is an error-display
+    // path, and an unhandled sequence should stay visible as the literal
+    // `\uXXXX` instead of silently losing a character.
     let mut out = String::new();
     let mut chars = stripped.chars();
     while let Some(c) = chars.next() {
