@@ -391,7 +391,10 @@ jobs:
     needs: [changes]
     if: needs.changes.outputs['rust-core'] == 'true' || needs.changes.outputs['rust-tauri'] == 'true'
     runs-on: ubuntu-22.04
-    timeout-minutes: 20
+    # This lane compiles the product and contributor core graphs, executes the
+    # embedding facade tests, then checks the detached Tauri Cargo world. A cold
+    # runner needs more than the former 20-minute budget to reach Tauri clippy.
+    timeout-minutes: 40
     container:
       image: ghcr.io/tinyhumansai/openhuman_ci:latest
     env:
