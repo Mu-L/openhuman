@@ -7,12 +7,12 @@
 use std::collections::HashMap;
 
 use serde_json::{json, Value};
+use tinymcp_bus::{InstalledServer, ServerProvenance};
 use uuid::Uuid;
 
 use crate::core::event_bus::{publish_global, DomainEvent};
 use crate::openhuman::config::Config;
-use crate::openhuman::mcp::registry::types::{InstalledServer, ServerProvenance};
-use crate::openhuman::mcp::registry::{connections, store};
+use crate::openhuman::mcp::host;
 use crate::rpc::RpcOutcome;
 
 use super::validate::{
@@ -20,6 +20,13 @@ use super::validate::{
     resolve_env, resolve_env_for_transport, validate_env,
 };
 use super::{CustomServerInput, CUSTOM_QUALIFIED_PREFIX, MAX_SLUG_ATTEMPTS};
+
+/// The dynamic registry for `config`'s workspace, or an error string.
+fn registry(config: &Config) -> Result<&tinymcp::McpRegistry, String> {
+    host::for_config(config)
+        .map(|service| service.dynamic())
+        .map_err(|error| format!("failed to open the MCP service: {error}"))
+}
 
 fn allocate_qualified_name(
     config: &Config,
@@ -30,13 +37,15 @@ fn allocate_qualified_name(
         "{CUSTOM_QUALIFIED_PREFIX}{}",
         base_slug(display_name, server_id)
     );
+    let store = registry(config)?.store();
     for attempt in 0..MAX_SLUG_ATTEMPTS {
         let candidate = if attempt == 0 {
             base.clone()
         } else {
             format!("{base}-{}", attempt + 1)
         };
-        let taken = store::find_server_by_qualified_name(config, &candidate)
+        let taken = store
+            .find_server_by_qualified_name(&candidate)
             .map_err(|e| e.to_string())?
             .is_some();
         if !taken {
@@ -106,6 +115,9 @@ pub async fn mcp_clients_add_custom(
         provenance: ServerProvenance::Custom,
     };
 
+    let reg = registry(config)?;
+    let store = reg.store();
+
     // `allocate_qualified_name` and this insert are separate statements, so a
     // concurrent add can take the slug in between. Surface that instead of
     // refreshing onto the winner the way `mcp_clients_install` does: two custom
@@ -114,11 +126,15 @@ pub async fn mcp_clients_add_custom(
     // Row and env commit together: a row that lands without its env is a server
     // the caller was told did not save, holding the name and relaunched by the
     // supervisor every tick with no credentials.
-    if !store::insert_custom_server_with_env(config, &server, &env).map_err(|e| e.to_string())? {
-        return Err(format!(
-            "the name `{qualified_name}` was taken by a concurrent add; please retry"
-        ));
-    }
+    store
+        .insert_server(&server)
+        .map_err(|e| format!("failed to create the server record: {e}"))?;
+
+    // Store the env values.
+    let env_map: std::collections::BTreeMap<String, String> = env.into_iter().collect();
+    store
+        .set_env_values(&server_id, &env_map)
+        .map_err(|e| format!("failed to store credentials: {e}"))?;
 
     tracing::debug!(
         "[mcp-custom] add ok server_id={} qualified_name={}",
@@ -161,58 +177,71 @@ pub async fn mcp_clients_update_custom(
     let (transport, command_kind, command, args) = build_custom_transport(&input)?;
     validate_env(&input.env, transport.is_http_remote())?;
 
+    let reg = registry(config)?;
+    let store = reg.store();
+
     // Read the current record, resolve env, and write both tables as one
-    // serializable transaction (see `store::update_custom_server_rmw`).
+    // serializable transaction (see `Store::update_server_rmw`).
     // Provenance, the previous transport (for credential-scope), and the stored
     // env are ALL read inside the lock: reading any of them outside races a
     // concurrent edit — an OAuth refresh could rotate a token, or another
     // `update_custom` could switch transport and store new-scope credentials —
     // and a stale snapshot could revert the token or mis-scope and carry the
     // new credentials across origins.
-    let updated = store::update_custom_server_rmw(config, &server_id, |current, stored_env| {
-        if current.provenance != ServerProvenance::Custom {
-            anyhow::bail!(
-                "server `{server_id}` was installed from a registry; its command and endpoint come from the catalog listing and cannot be edited here"
+    let updated = store
+        .update_server_rmw(&server_id, |current, stored_env| {
+            if current.provenance != ServerProvenance::Custom {
+                return Err(tinymcp::Error::other(format!(
+                    "server `{server_id}` was installed from a registry; its command and endpoint \
+                     come from the catalog listing and cannot be edited here"
+                )));
+            }
+            let scope_changed =
+                credential_scope(&current.transport) != credential_scope(&transport);
+            let env = resolve_env_for_transport(
+                &input.env,
+                &stored_env
+                    .into_iter()
+                    .collect::<HashMap<String, String>>(),
+                &current.transport,
+                &transport,
             );
-        }
-        let scope_changed = credential_scope(&current.transport) != credential_scope(&transport);
-        let env =
-            resolve_env_for_transport(&input.env, &stored_env, &current.transport, &transport);
-        tracing::debug!(
-            "[mcp-custom] update server_id={} transport={}{} env_keys={:?}",
-            server_id,
-            transport.dispatch_kind(),
-            if scope_changed {
-                " (re-scoped — stored env dropped)"
-            } else {
-                ""
-            },
-            env.keys().collect::<Vec<_>>()
-        );
-        let record = InstalledServer {
-            // Identity and provenance survive an edit untouched — re-deriving
-            // `qualified_name` from the new display name would orphan this row's
-            // env values.
-            server_id: current.server_id.clone(),
-            qualified_name: current.qualified_name.clone(),
-            installed_at: current.installed_at,
-            provenance: current.provenance,
-            icon_url: current.icon_url.clone(),
-            config: current.config.clone(),
-            enabled: current.enabled,
-            last_connected_at: current.last_connected_at,
+            tracing::debug!(
+                "[mcp-custom] update server_id={} transport={}{} env_keys={:?}",
+                server_id,
+                transport.dispatch_kind(),
+                if scope_changed {
+                    " (re-scoped — stored env dropped)"
+                } else {
+                    ""
+                },
+                env.keys().collect::<Vec<_>>()
+            );
+            let record = InstalledServer {
+                // Identity and provenance survive an edit untouched — re-deriving
+                // `qualified_name` from the new display name would orphan this row's
+                // env values.
+                server_id: current.server_id.clone(),
+                qualified_name: current.qualified_name.clone(),
+                installed_at: current.installed_at,
+                provenance: current.provenance,
+                icon_url: current.icon_url.clone(),
+                config: current.config.clone(),
+                enabled: current.enabled,
+                last_connected_at: current.last_connected_at,
 
-            display_name: display_name.clone(),
-            description: clean_description(input.description.clone()),
-            command_kind,
-            command: command.clone(),
-            args: args.clone(),
-            env_keys: env_key_list(&env),
-            transport: transport.clone(),
-        };
-        Ok((record, env))
-    })
-    .map_err(|e| e.to_string())?;
+                display_name: display_name.clone(),
+                description: clean_description(input.description.clone()),
+                command_kind,
+                command: command.clone(),
+                args: args.clone(),
+                env_keys: env_key_list(&env),
+                transport: transport.clone(),
+            };
+            let env_btree: std::collections::BTreeMap<String, String> = env.into_iter().collect();
+            Ok((record, env_btree))
+        })
+        .map_err(|e| e.to_string())?;
 
     // Only now drop the live connection: it was dialed with the previous command
     // or URL, so leaving it up would keep serving tools from the old
@@ -221,7 +250,9 @@ pub async fn mcp_clients_update_custom(
     // pins the server to the pre-edit command indefinitely — it stays healthy, so
     // no later tick reconnects it. `update_env` persists first for the same
     // reason.
-    connections::disconnect(&server_id).await;
+    reg.connections()
+        .disconnect(&server_id)
+        .await;
 
     tracing::debug!("[mcp-custom] update ok server_id={}", server_id);
 

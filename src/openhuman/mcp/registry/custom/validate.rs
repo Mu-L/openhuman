@@ -3,7 +3,7 @@
 
 use std::collections::HashMap;
 
-use crate::openhuman::mcp::registry::types::{CommandKind, Transport};
+use tinymcp_bus::{CommandKind, Transport};
 
 use super::CustomServerInput;
 use super::RESERVED_ENV_PREFIX;
