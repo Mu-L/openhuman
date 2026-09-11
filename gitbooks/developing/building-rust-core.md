@@ -43,8 +43,9 @@ cd openhuman
 That is enough for the Rust workspace. Core wrapper sources and the package
 manifest live under `crates/openhuman-core/`; the authoritative domain
 implementation intentionally remains under the repository-root
-`src/openhuman/` tree. The terminal frontend is the sibling
-`crates/openhuman-tui/` package.
+`src/openhuman/` tree. The stable host-facing library facade is the sibling
+`crates/openhuman-embed/` package, while the terminal frontend is
+`crates/openhuman-tui/`.
 
 Desktop/Tauri work is different:
 
