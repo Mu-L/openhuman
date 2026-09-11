@@ -11,7 +11,7 @@
  * is the tab's existing reload.
  */
 import createDebug from 'debug';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import { useT } from '../../../lib/i18n/I18nContext';
 import { type CustomServerParams, mcpClientsApi } from '../../../services/api/mcpClientsApi';
