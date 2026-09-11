@@ -441,7 +441,10 @@ impl ChatModel<()> for RouteRecordingModel {
     }
 
     fn cache_identity(&self) -> Option<String> {
-        self.inner.cache_identity()
+        self.inner.cache_identity().map(|identity| match &self.request_model {
+            Some(model) => format!("{identity}:request-model={model}"),
+            None => identity,
+        })
     }
 
     async fn invoke(

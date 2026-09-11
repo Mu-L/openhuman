@@ -101,12 +101,10 @@ pub(crate) struct CrateOpenAiConfig<'a> {
 /// Whether `endpoint` is OpenRouter, the one relay in the catalog that
 /// documents forwarding `cache_control` markers to its upstream providers.
 pub(crate) fn endpoint_is_openrouter(endpoint: &str) -> bool {
-    endpoint
-        .trim()
-        .to_ascii_lowercase()
-        .split("://")
-        .last()
-        .is_some_and(|rest| rest.starts_with("openrouter.ai/"))
+    url::Url::parse(endpoint.trim())
+        .ok()
+        .and_then(|url| url.host_str().map(|host| host.eq_ignore_ascii_case("openrouter.ai")))
+        .unwrap_or(false)
 }
 
 /// Build a crate-native `OpenAiModel` (`ChatModel`) for the given OpenAI-compatible

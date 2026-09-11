@@ -114,3 +114,14 @@ fn every_turn_wrapper_forwards_the_inner_cache_identity() {
     );
     assert_eq!(stacked.cache_identity(), expected);
 }
+
+#[test]
+fn profile_override_cache_identity_includes_request_model() {
+    let inner: Arc<dyn ChatModel<()>> = Arc::new(IdentifiedModel);
+    let first = ProfileOverrideModel::new(inner.clone(), ModelProfile::default())
+        .with_request_model("model-a");
+    let second = ProfileOverrideModel::new(inner, ModelProfile::default())
+        .with_request_model("model-b");
+
+    assert_ne!(first.cache_identity(), second.cache_identity());
+}
