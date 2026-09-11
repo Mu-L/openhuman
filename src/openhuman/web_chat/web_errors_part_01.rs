@@ -157,8 +157,12 @@ pub(crate) fn extract_provider_error_detail(err: &str) -> Option<String> {
                     match esc {
                         '"' => out.push('"'),
                         '\\' => out.push('\\'),
+                        '/' => out.push('/'),
                         'n' => out.push('\n'),
                         't' => out.push('\t'),
+                        'r' => out.push('\r'),
+                        'b' => out.push('\u{8}'),
+                        'f' => out.push('\u{c}'),
                         other => {
                             out.push('\\');
                             out.push(other);
