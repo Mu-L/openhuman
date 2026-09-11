@@ -80,10 +80,10 @@ Classify each comment:
 
 Also do a standards pass against `CLAUDE.md` / `AGENTS.md` on the diff:
 - New Rust functionality lives under `src/openhuman/<domain>/`, not root-level files.
-- Domain exposure via `schemas.rs` + registry — not ad-hoc branches in `src/core/cli.rs` / `src/core/jsonrpc.rs`.
+- Domain exposure via `schemas.rs` + registry — not ad-hoc branches in `crates/openhuman-core/src/core/cli.rs` / `crates/openhuman-core/src/core/jsonrpc.rs`.
 - No dynamic `import()` in production `app/src` code.
 - Frontend `VITE_*` reads go through `app/src/utils/config.ts`.
-- `app/src-tauri` is desktop-only.
+- `crates/openhuman-app` is desktop-only.
 - Debug logging on new flows; no secrets logged.
 - Capability changes update `src/openhuman/about_app/`.
 - Files preferably ≤ ~500 lines.
@@ -116,7 +116,7 @@ cd app && pnpm test:unit
 # Rust
 cargo fmt --manifest-path Cargo.toml
 cargo check --manifest-path Cargo.toml
-cargo check --manifest-path app/src-tauri/Cargo.toml
+cargo check --manifest-path crates/openhuman-app/Cargo.toml
 cargo test --manifest-path Cargo.toml   # if Rust changed
 ```
 

@@ -3,7 +3,7 @@
 //! Compiled only when the `skills` Cargo feature is OFF (see the gate in
 //! [`super`]). Mirrors only what always-on code reaches: the boot catalog
 //! refresh kicked off by `core::runtime::services`, the controller aggregators
-//! (`src/core/all.rs`), and the `tools` module glob
+//! (`crates/openhuman-core/src/core/all.rs`), and the `tools` module glob
 //! (`src/openhuman/tools/mod.rs`). Everything else — the catalog store, wire
 //! types, and the `skill_setup` agent — is only referenced from code gated by
 //! the same feature, so it vanishes alongside.
@@ -29,7 +29,7 @@ pub fn all_skill_registry_controller_schemas() -> Vec<ControllerSchema> {
 
 // ---------------------------------------------------------------------------
 // ops::start_boot_catalog_refresh — called unconditionally at core boot from
-// `src/core/runtime/services.rs`, so it must stay callable without a `#[cfg]`
+// `crates/openhuman-core/src/core/runtime/services.rs`, so it must stay callable without a `#[cfg]`
 // at that always-on site.
 // ---------------------------------------------------------------------------
 

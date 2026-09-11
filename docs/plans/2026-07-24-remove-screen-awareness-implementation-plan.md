@@ -28,7 +28,7 @@ Files:
   Globe, input-monitoring, and microphone behavior for now. The companion still
   consumes the foreground-window types until step 5.
 - Remove the module/registry/CLI/legacy-alias entries from
-  `src/openhuman/{mod.rs}`, `src/core/{all.rs,cli.rs,legacy_aliases.rs}`, and
+  `src/openhuman/{mod.rs}`, `crates/openhuman-core/src/core/{all.rs,cli.rs,legacy_aliases.rs}`, and
   delete the `screen_intelligence` namespace description in `all.rs`.
 - Remove `ScreenIntelligenceConfig` and its schema module/re-export/default
   field from `src/openhuman/config/{mod.rs,schema/accessibility.rs,schema/mod.rs,schema/types.rs}`.
@@ -158,35 +158,35 @@ Commit:
 
 Files:
 
-- Delete `app/src-tauri/src/screen_capture/` and remove its module, managed
+- Delete `crates/openhuman-app/src/screen_capture/` and remove its module, managed
   `ScreenShareState`, and three command registrations from
-  `app/src-tauri/src/lib.rs`.
+  `crates/openhuman-app/src/lib.rs`.
 - Remove `screen_share_begin_session`, `screen_share_thumbnail`, and
   `screen_share_finalize_session` and their screen-share descriptions from
-  `app/src-tauri/permissions/{allow-webview-recipe.toml,allow-core-process.toml}`.
+  `crates/openhuman-app/permissions/{allow-webview-recipe.toml,allow-core-process.toml}`.
 - Delete the complete `installGetDisplayMediaShim` block, picker DOM, session
   IPC calls, and display-capture permission-query override from
-  `app/src-tauri/src/webview_accounts/runtime.js`; leave the ordinary recipe
+  `crates/openhuman-app/src/webview_accounts/runtime.js`; leave the ordinary recipe
   runtime and other webview functionality intact.
-- In `app/src-tauri/vendor/tauri-cef/crates/tauri-runtime-cef/src/permissions.rs`,
+- In `crates/openhuman-app/vendor/tauri-cef/crates/tauri-runtime-cef/src/permissions.rs`,
   make `ALLOWED_MEDIA_MASK` contain only device microphone/camera bits and
   replace the desktop-allowed tests with tests that desktop audio, desktop
   video, and mixed device+desktop requests are filtered/denied while device
   audio/video remain allowed. Update the permission-handler comment in
   `cef_impl.rs` to state desktop bits are rejected.
 - Remove obsolete native-picker claims from
-  `app/src-tauri/src/{cdp/session.rs,meet_audio/captions_bridge.js}` without
+  `crates/openhuman-app/src/{cdp/session.rs,meet_audio/captions_bridge.js}` without
   changing their retained mic/camera/caption behavior.
 
 Tests and checks:
 
 1. Change the CEF unit tests first to require desktop bits to be absent; verify
    the current mask makes them fail.
-2. Run `cargo fmt --check` in `app/src-tauri`.
-3. Run `cargo test --manifest-path app/src-tauri/vendor/tauri-cef/crates/tauri-runtime-cef/Cargo.toml permissions::tests`.
-4. Run `cargo test --manifest-path app/src-tauri/Cargo.toml` and
-   `cargo check --manifest-path app/src-tauri/Cargo.toml`.
-5. Use `rg -n 'screen_share_|getDisplayMedia|DESKTOP_(AUDIO|VIDEO)_CAPTURE' app/src-tauri/src app/src-tauri/permissions` and require no remaining shipped
+2. Run `cargo fmt --check` in `crates/openhuman-app`.
+3. Run `cargo test --manifest-path crates/openhuman-app/vendor/tauri-cef/crates/tauri-runtime-cef/Cargo.toml permissions::tests`.
+4. Run `cargo test --manifest-path crates/openhuman-app/Cargo.toml` and
+   `cargo check --manifest-path crates/openhuman-app/Cargo.toml`.
+5. Use `rg -n 'screen_share_|getDisplayMedia|DESKTOP_(AUDIO|VIDEO)_CAPTURE' crates/openhuman-app/src crates/openhuman-app/permissions` and require no remaining shipped
    command, shim, or allowlist match; the CEF denial implementation is checked
    separately in the vendored `permissions.rs` test above.
 
@@ -198,9 +198,9 @@ Commit:
 
 Files:
 
-- Delete `app/src-tauri/src/companion/{pointing.rs,pointing_tests.rs}` and
+- Delete `crates/openhuman-app/src/companion/{pointing.rs,pointing_tests.rs}` and
   remove the module export from `companion/mod.rs`.
-- In `app/src-tauri/src/companion/{mod.rs,pipeline.rs,types.rs,session.rs,session_tests.rs,pipeline_tests.rs}`, remove monitor geometry collection, foreground
+- In `crates/openhuman-app/src/companion/{mod.rs,pipeline.rs,types.rs,session.rs,session_tests.rs,pipeline_tests.rs}`, remove monitor geometry collection, foreground
   app/window context collection, screen-context prompt argument and text,
   `[POINT:…]` parsing, target fields, pointing state/transitions, and
   `capture_screen`/`include_app_context` config fields. `run_text_turn` and
@@ -225,9 +225,9 @@ Tests and checks:
 1. Update pipeline/session tests first to assert a text turn has no screen
    parameters, no pointing state, and a prompt containing only companion role,
    history, and utterance; verify the old signatures/state make this fail.
-2. Run `cargo fmt --check` in `app/src-tauri`.
-3. Run `cargo test --manifest-path app/src-tauri/Cargo.toml companion::` and
-   `cargo check --manifest-path app/src-tauri/Cargo.toml`.
+2. Run `cargo fmt --check` in `crates/openhuman-app`.
+3. Run `cargo test --manifest-path crates/openhuman-app/Cargo.toml companion::` and
+   `cargo check --manifest-path crates/openhuman-app/Cargo.toml`.
 4. Run `cargo fmt --check`, `GGML_NATIVE=OFF cargo test --lib
    accessibility::`, and `GGML_NATIVE=OFF cargo check --manifest-path
    Cargo.toml` from the repository root for the shared accessibility cleanup.
@@ -328,15 +328,15 @@ history:
 
 ```bash
 rg -n -i 'screen_intelligence|screen-awareness|screen awareness|screen_awareness_agent|screen_share_|getDisplayMedia|screen_capture' \
-  src app/src app/src-tauri/src app/src-tauri/permissions docs gitbooks scripts tests app/schema.json \
+  src app/src crates/openhuman-app/src crates/openhuman-app/permissions docs gitbooks scripts tests app/schema.json \
   --glob '!docs/specs/2026-07-24-remove-screen-awareness-design.md' \
   --glob '!app/test/e2e/helpers/artifacts.ts' \
   --glob '!app/test/e2e/specs/tauri-commands.spec.ts' \
   --glob '!scripts/ios-appstore-assets.mjs' \
   --glob '!scripts/ios-appstore-metadata.mjs'
 rg -n 'DESKTOP_(AUDIO|VIDEO)_CAPTURE' \
-  app/src-tauri/vendor/tauri-cef/crates/tauri-runtime-cef/src/permissions.rs \
-  app/src-tauri/vendor/tauri-cef/crates/tauri-runtime-cef/src/cef_impl.rs
+  crates/openhuman-app/vendor/tauri-cef/crates/tauri-runtime-cef/src/permissions.rs \
+  crates/openhuman-app/vendor/tauri-cef/crates/tauri-runtime-cef/src/cef_impl.rs
 ```
 
 The first command must have no shipped-product match. The second may reference
@@ -350,7 +350,7 @@ Final validation:
 ```bash
 cargo fmt --check
 GGML_NATIVE=OFF cargo check --manifest-path Cargo.toml
-cargo check --manifest-path app/src-tauri/Cargo.toml
+cargo check --manifest-path crates/openhuman-app/Cargo.toml
 pnpm typecheck
 pnpm lint
 pnpm format:check

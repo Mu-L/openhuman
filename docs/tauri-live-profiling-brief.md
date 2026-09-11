@@ -16,7 +16,7 @@ family-wide, not single-pid.
 
 ## What already exists (reuse, do not rebuild)
 
-- **`app/src-tauri/profiling/`** — an offline Tauri process-family profiler
+- **`crates/openhuman-app/profiling/`** — an offline Tauri process-family profiler
   (own small crate: `src/main.rs` ~813 lines, README) added in commit
   `ce6cd2291`. Start here; extend it rather than writing a new sampler.
 - **`src/openhuman/platform/proc_metrics/`** — RSS/peak/threads/CPU-ms/fds sampling
@@ -64,7 +64,7 @@ story: CEF/renderer processes, prewarm policy, spaCy, and shell-side polling.
 
 - Family enumeration: union of the Tauri host's descendant tree (use
   `proc_metrics::tree`) plus CEF helper processes, which may re-parent —
-  match by bundle path/name as `app/src-tauri/profiling` already does.
+  match by bundle path/name as `crates/openhuman-app/profiling` already does.
 - Sum-RSS double-counts shared CEF framework pages across helpers; on macOS
   record `footprint` output alongside ps-style sums (the instances driver
   in `scripts/profile/library-instances.sh` shows the pattern and caveat

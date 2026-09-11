@@ -21,7 +21,7 @@ Keep intentional contracts through the narrowest documented Knip exception.
 
 **Scope:** `app/knip.json`, `app/package.json`, the applicable pnpm lockfiles,
 and Knip-confirmed dead or over-exported TypeScript/TSX under `app/src/` and
-`app/test/`. Generated assets, `app/src-tauri/`, vendored sources, Rust, public
+`app/test/`. Generated assets, `crates/openhuman-app/`, vendored sources, Rust, public
 docs, and unrelated formatting/refactors are out of scope.
 
 ---
@@ -39,13 +39,13 @@ Apply these rules to every task below:
    ```bash
    rg -n '<symbol-or-file-stem>' app package.json scripts .github \
      --glob '!app/pnpm-lock.yaml' --glob '!pnpm-lock.yaml' \
-     --glob '!app/src-tauri/vendor/**' --glob '!node_modules/**' \
+     --glob '!crates/openhuman-app/vendor/**' --glob '!node_modules/**' \
      --glob '!target/**'
    ```
 
    Also inspect `app/package.json`, `app/index.html`, `app/vite.config.ts`,
    `app/test/vitest.config.ts`, `app/test/wdio.conf.ts`,
-   `app/playwright.config.ts`, `app/scripts/`, `app/src-tauri/tauri.conf.json`,
+   `app/playwright.config.ts`, `app/scripts/`, `crates/openhuman-app/tauri.conf.json`,
    and `.github/workflows/` whenever the candidate could be loaded by name,
    convention, a script, or Tauri.
 

@@ -47,7 +47,7 @@ Every HTTP-client construction site that talks to external HTTPS endpoints, incl
 - `src/openhuman/integrations/client.rs` and integration tools (`tools/searxng.rs`, `tools/brave.rs`, `tools/querit.rs`, `tools/seltz.rs`).
 - `src/openhuman/inference/provider/compatible.rs` — OpenAI-compatible inference provider clients.
 - `src/openhuman/integrations/composio/client.rs`, `src/openhuman/desktop/app_state/ops.rs`.
-- `src/api/rest.rs` (REST API client).
+- `crates/openhuman-core/src/api/rest.rs` (REST API client).
 
 Registered in the domain tree via `pub mod tls;` in `src/openhuman/mod.rs`.
 

@@ -64,7 +64,7 @@ pub fn init_workflows_dir(_workspace_dir: &Path) -> Result<(), String> {
 }
 
 // ---------------------------------------------------------------------------
-// Controller aggregators — empty so `src/core/all.rs` needs no `#[cfg]`.
+// Controller aggregators — empty so `crates/openhuman-core/src/core/all.rs` needs no `#[cfg]`.
 // ---------------------------------------------------------------------------
 
 /// Always empty: the `openhuman.skills_*` controllers are compiled out, so

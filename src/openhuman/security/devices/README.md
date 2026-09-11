@@ -45,7 +45,7 @@ Namespace `devices` (invoked as `openhuman.devices_<function>`):
 | `devices_list` | — | `ListDevicesResponse` | Lists non-revoked devices, overlaying live `peer_online` from `PEER_STATUS`. |
 | `devices_revoke` | `channel_id: string` | `RevokeDeviceResponse` | Soft-deletes the device, clears all in-memory state for the channel, publishes `DeviceRevoked`. |
 
-Wired into the controller registry in `src/core/all.rs` (schemas + registered controllers + the `"devices"` namespace branch).
+Wired into the controller registry in `crates/openhuman-core/src/core/all.rs` (schemas + registered controllers + the `"devices"` namespace branch).
 
 ## Agent tools
 
@@ -53,7 +53,7 @@ None. This domain has no `tools.rs` and owns no agent tools.
 
 ## Events
 
-Subscriber registered at startup from `src/core/jsonrpc.rs` via `register_device_tunnel_subscriber`. `DeviceTunnelSubscriber` (`name() = "device::tunnel"`, `domains() = ["device"]`) **handles**:
+Subscriber registered at startup from `crates/openhuman-core/src/core/jsonrpc.rs` via `register_device_tunnel_subscriber`. `DeviceTunnelSubscriber` (`name() = "device::tunnel"`, `domains() = ["device"]`) **handles**:
 
 - `DevicePeerOnline` / `DevicePeerOffline` → update `PEER_STATUS`.
 - `DeviceTunnelFrame` → complete handshake + persist `PairedDevice`.
@@ -95,8 +95,8 @@ Separately, encrypted X25519 private keys are persisted as `enc2:` strings (via 
 
 ## Used by
 
-- `src/core/all.rs` — registers the `devices` controllers/schemas and namespace branch.
-- `src/core/jsonrpc.rs` — calls `register_device_tunnel_subscriber()` at startup.
+- `crates/openhuman-core/src/core/all.rs` — registers the `devices` controllers/schemas and namespace branch.
+- `crates/openhuman-core/src/core/jsonrpc.rs` — calls `register_device_tunnel_subscriber()` at startup.
 - `src/openhuman/platform/socket/event_handlers.rs` — parses raw `tunnel:*` Socket.IO events into `DomainEvent`s that this domain consumes, using this domain's `tunnel_client` wire types (`TunnelPeerStatus`, `TunnelFrame`).
 
 ## Notes / gotchas

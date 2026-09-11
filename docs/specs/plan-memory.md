@@ -153,7 +153,7 @@ the method is unregistered, the tool is absent, the UI hides the surface.
 | `documents` | doc put/get/query | doc tools |
 | `sources` | `memory_sources_sync`, `memory_sync*` | sync tools |
 
-The registration sites are already grouped per family in `src/core/all.rs` (each
+The registration sites are already grouped per family in `crates/openhuman-core/src/core/all.rs` (each
 `all_memory_*_registered_controllers()` call), so this is a filter at those call sites — not a
 rewrite. Both-ways tests per family, mirroring `channels_controllers_{registered,absent}`.
 
@@ -460,7 +460,7 @@ Sharper rule:
 | **Perf regression from trait indirection** | families are coarse; `async_trait` boxing on already-async I/O paths is noise; benchmark recall p50/p95 before/after in M3 |
 | **Capability explosion** | 13 families capped; adding one = contract minor bump + both-ways test |
 | **Crate split churn** | M0 is re-export-only; every existing import path keeps resolving |
-| **Feature-forwarding drift** | any new default-ON gate goes into `app/src-tauri/Cargo.toml`; `check-feature-forwarding.mjs` enforces it |
+| **Feature-forwarding drift** | any new default-ON gate goes into `crates/openhuman-app/Cargo.toml`; `check-feature-forwarding.mjs` enforces it |
 | **Disabled-build test rot** | CI's smoke lane is `cargo check` only — run `cargo test --lib --no-default-features …` locally after every gated change |
 
 ---

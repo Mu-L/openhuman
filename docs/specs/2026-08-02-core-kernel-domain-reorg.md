@@ -129,7 +129,7 @@ Verification that a family-move PR must reproduce:
 ```bash
 GGML_NATIVE=OFF cargo check --all-targets
 GGML_NATIVE=OFF cargo check --lib --no-default-features
-GGML_NATIVE=OFF cargo check --manifest-path app/src-tauri/Cargo.toml
+GGML_NATIVE=OFF cargo check --manifest-path crates/openhuman-app/Cargo.toml
 GGML_NATIVE=OFF cargo test --lib core::                                             # gates on
 GGML_NATIVE=OFF cargo test --lib --no-default-features core::                       # gates off
 cargo fmt --check
@@ -328,7 +328,7 @@ RPCs are unregistered and the `MemoryDiffTool` is absent.
 1. `src/openhuman/` is ~30 directories, zero root-level `*.rs` besides `mod.rs`.
 2. Every family directory maps 1:1 to a gate or is declared kernel in this document.
 3. `kernel-floor.limits` reaches 222 names / 2 native.
-4. Each gate has both-ways tests in `src/core/all_tests.rs` and `tools/ops_tests.rs`.
+4. Each gate has both-ways tests in `crates/openhuman-core/src/core/all_tests.rs` and `tools/ops_tests.rs`.
 5. ✅ **Done.** `DomainGroup` gained seven variants, not four: `Inference`, `Integrations`,
    `Automation` (cron + subconscious), `Runtimes` (runtime + sandbox), `Desktop`, `Hosted`,
    `Relay` (tinyplace). The extra three over the original estimate are `Inference`, `Desktop`
@@ -341,5 +341,5 @@ RPCs are unregistered and the `MemoryDiffTool` is absent.
    ten namespaces (including `harness_init`) into `Platform` despite claiming their families,
    and `StoreInitPlan.people` keyed on `Platform` while its controllers moved to `Memory` —
    which would have registered the people RPC surface with no store behind it.
-6. Hand off to `kernel.md`'s subsystem registry (`src/core/subsystem/`, `Driver`,
+6. Hand off to `kernel.md`'s subsystem registry (`crates/openhuman-core/src/core/subsystem/`, `Driver`,
    `Guard`, `subsystems_status`).

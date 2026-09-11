@@ -17,7 +17,7 @@ gated behind a Cargo feature `tui`.
    (repo convention: gates default-ON). It must NOT ship in the desktop app —
    add `'tui': 'Terminal UI subcommand; the desktop app ships its own Tauri UI.'`
    to `INTENTIONALLY_NOT_FORWARDED` in `scripts/ci/check-feature-forwarding.mjs`.
-2. **Module**: crate-level `src/tui/`, gated at its declaration in `src/lib.rs`:
+2. **Module**: crate-level `crates/openhuman-tui/src/`, gated at its declaration in `src/lib.rs`:
    - `mod.rs` always compiled; real submodules `#[cfg(feature = "tui")]`;
      `#[cfg(not(feature = "tui"))] mod stub;` exposing the same `run_from_cli`.
    - `stub.rs` `run_from_cli` bails with
@@ -26,7 +26,7 @@ gated behind a Cargo feature `tui`.
    - No controllers, no agent tools, no `all.rs` changes (leaf client, like `flows`'
      philosophy: absence, not degraded registration — but here the only outside
      touch-point is the CLI arm, which uses the stub for a build-fact error).
-3. **CLI arm**: in `src/core/cli.rs` match (~line 63), add
+3. **CLI arm**: in `crates/openhuman-core/src/core/cli.rs` match (~line 63), add
    `"tui" | "chat" => run_tui_from_cli(&args[1..])`.
    Arm stays **un-cfg'd** (mcp precedent). Add `"tui" | "chat"` to the banner-suppression
    `matches!` at lines 48–50 (a TUI must own the terminal).
@@ -43,7 +43,7 @@ gated behind a Cargo feature `tui`.
    - Stream: drain `web_chat::subscribe_web_channel_events()` (broadcast bus,
      `src/openhuman/web_chat/event_bus.rs:14`), filter by our `client_id`.
      Render `text_delta`/`thinking_delta` (`delta`, `delta_kind` fields on
-     `WebChannelEvent`, `src/core/socketio.rs:98`), show `tool_call`/`tool_result`
+     `WebChannelEvent`, `crates/openhuman-core/src/core/socketio.rs:98`), show `tool_call`/`tool_result`
      as status lines, finish on `chat_done` (use `full_response` as authoritative
      final text) or `chat_error` (show `message`).
    - Cancel in-flight turn: `channel.web_cancel` on Esc.
@@ -59,7 +59,7 @@ gated behind a Cargo feature `tui`.
      LeaveAlternateScreen) before the panic message prints.
    - **Logging must not hit stdout/stderr while the TUI owns the terminal** —
      inspect how `run_from_cli`/`run_server_command` init logging
-     (`src/core/logging.rs`) and route core logs to file only (or suppress console)
+     (`crates/openhuman-core/src/core/logging.rs`) and route core logs to file only (or suppress console)
      for the tui arm. Core boot logs corrupting the UI is a bug.
 8. **Separation for testability**: pure state module (`transcript.rs` or `state.rs`)
    holding a reducer `apply_event(&mut TranscriptState, &WebChannelEvent)` with no
@@ -71,7 +71,7 @@ gated behind a Cargo feature `tui`.
 - Unit tests for the reducer: text_delta accumulation, thinking vs text separation,
   chat_done replaces with full_response, chat_error, ignores other client_ids,
   tool_call/result lines.
-- `src/core/cli_tests.rs`: `tui_subcommand_reports_disabled_build_when_gate_off`
+- `crates/openhuman-core/src/core/cli_tests.rs`: `tui_subcommand_reports_disabled_build_when_gate_off`
   (+ `chat` alias) under `#[cfg(not(feature = "tui"))]`, mirroring the mcp tests
   (assert error contains "tui feature disabled" and NOT "unknown namespace").
 - Builds (Apple Silicon: prefix `GGML_NATIVE=OFF`):

@@ -1,6 +1,6 @@
 # Phase 4 — Fleet supervisor: team/cloud hosting
 
-**Status:** MVP **DONE** — `openhuman-fleet` binary (`src/bin/fleet.rs`,
+**Status:** MVP **DONE** — `openhuman-fleet` binary (`crates/openhuman-core/src/bin/fleet.rs`,
 `[[bin]] name = "openhuman-fleet"`). Remaining: backend membership sync,
 ready-file port discovery, admin API for edge tokens (see "MVP vs production").
 
@@ -11,7 +11,7 @@ provision/manage members' assistants while every existing client
 
 ## Delivered (MVP)
 
-`src/bin/fleet.rs` — a self-contained binary (separate compile target, zero
+`crates/openhuman-core/src/bin/fleet.rs` — a self-contained binary (separate compile target, zero
 weight on the shipped desktop/lib build: it is gated behind the default-OFF
 `bin-tools` feature):
 

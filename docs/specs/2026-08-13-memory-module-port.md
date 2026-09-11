@@ -1214,12 +1214,12 @@ test beside it is what carries the format guarantee afterwards.
 
 **Stage 6 — drop the deps and ratchet.**
 Remove all five entries from `Cargo.toml`, forward the gate to
-`app/src-tauri/Cargo.toml`, and re-baseline `scripts/kernel-floor.limits` —
+`crates/openhuman-app/Cargo.toml`, and re-baseline `scripts/kernel-floor.limits` —
 `libsqlite3-sys` should leave the kernel profile with the engine.
 
 ## 5. Verification
 
-- Both-ways gate tests in `src/core/all_tests.rs` for any new feature gating.
+- Both-ways gate tests in `crates/openhuman-core/src/core/all_tests.rs` for any new feature gating.
 - A regression test per stage, failing before and passing after.
 - `scripts/check-kernel-floor.sh` re-baselined only at stage 6, and the shed
   written back — an unratcheted improvement grows back unnoticed.

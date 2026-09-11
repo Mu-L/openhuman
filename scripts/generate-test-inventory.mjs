@@ -13,7 +13,7 @@
 //       check — the orphans the audit found all live under `scripts/`.
 //
 //   (b) CONTROLLER-DOMAIN CHECK — every controller domain registered in
-//       `src/core/all.rs` (via `crate::openhuman::<domain>::all_*_controllers`)
+//       `crates/openhuman-core/src/core/all.rs` (via `crate::openhuman::<domain>::all_*_controllers`)
 //       is referenced by >=1 file under `tests/`. Catches RPC domains that
 //       ship with zero integration/E2E coverage (recall_calendar,
 //       devices, …).
@@ -256,7 +256,7 @@ if (orphans.length > 0) {
 
 if (unreferencedDomains.length > 0) {
   failed = true;
-  console.error('\n✖ Controller domains registered in src/core/all.rs with no reference in tests/:');
+  console.error('\n✖ Controller domains registered in crates/openhuman-core/src/core/all.rs with no reference in tests/:');
   for (const domain of unreferencedDomains) console.error(`  - ${domain}`);
   console.error('  Add >=1 RPC round-trip under tests/, or allowlist in DOMAIN_ALLOWLIST with cause.');
 }

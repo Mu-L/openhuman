@@ -9,7 +9,7 @@ harness entry, thin CLI/Tauri.
 ## New modules
 
 ```text
-src/core/runtime/
+crates/openhuman-core/src/core/runtime/
 ├── mod.rs        # pub use CoreBuilder, CoreRuntime, ServiceSet, TokenSource
 ├── builder.rs    # CoreBuilder — validation + build()
 ├── context.rs    # CoreContext (Stage A facade — owns init order; see phase 2)
@@ -22,7 +22,7 @@ Public API per README §2.1. Additional decisions:
   `EnvOrFile` (read `OPENHUMAN_CORE_TOKEN` when present, otherwise generate
   and write the standalone `{root}/core.token` fallback 0600). `build()` seeds
   `auth::init_rpc_token*` exactly once, same precedence as today
-  (`src/core/auth.rs`).
+  (`crates/openhuman-core/src/core/auth.rs`).
 - **`build()` is init-only**: no sockets and no detached jobs for
   `ServiceSet::none()` / `ServiceSet::headless_api()`. It runs, in
   order: controller registration (`all::all_registered_controllers`), master
@@ -72,7 +72,7 @@ bound.
 turn goes through `openhuman.inference_agent_chat` rather than reaching
 `run_turn_via_tinyagents_shared` directly — dispatch is the only path that
 honours `DomainSet` gating and installs `CoreContext` scope (see
-`src/embed/call.rs`), and bypassing it would serve domains the embedder switched
+`crates/openhuman-core/src/embed/call.rs`), and bypassing it would serve domains the embedder switched
 off.
 
 `AgentRuntime` as sketched above was **not** built. The same slice is delivered
@@ -99,8 +99,8 @@ for a library host:
 | Consumer                                                       | Change                                                                                                                                                                                                                     |
 | -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `run_server` / `run_server_embedded*` (`jsonrpc.rs:1682-1737`) | become `#[deprecated]` shims over the builder; deleted one release later                                                                                                                                                   |
-| Tauri (`app/src-tauri/src/core_process.rs:289`)                | `CoreProcessHandle::ensure_running` builds `CoreBuilder::new(HostKind::TauriShell).token(TokenSource::Fixed(..)).services(ServiceSet::desktop())`, then passes readiness to `CoreRuntime::serve`; `CancellationToken` / restart / port-takeover logic unchanged |
-| CLI `run`/`serve` (`src/core/cli.rs:66`)                       | maps flags → `ServiceSet` (`--jsonrpc-only` → `socketio: false`)                                                                                                                                                           |
+| Tauri (`crates/openhuman-app/src/core_process.rs:289`)                | `CoreProcessHandle::ensure_running` builds `CoreBuilder::new(HostKind::TauriShell).token(TokenSource::Fixed(..)).services(ServiceSet::desktop())`, then passes readiness to `CoreRuntime::serve`; `CancellationToken` / restart / port-takeover logic unchanged |
+| CLI `run`/`serve` (`crates/openhuman-core/src/core/cli.rs:66`)                       | maps flags → `ServiceSet` (`--jsonrpc-only` → `socketio: false`)                                                                                                                                                           |
 | CLI `call` + namespace dispatch (`cli.rs:354,435`)             | `ServiceSet::none()` build → `runtime.invoke()`; one-shot calls stop constructing server state                                                                                                                             |
 | MCP stdio (`cli.rs` `mcp`)                                     | adapter over `runtime.invoke()`                                                                                                                                                                                            |
 | `src/lib.rs`                                                   | re-export the new surface; keep `run_core_from_args`                                                                                                                                                                       |

@@ -50,7 +50,7 @@ The agent tool layer. Defines the core [`Tool`] trait every agent-callable capab
 
 ## RPC / controllers
 
-Namespace `tools` (wired into `src/core/all.rs` via `all_tools_registered_controllers` / `all_tools_controller_schemas`). A deliberately small allowlist for Tauri-driven flows; everything else stays agent-only.
+Namespace `tools` (wired into `crates/openhuman-core/src/core/all.rs` via `all_tools_registered_controllers` / `all_tools_controller_schemas`). A deliberately small allowlist for Tauri-driven flows; everything else stays agent-only.
 
 | Method | Purpose |
 | --- | --- |
@@ -102,7 +102,7 @@ None. No `store.rs`; the module holds no persisted state. Tools that persist (me
 
 ## Used by
 
-- `src/core/all.rs` — registers the `tools` RPC controllers + schemas.
+- `crates/openhuman-core/src/core/all.rs` — registers the `tools` RPC controllers + schemas.
 - `openhuman::agent` harness (`session/builder`, `dispatcher`, `subagent_runner`, `agent/tools/*`) and the `openhuman::agent::tinyagents` seam (`SharedToolAdapter`, `ToolPolicyMiddleware`) — primary consumers; build the registry and execute/police tools on the tinyagents harness path.
 - `openhuman::channels`, `openhuman::routing`, `openhuman::inference::provider` — build tool sets / clean schemas per provider.
 - `openhuman::tools::agent_policy`, `openhuman::security::approval` — read tool metadata (category, external-effect) for policy/approval decisions.

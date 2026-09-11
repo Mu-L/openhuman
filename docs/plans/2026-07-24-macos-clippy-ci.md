@@ -35,7 +35,7 @@ The selected change is compatible with the current repository:
   lets `scripts/ci-cancel-aware.sh` propagate GitHub run cancellation.
 
 One performance nuance must be measured, not papered over: the preceding Tauri
-app build warms `app/src-tauri/target`, including the path-dependent core as
+app build warms `crates/openhuman-app/target`, including the path-dependent core as
 compiled in the Tauri Cargo graph. It does not compile the independent root
 Cargo graph into `target/`; that graph benefits from the existing two-workspace
 Rust cache but can still be cold on a cache miss. This does not invalidate the

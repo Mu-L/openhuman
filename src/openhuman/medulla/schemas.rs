@@ -2,7 +2,7 @@
 //!
 //! Handlers delegate straight to [`super::ops`]; no business logic lives here.
 //! Registered under [`DomainGroup::Medulla`](crate::core::all::DomainGroup) at
-//! the single site in `src/core/all.rs`, so a host that switches the family off
+//! the single site in `crates/openhuman-core/src/core/all.rs`, so a host that switches the family off
 //! sees these methods as unknown rather than as failing.
 
 use serde::de::DeserializeOwned;

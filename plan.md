@@ -50,15 +50,15 @@ Legend: ✅ = skeptic-confirmed · ⚠️ = plausible, not independently re-veri
 | ✅ | `app/src/components/settings/hooks/__tests__/useSettingsNavigation.test.tsx` | whole file | Asserts a retired, hardcoded-empty `breadcrumbs` field across 8 routes — tests a constant. Route resolution is fully covered by the sibling `useSettingsNavigation.coverage.test.tsx`. |
 | ✅ | `app/src/services/api/{graphCentralityApi,graphCohesionApi,memoryFreshnessApi,connectionPathApi,memoryTimelineApi,entityAssociationsApi,namespaceOverviewApi}.test.ts` | the copy-pasted `exposes the public surface` test in each (7 files) | typeof-only assertions on aggregate objects **no consumer imports** (tabs import the named exports directly); the functions are behaviorally tested above in each file. Do one grep-and-delete pass. |
 | ✅ | `src/openhuman/agent/harness/harness_gap_tests.rs` | `datetime_section_is_static_grounding_rule_not_a_volatile_timestamp` | Strict subset of `agent/prompts/mod_tests.rs::datetime_section_is_static_grounding_rule_without_volatile_timestamp`; the file's own header lists item 6 as covered elsewhere. |
-| ✅ | `app/src-tauri/src/lib_tests.rs` | `setup_tray_function_signature_compiles`, `tray_setup_logging_patterns_exist`, `app_runtime_type_exists`, `is_daemon_mode_detects_daemon_flag` | Empty bodies / comments-only / the one real assertion is commented out / result discarded with `let _`. Cannot fail; verify nothing. |
-| ✅ | `app/src-tauri/src/deep_link_ipc.rs` | `extract_deep_link_urls_filters_correctly` | Re-implements the prefix filter inline instead of calling the production `extract_deep_link_urls()` — passes even if the real filter regresses. Better fix: refactor to take an args slice like the Windows sibling (`collect_deep_link_urls_from_args`), then test the real function. |
+| ✅ | `crates/openhuman-app/src/lib_tests.rs` | `setup_tray_function_signature_compiles`, `tray_setup_logging_patterns_exist`, `app_runtime_type_exists`, `is_daemon_mode_detects_daemon_flag` | Empty bodies / comments-only / the one real assertion is commented out / result discarded with `let _`. Cannot fail; verify nothing. |
+| ✅ | `crates/openhuman-app/src/deep_link_ipc.rs` | `extract_deep_link_urls_filters_correctly` | Re-implements the prefix filter inline instead of calling the production `extract_deep_link_urls()` — passes even if the real filter regresses. Better fix: refactor to take an args slice like the Windows sibling (`collect_deep_link_urls_from_args`), then test the real function. |
 | ✅ | `src/openhuman/routing/factory.rs` | `factory_constructs_without_panic_when_runtime_enabled`, `factory_llamacpp_provider_constructs_without_panic`, `factory_custom_openai_provider_constructs_without_panic`, `factory_lm_studio_provider_constructs_without_panic` | Skeptic traced the whole construction path — provably infallible (pure struct init), so the tests cannot fail. One test's comment claims to verify probe-URL selection but the body asserts nothing; fields are private so strengthening is blocked. |
 | ⚠️ | `app/src/components/chat/ArtifactCard.test.tsx` | whole file (281 lines) | Duplicates `__tests__/ArtifactCard.test.tsx` test-for-test (in-progress label, download→done flow, error truncation + Show more, Retry). Keep the `__tests__/` version. |
 | ⚠️ | `app/src/components/settings/panels/RecoveryPhrasePanel.test.tsx` | whole file (1 test) | Subsumed by the 35-test `__tests__/RecoveryPhrasePanel.test.tsx`. |
 | ⚠️ | `src/openhuman/threads/ops_tests.rs` | `sanitize_generated_title_*`, `collapse_whitespace_*`, `title_log_fingerprint_*`, `title_from_user_message_*` | `threads/title.rs` inline tests already cover the same functions with equivalent cases. Keep the copies in `title.rs` (the owning module). |
 | ⚠️ | `src/openhuman/channels/providers/whatsapp_tests.rs` | 7 × `whatsapp_parse_<type>_message_skipped` | All hit the identical `type != "text" → continue` branch; collapse to one parameterized loop over the type strings. |
 | ⚠️ | `src/openhuman/routing/telemetry.rs` | `emit_does_not_panic` ×3 variants | Fire-and-forget calls with no assertion. |
-| ⚠️ | `app/src-tauri/src/deep_link_ipc.rs` | `no_primary_returns_appropriate_result` | Its own comment admits it can't reach the production branch; asserts stdlib `UnixStream::connect` errors on a bogus path. |
+| ⚠️ | `crates/openhuman-app/src/deep_link_ipc.rs` | `no_primary_returns_appropriate_result` | Its own comment admits it can't reach the production branch; asserts stdlib `UnixStream::connect` errors on a bogus path. |
 | ⚠️ | `app/test/e2e/specs/smoke.spec.ts` | the permanently-`it.skip`ped auth-deep-link test | Skipped for a documented flake with no tracking issue/owner. File an issue and fix, or delete. |
 
 ### 2.2 Consolidate, don't delete: the connector template family
@@ -78,7 +78,7 @@ Net: ~100 declarations → ~10 with identical per-toolkit coverage.
 | `src/openhuman/memory/schema_tests.rs` | registry-sync + unknown-fn tests | **False duplicate.** `memory/schema/` (singular, `memory_tree` namespace) and `memory/schemas/` (plural, `memory` namespace) are two distinct live registries with disjoint function sets. These are the *only* parity/unknown-fn guards for the `memory_tree` controller surface. |
 | `src/openhuman/channels/providers/qq_tests.rs` | `test_name` | Sole coverage of `QQChannel::name()`, which keys routing (`routes.rs:345`) and the channel map (`runtime/startup.rs:701`). A rename would ship uncaught. |
 | `src/openhuman/provider_surfaces/schemas.rs` | `all_schemas_returns_two` etc. | Weak but the only guard that the registration lists are populated. **Improve** (see §3), don't delete. |
-| `src/core/jsonrpc_tests.rs` | wallet-message drift guard (L1421) | The literal pin is load-bearing: three Rust producers and six frontend components hardcode the same string; the pin is what forces a human to update the desynced sites on a wording change. |
+| `crates/openhuman-core/src/core/jsonrpc_tests.rs` | wallet-message drift guard (L1421) | The literal pin is load-bearing: three Rust producers and six frontend components hardcode the same string; the pin is what forces a human to update the desynced sites on a wording change. |
 | `tests/x402_twit_sh_live.rs` | `#[ignore]`d live x402 test | Only coverage artifact for the money-moving `X402RequestTool` (compile-pins its API + manual E2E harness). Costs nothing in CI. |
 | `app/test/e2e/specs/gmail-flow.spec.ts` | blanket drop of 8 tests | Over-reach: 4 of the 8 carry a real "app still boots with revoked/expired-token mock state" guard nothing else reproduces. Only 9.1.2 and 9.3.3 are true no-ops. Fix the fixture instead (§3). |
 
@@ -90,7 +90,7 @@ Net: ~100 declarations → ~10 with identical per-toolkit coverage.
 |---|-------------|---------|-----|
 | ✅ | `src/openhuman/agent/prompts/mod_tests.rs::grounding_contract_requires_exact_numeric_evidence` | Pins 5 verbatim prose substrings of the grounding contract — breaks on any copywriting pass. | Behavioral guarantee ("contract appended on every build path") already covered by the marker-based test; convert this to a single explicitly-labeled wording-lock, or assert stable structural markers. |
 | ✅ | `src/openhuman/agent/prompts/mod_tests.rs::identity_section_creates_missing_workspace_files` | Also string-matches SOUL.md brand-voice prose (`"Don't validate FUD"`). | Split: (a) files created + seeded from the checked-in template (compare against template file content); (b) a narrow, labeled brand-voice lock if the phrase must stay pinned. |
-| ✅ | `app/src-tauri/src/core_process_tests.rs::startup_timeout_cleanup_aborts_task_and_clears_slot` | 5 substring checks against one human-readable diagnostic string. **Caveat:** it also asserts real behavior (task slot cleared, shutdown token cancelled) — preserve those two assertions. | Return a small struct (attempt, port, ready_signal, port_open, task_state) + display string; assert struct fields, one loose `contains` on the text. |
+| ✅ | `crates/openhuman-app/src/core_process_tests.rs::startup_timeout_cleanup_aborts_task_and_clears_slot` | 5 substring checks against one human-readable diagnostic string. **Caveat:** it also asserts real behavior (task slot cleared, shutdown token cancelled) — preserve those two assertions. | Return a small struct (attempt, port, ready_signal, port_open, task_state) + display string; assert struct fields, one loose `contains` on the text. |
 | ✅ | `src/openhuman/hooks/../useDaemonLifecycle.test.ts` (`app/src/hooks/__tests__/`) | Pins exact `console.log` strings as an effect-rerun proxy. Listener-count assertions are legit — keep them. | Drop the log-text pinning; keep listener/startDaemon observable assertions. |
 | ✅ | `src/openhuman/provider_surfaces/schemas.rs::all_schemas_returns_two` / `all_controllers_returns_two` | Magic-number count breaks on any legitimate 3rd controller. | Replace with `schemas().len() == controllers().len()` parity + presence of a known op (`list_queue`). Standardize this as a shared `assert_schema_controller_parity()` helper — the `== N` pattern repeats across ~15 domains. |
 | ✅ | every `connector-*.spec.ts::composio_sync RPC routes to mock backend` | Name promises routing; body only asserts the session didn't crash (original assertion removed per inline comment). | Rename to what it checks, or move the real routing assertion to a native-provider connector where sync actually hits the mock. |
@@ -122,7 +122,7 @@ Net: ~100 declarations → ~10 with identical per-toolkit coverage.
    source_id scoping (prefix siblings untouched); shared path_scope/collection trees NOT torn down
    while referenced; orphan cascade when fully orphaned; idempotency; legacy partial-delete
    recovery.
-4. **Event bus panic isolation** (`src/core/event_bus/bus.rs`): production `catch_unwind` exists
+4. **Event bus panic isolation** (`crates/openhuman-core/src/core/event_bus/bus.rs`): production `catch_unwind` exists
    precisely so one handler can't kill the loop — no test exercises it. Two subscribers, one
    panics, assert both keep receiving subsequent events.
 5. **Webhook ingress flood** (`webhooks/router.rs`): externally-triggered, unauthenticated-by-default
@@ -274,7 +274,7 @@ untested: `command_checks.rs`, `path_checks.rs`, `encryption/core.rs` have zero 
    `rust-coverage-changed.sh` maps `src/<a>/<b>` to unit-test filters and only runs a `--test`
    target when the *test file itself* changed. An RPC-behavior regression in a domain with thin
    unit tests but good E2E coverage sails through the fast lane. Consider mapping changed domains
-   to their obvious integration targets too (e.g. `src/core/**` → `--test json_rpc_e2e`).
+   to their obvious integration targets too (e.g. `crates/openhuman-core/src/core/**` → `--test json_rpc_e2e`).
 4. **`vitest related` is import-graph-based**: tests coupled to a changed file through non-import
    seams (mock fixtures, runtime registration, `?raw` prompt assets) won't be selected. The
    0%-lcov backstop protects *changed lines lacking any test*, not *existing tests that would now
@@ -358,7 +358,7 @@ Dimensions the suite (and this audit) currently have **zero** coverage of:
 - [x] Orphan-check in the inventory generator (`scripts/generate-test-inventory.mjs`, wired as the
   `test-inventory` PR-lane job via `test:inventory`): every script-level test file is invoked by
   ≥1 package.json script or workflow.
-- [x] Controller-domain coverage check: every domain in `src/core/all.rs` referenced by ≥1 file in
+- [x] Controller-domain coverage check: every domain in `crates/openhuman-core/src/core/all.rs` referenced by ≥1 file in
   `tests/` (Appendix A.4). 26 currently-uncovered domains seeded into a burn-down allowlist.
 - [x] Resolve the Release CI Gate Playwright `continue-on-error` bypass (§5bis item 1, #3615):
   `playwright-e2e` excluded from the gate's `needs`/results with an explanatory comment.
@@ -407,7 +407,7 @@ of the five "ZERO tests" claims turned out **already covered**, so only the genu
   new `assert_schema_controller_parity()`, composio catalog input-names, core_process
   loose-contains (keeps task-slot/shutdown-token asserts), useDaemonLifecycle (keeps
   listener asserts), ApprovalRequestCard (labeled visual lock), AppWalkthrough (data-testid).
-- [x] Shared helper `assert_schema_controller_parity()` added (`src/core/all.rs`) and the
+- [x] Shared helper `assert_schema_controller_parity()` added (`crates/openhuman-core/src/core/all.rs`) and the
   connector contract runner. (`allowlist_contract_tests!` / envelope-unwrap helper: follow-up.)
 - Deferred: §3 gmail-flow fixture fix (needs deterministic mock Gmail-skill seeding validated
   against a running desktop E2E app — not runnable in the authoring env; §2.3 flagged those
@@ -513,6 +513,6 @@ names — **in-process calls, not RPC** — i.e. unit tests mislabeled `_e2e`. R
 
 - Reorganize `raw_coverage` sprint files into per-domain modules — the "round" layout is exactly
   why 20 uncovered domains went unnoticed.
-- **CI check: every controller domain registered in `src/core/all.rs` must have ≥1 reference in
+- **CI check: every controller domain registered in `crates/openhuman-core/src/core/all.rs` must have ≥1 reference in
   `tests/`** — small script in the spirit of `generate-test-inventory.mjs`; would have caught all
   of A.3 automatically. (Add to Phase 0 alongside the orphan-test check.)

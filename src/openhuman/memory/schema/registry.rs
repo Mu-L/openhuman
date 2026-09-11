@@ -7,7 +7,7 @@
 //! / provider / tool_memory) into one `Vec` behind one push site. This registry
 //! is the opposite shape: it is one family — the `memory_tree` chunk store —
 //! under its own namespace, already registered from its own push site in
-//! `src/core/all.rs`, and the tree domain's other halves (`retrieval`,
+//! `crates/openhuman-core/src/core/all.rs`, and the tree domain's other halves (`retrieval`,
 //! `tree_runtime`'s summarizer) are already separate registries with separate
 //! push sites. A per-family filter can therefore already be applied here
 //! without any split; carving these functions up further would invent

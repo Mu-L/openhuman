@@ -56,7 +56,7 @@ Namespace `task_sources` (methods `openhuman.task_sources_<function>`):
 | `preview_filter` | Dry-run a filter — fetch matching tasks WITHOUT routing/recording. |
 | `status` | Domain master switch + default interval + source counts. |
 
-Handlers parse params and delegate to `ops.rs`; schemas reference `FilterSpec`, `TaskSource`, `TaskSourcePatch`, `FetchOutcome`, `NormalizedTask`. Registered into the global registry via `src/core/all.rs`.
+Handlers parse params and delegate to `ops.rs`; schemas reference `FilterSpec`, `TaskSource`, `TaskSourcePatch`, `FetchOutcome`, `NormalizedTask`. Registered into the global registry via `crates/openhuman-core/src/core/all.rs`.
 
 ## Agent tools
 
@@ -74,7 +74,7 @@ Subscribes:
 
 - `DomainEvent::ComposioConnectionCreated` (domain filter `["composio"]`) via `TaskSourcesConnectionSubscriber` — fires a one-shot `ConnectionCreated` fetch for matching enabled sources. Registered once at startup (`register_task_sources_subscriber`, idempotent `OnceLock` handle).
 
-Startup wiring lives in `src/core/jsonrpc.rs` (registers the subscriber and starts the periodic poll).
+Startup wiring lives in `crates/openhuman-core/src/core/jsonrpc.rs` (registers the subscriber and starts the periodic poll).
 
 ## Persistence
 
@@ -97,9 +97,9 @@ Additive idempotent column migrations (`add_column_if_missing`) backfill `ingest
 
 ## Used by
 
-- `src/core/all.rs` — registers controllers + schemas into the global RPC registry.
-- `src/core/jsonrpc.rs` — at startup registers the connection subscriber and starts the periodic poll.
-- `src/core/event_bus/events.rs` — defines/classifies the three `TaskSource*` event variants under domain `"task_sources"`.
+- `crates/openhuman-core/src/core/all.rs` — registers controllers + schemas into the global RPC registry.
+- `crates/openhuman-core/src/core/jsonrpc.rs` — at startup registers the connection subscriber and starts the periodic poll.
+- `crates/openhuman-core/src/core/event_bus/events.rs` — defines/classifies the three `TaskSource*` event variants under domain `"task_sources"`.
 - `src/openhuman/config/schema/` — `TaskSourcesConfig` block feeding domain defaults.
 
 ## Notes / gotchas

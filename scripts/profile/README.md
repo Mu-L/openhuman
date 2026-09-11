@@ -2,7 +2,7 @@
 
 Reproducible benchmarking scripts for the OpenHuman Rust core as an embedded
 library (no RPC server), built around the `library-profile` and `rss-bench`
-binaries (see `src/bin/library_profile/main.rs`). Full write-up:
+binaries (see `crates/openhuman-core/src/bin/library_profile/main.rs`). Full write-up:
 [`docs/library-benchmarking.md`](../../docs/library-benchmarking.md). Prior
 findings: [`docs/resource-profiling-session-2026-07-21.md`](../../docs/resource-profiling-session-2026-07-21.md).
 

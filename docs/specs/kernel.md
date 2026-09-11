@@ -33,10 +33,10 @@ requires unsafe dynamic linking.
 
 | Kernel concern | Existing mechanism | Gap for the kernel model |
 | --- | --- | --- |
-| Syscall surface | Controller registry (`src/core/all.rs`), JSON-RPC `/rpc`, `/schema` | Method set is fixed at compile time; cannot vary by bound driver |
+| Syscall surface | Controller registry (`crates/openhuman-core/src/core/all.rs`), JSON-RPC `/rpc`, `/schema` | Method set is fixed at compile time; cannot vary by bound driver |
 | Runtime composition | `DomainSet` / `DomainGroup` on `CoreBuilder` | Selects *whether* a domain runs, not *which implementation* |
 | Build composition | Per-domain Cargo `[features]` (`voice`, `web3`, `mcp`, `channels`, …) | Gate = on/off, not a choice between implementations |
-| Service lifecycle | `ServiceSet`, `src/core/runtime/services.rs` | No per-subsystem health/degraded state |
+| Service lifecycle | `ServiceSet`, `crates/openhuman-core/src/core/runtime/services.rs` | No per-subsystem health/degraded state |
 | IPC | `event_bus/` broadcast + native request/response | Fine as-is; becomes the kernel's internal bus |
 | Policy | `SecurityPolicy`, approval gate, `MemoryTaint`, `source_scope`, redaction | Enforced *inside* domains, so a swapped implementation could bypass it |
 | Trust metadata | `CapabilityProviderConfig` (`config/schema/capability_providers.rs`) | Already the right shape; unused by domains |
@@ -51,7 +51,7 @@ The kernel model is mostly **naming and enforcing** the above, plus one genuinel
 
 ### 3.1 Definitions
 
-- **Kernel** — `src/core/` plus the always-on platform domains. Owns: RPC transport and the
+- **Kernel** — `crates/openhuman-core/src/core/` plus the always-on platform domains. Owns: RPC transport and the
   controller registry, the event bus, config load/validation, `SecurityPolicy` and the approval
   gate, scheduling/cron, the workspace and path roots, observability, and the subsystem registry.
   The kernel contains **no capability implementation**.
@@ -203,7 +203,7 @@ embedded default if that driver fails to construct (logged loudly, surfaced in s
 silent).
 
 > **Feature-forwarding gate applies.** Any new default-ON gate (e.g. `memory-embedded`) must be
-> added to `app/src-tauri/Cargo.toml`'s explicit feature list — the shell sets
+> added to `crates/openhuman-app/Cargo.toml`'s explicit feature list — the shell sets
 > `default-features = false`. `scripts/ci/check-feature-forwarding.mjs` enforces this; the `voice`
 > incident is why.
 
@@ -246,11 +246,11 @@ external demand (pluggable backends such as Supermemory/mem0).
 
 ## 6. Definition of done (kernel layer)
 
-1. `src/core/subsystem/` exists: `Driver`, `DriverClass`, `DriverHealth`, `Capabilities`,
+1. `crates/openhuman-core/src/core/subsystem/` exists: `Driver`, `DriverClass`, `DriverHealth`, `Capabilities`,
    `SubsystemRegistry`, `Guard`, and the `[subsystems.*]` config mapping.
 2. Binding happens once at `CoreBuilder` time; a failed bind falls back to the embedded default,
    emits a `DomainEvent`, and is visible in `<subsystem>_status`.
-3. Controller registration in `src/core/all.rs` is filtered by the bound driver's capability set,
+3. Controller registration in `crates/openhuman-core/src/core/all.rs` is filtered by the bound driver's capability set,
    the same way it is filtered by `DomainSet` today.
 4. Agent-tool assembly is filtered by the same set.
 5. `Guard` is the only path from product code to a driver; a test asserts no direct driver call

@@ -647,7 +647,7 @@ Recorded so a later audit does not re-litigate:
 - **≥ 80% diff-coverage merge gate.** S2/S4 touch many call sites; check
   `diff-cover` locally before pushing rather than discovering it in CI.
 - **Two Cargo worlds** — any vendored bump (only under Option B) regenerates
-  root **and** `app/src-tauri` lockfiles.
+  root **and** `crates/openhuman-app` lockfiles.
 - **`GGML_NATIVE=OFF`** for local root-crate `cargo` runs on Apple Silicon.
 - **GPL/crates.io boundary** — under Option B, the `session_raw` format becomes
   public API of a redistributed crate. Nothing product-specific (agent ids,

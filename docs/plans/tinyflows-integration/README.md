@@ -32,7 +32,7 @@ Engine-side gaps (see Phase 7): `agent` node sub-ports (chat_model/memory/tool/o
 ### 1.2 Rust core seam (`src/openhuman/flows/` + `src/openhuman/flows/tinyflows/` — implemented, with holes)
 
 - **Domain** `flows::` (~3,700 lines + tests): `types.rs` (`Flow` wraps `WorkflowGraph` + `enabled`/`require_approval`/`last_status`; `FlowRun`, `FlowRunStep`, `FlowRunTrigger::{Rpc,Schedule,AppEvent,Resume}`), `store.rs` (SQLite incl. `flow_state` kv), `ops.rs` (validate/migrate + full run/resume under `TrustedAutomation → Workflow` origin, 600 s timeout), `schemas.rs`, `tools.rs` (`ProposeWorkflowTool` — validate-only, never persists), `bus.rs` (`FlowTriggerSubscriber`).
-- **RPC surface** (10 methods, wired in `src/core/all.rs`): `openhuman.flows_{create,get,list,update,delete,set_enabled,run,resume,list_runs,get_run}`.
+- **RPC surface** (10 methods, wired in `crates/openhuman-core/src/core/all.rs`): `openhuman.flows_{create,get,list,update,delete,set_enabled,run,resume,list_runs,get_run}`.
 - **Capability seam** `src/openhuman/flows/tinyflows/`: `caps.rs` (LLM/Composio-tools/HTTP/code/state adapters), `observability.rs` (currently `NoopObserver`), `langfuse_export.rs` (post-run trace export).
 - **Schedule triggers work end-to-end**: `flows::ops::bind_schedule_trigger` registers a cron `JobType::Flow` → scheduler publishes `DomainEvent::FlowScheduleTick` → `FlowTriggerSubscriber` runs the flow.
 - **Composio `app_event` triggers also work end-to-end**: `flows/bus.rs::handle_app_event` matches `DomainEvent::ComposioTriggerReceived { toolkit, trigger }` against enabled `app_event` flows (case-insensitive toolkit/slug match, per-flow concurrency guard) and runs them under `FlowRunTrigger::AppEvent`. Since Composio triggers are delivered by the platform, this **is** our webhook story for third-party apps — no tunnel needed.
@@ -112,7 +112,7 @@ Every workflow is, at run time, a **unique tinyagents state graph**: `compile()`
 
 Audit (2026-07-04):
 
-- ✅ **Single unified copy** — both Cargo worlds (`Cargo.toml:355`, `app/src-tauri/Cargo.toml:214`) patch `tinyagents` to `vendor/tinyagents`; exactly one `tinyagents 1.5.0` in both lockfiles. tinyflows' `tinyagents = "1.2"` requirement unifies onto the same copy (semver-compatible). No duplication, no type-identity risk.
+- ✅ **Single unified copy** — both Cargo worlds (`Cargo.toml:355`, `crates/openhuman-app/Cargo.toml:214`) patch `tinyagents` to `vendor/tinyagents`; exactly one `tinyagents 1.5.0` in both lockfiles. tinyflows' `tinyagents = "1.2"` requirement unifies onto the same copy (semver-compatible). No duplication, no type-identity risk.
 - ⚠️ **Not on a tag** — the submodule is pinned at `df391c4` = `v1.5.0-13-gdf391c4`: 13 untagged commits past v1.5.0 (REPL host-embedding / cancel work taken early for the Rhai workflow feature). The crate still self-reports `1.5.0`, so the version string understates the vendored code.
 - ⚠️ **Two minor versions behind** — upstream is at **v1.7.1** (60 commits past v1.5.0). The 13 early-adopted commits all landed upstream (via PR #19 etc.; `ReplSession::set_cancel_flag` verified present in v1.7.1), so retagging loses nothing.
 - ⚠️ Same pattern on tinyflows itself: submodule at `v0.3.0-1-g438f8fc` (one commit past tag).
@@ -257,7 +257,7 @@ The `workflows::` domain (WORKFLOW.md/SKILL.md bundle discovery/install, RPC `op
 
 - **Audit consumers first**: `agent/tools/run_workflow.rs` (agent tool that runs WORKFLOW.md bundles — decide: retire, or repoint to `flows_run`/skills), the `/skills` UI surfaces (`WorkflowsTab`, `CreateWorkflowForm`, `WorkflowRunnerBody`, `WorkflowNew.tsx`, `WorkflowsRun.tsx`, `DevWorkflowPanel`, `workflowsApi.ts`), `about_app`, gitbooks, and the Rhai workflow plan's references to `run_workflow` as a composition surface.
 - **Migrate**: bundle discovery/install semantics that skills doesn't already cover move into the `skills` domain (it is metadata-only post-QuickJS-removal, so this is mostly file-format and registry work).
-- **Deprecate then delete**: mark `openhuman.workflows_*` deprecated for one release (RPC responses carry a deprecation notice), then remove `src/openhuman/workflows/`, its controllers from `src/core/all.rs`, the frontend clients/pages, and the `/workflows/new`//`workflows/run` routes (bare `/workflows` already redirects to `/settings/automations`).
+- **Deprecate then delete**: mark `openhuman.workflows_*` deprecated for one release (RPC responses carry a deprecation notice), then remove `src/openhuman/workflows/`, its controllers from `crates/openhuman-core/src/core/all.rs`, the frontend clients/pages, and the `/workflows/new`//`workflows/run` routes (bare `/workflows` already redirects to `/settings/automations`).
 - **Not in scope**: `openhuman.workflow_run_*` (`agent_orchestration`'s declarative run ledger) is a different system and untouched here — though its name should also be revisited once "Workflows" ≡ tinyflows.
 - **Naming end-state**: one user-facing concept — **Workflows = tinyflows graphs** at `/flows`; skills are skills.
 

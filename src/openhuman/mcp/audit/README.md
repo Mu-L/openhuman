@@ -30,7 +30,7 @@ From `mod.rs`:
 - **`openhuman.mcp_audit_list`** (namespace `mcp_audit`, function `list`) — lists write-attempt audit records (successes and rejected/failed attempts) ordered by `timestamp_ms` descending.
   - Inputs (all optional): `limit` (u64, default 50, max 500), `offset` (u64), `since_ms` (u64), `client_filter` (string, exact), `tool_filter` (string, exact), `success_only` (bool).
   - Output: `records` — array of `McpWriteRecord`.
-- **Internal-only.** Registered via `all_internal_controllers` and wired into `src/core/all.rs` through `all_mcp_audit_internal_controllers()`. Per `src/core/all_tests.rs`, the method is routable internally (`schema_for_rpc_method`) but **not** exposed publicly via `rpc_method_from_parts`.
+- **Internal-only.** Registered via `all_internal_controllers` and wired into `crates/openhuman-core/src/core/all.rs` through `all_mcp_audit_internal_controllers()`. Per `crates/openhuman-core/src/core/all_tests.rs`, the method is routable internally (`schema_for_rpc_method`) but **not** exposed publicly via `rpc_method_from_parts`.
 
 ## Persistence
 
@@ -50,7 +50,7 @@ From `mod.rs`:
 
 - `src/openhuman/mcp/server/write_dispatch.rs` — calls `mcp::audit::record_write` after each write attempt and `mcp::audit::list_writes` for its own surfaces/tests.
 - `src/openhuman/mcp/server/tools_tests.rs` — reads back audit rows in tests.
-- `src/core/all.rs` — registers the internal controller.
+- `crates/openhuman-core/src/core/all.rs` — registers the internal controller.
 - `src/openhuman/tools/registry/ops.rs` — independently `COUNT`s `mcp_writes` rows (queries the shared table directly, not via this module's API).
 
 ## Notes / gotchas

@@ -214,7 +214,7 @@ fn ok<'a>(value: &'a Value, context: &str) -> &'a Value {
 /// Peel the conditional `RpcOutcome` envelope. A handler that emits no log
 /// lines returns the bare value; one that emits any returns
 /// `{ result, logs }`. Both shapes are valid for the same method, so every
-/// consumer has to tolerate both — see `src/rpc/mod.rs`.
+/// consumer has to tolerate both — see `crates/openhuman-core/src/rpc/mod.rs`.
 fn payload<'a>(value: &'a Value, context: &str) -> &'a Value {
     let result = ok(value, context);
     result.get("result").unwrap_or(result)
@@ -565,7 +565,7 @@ async fn agent_run_events_returns_a_drained_empty_page_for_an_unknown_run() {
 /// failed later", so it passed under both.
 ///
 /// Matching `missing required param 'run_id'` — the exact format emitted by
-/// `validate_params` (`src/core/all.rs:1339-1343`) — pins the layer that is
+/// `validate_params` (`crates/openhuman-core/src/core/all.rs:1339-1343`) — pins the layer that is
 /// actually supposed to reject this.
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn agent_run_events_rejects_a_missing_run_id() {

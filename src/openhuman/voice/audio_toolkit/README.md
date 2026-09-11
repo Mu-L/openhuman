@@ -41,7 +41,7 @@ Namespace `audio_toolkit` (invoked as `openhuman.audio_toolkit_<function>`):
 | `audio_toolkit_email_podcast` | `to`, `subject`, `body`, `audio_path` (req); optional `attachment_name` | `email` (delivery JSON) |
 | `audio_toolkit_generate_and_email_podcast` | `text`, `to`, `subject`, `body` (req); optional `title`, `output_path`, `provider`, `voice`, `format`, `attachment_name` | `result` (combined JSON) |
 
-Registered into the global controller registry via `src/core/all.rs` (both `all_audio_toolkit_registered_controllers` and `all_audio_toolkit_controller_schemas`).
+Registered into the global controller registry via `crates/openhuman-core/src/core/all.rs` (both `all_audio_toolkit_registered_controllers` and `all_audio_toolkit_controller_schemas`).
 
 ## Agent tools
 
@@ -75,7 +75,7 @@ No durable domain store. Side effects are filesystem writes within the workspace
 
 ## Used by
 
-- `src/core/all.rs` — registers the controllers/schemas into the JSON-RPC + CLI surface.
+- `crates/openhuman-core/src/core/all.rs` — registers the controllers/schemas into the JSON-RPC + CLI surface.
 - `src/openhuman/tools/ops.rs` — instantiates the three tools into the agent tool registry; `src/openhuman/tools/mod.rs` re-exports them.
 
 ## Notes / gotchas

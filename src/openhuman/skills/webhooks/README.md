@@ -35,7 +35,7 @@ Key `WebhookRouter` methods: `new(persist_path)`, `register` / `register_echo` /
 
 ## RPC / controllers
 
-Registered via `all_webhooks_registered_controllers()` (wired in `src/core/all.rs`). Methods (`webhooks` namespace):
+Registered via `all_webhooks_registered_controllers()` (wired in `crates/openhuman-core/src/core/all.rs`). Methods (`webhooks` namespace):
 
 | Method | Backing | Purpose |
 | --- | --- | --- |
@@ -88,12 +88,12 @@ The router also runs a separate `tokio::sync::broadcast` channel of `WebhookDebu
 
 ## Used by
 
-- `src/core/all.rs` — registers the controllers/schemas into the RPC registry.
+- `crates/openhuman-core/src/core/all.rs` — registers the controllers/schemas into the RPC registry.
 - `src/openhuman/platform/socket/manager.rs` — stores the `WebhookRouter` (`set_webhook_router` / `webhook_router`) on the socket manager; ops/bus retrieve it from there.
 - `src/openhuman/platform/socket/event_handlers.rs` — publishes `WebhookIncomingRequest` from the socket and reads the shared router slot.
 - `src/openhuman/channels/runtime/startup.rs` — registers `WebhookRequestSubscriber` at startup.
-- `src/core/event_bus/events.rs` — defines the `Webhook*` `DomainEvent` variants this module uses.
-- `src/core/jsonrpc.rs` — RPC transport surface.
+- `crates/openhuman-core/src/core/event_bus/events.rs` — defines the `Webhook*` `DomainEvent` variants this module uses.
+- `crates/openhuman-core/src/core/jsonrpc.rs` — RPC transport surface.
 
 ## Notes / gotchas
 

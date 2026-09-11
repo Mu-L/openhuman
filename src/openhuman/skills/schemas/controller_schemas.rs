@@ -3,7 +3,7 @@
 //! `skills_schemas(function)` returns the [`ControllerSchema`] for the
 //! named function. `all_skills_controller_schemas` and
 //! `all_skills_registered_controllers` wire everything into the global
-//! registry in `src/core/all.rs`.
+//! registry in `crates/openhuman-core/src/core/all.rs`.
 
 use crate::core::all::RegisteredController;
 use crate::core::{ControllerSchema, FieldSchema, TypeSchema};

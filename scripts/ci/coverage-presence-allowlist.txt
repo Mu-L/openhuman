@@ -4,7 +4,7 @@
 # This is NOT a way to silence the gate. Every entry is a statement that the
 # file is deliberately absent from the product build, and the reason must say
 # which gate excludes it and why that is intended. Structural categories
-# (test sources, stub.rs, per-OS modules, src/tui/, test_support/) are handled
+# (test sources, stub.rs, per-OS modules, test_support/) are handled
 # by the script itself and must NOT be listed here.
 #
 # The list is a ratchet: entries come off, they do not go on. Adding one needs a

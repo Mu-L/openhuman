@@ -31,7 +31,7 @@ Local assistive surfaces for third-party provider apps. This domain owns a norma
 
 ## RPC / controllers
 
-Namespace `provider_surfaces` (two controllers, registered via `src/core/all.rs`):
+Namespace `provider_surfaces` (two controllers, registered via `crates/openhuman-core/src/core/all.rs`):
 
 | Method | Inputs | Output |
 | --- | --- | --- |
@@ -62,7 +62,7 @@ In-memory only. State lives in a process-global `RESPOND_QUEUE` (`static OnceLoc
 
 ## Used by
 
-- `src/core/all.rs` — registers the controllers/schemas into the global registry (`all_provider_surfaces_registered_controllers`, `all_provider_surfaces_controller_schemas`, and a `"provider_surfaces"` dispatch arm).
+- `crates/openhuman-core/src/core/all.rs` — registers the controllers/schemas into the global registry (`all_provider_surfaces_registered_controllers`, `all_provider_surfaces_controller_schemas`, and a `"provider_surfaces"` dispatch arm).
 - `src/openhuman/desktop_companion/handoff.rs` — reads `store::list_queue_items()` and matches `RespondQueueItem`s to correlate desktop companion handoff actions against the queue (light-touch, read-only against the store).
 - `src/openhuman/integrations/task_sources/pipeline_tests.rs` — references the queue in tests.
 

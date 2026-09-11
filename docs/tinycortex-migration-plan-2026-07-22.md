@@ -386,7 +386,7 @@ re-export except deliberate facades recorded in the spec.
   "no product policy / no keys / nothing openhuman-branded as API" rule, and
   don't move anything derived from GPL-only sources into the MIT crate.
 - **Two Cargo worlds + nested submodule:** vendor bumps now touch up to three
-  lockfiles (root, `app/src-tauri`, and tinycortex's own) and two submodule
+  lockfiles (root, `crates/openhuman-app`, and tinycortex's own) and two submodule
   pointers (`vendor/tinycortex`, `vendor/tinycortex/vendor/tinyagents`). CI
   clones with `submodules: recursive` for the vendor suite — verify after any
   bump.

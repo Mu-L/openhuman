@@ -117,10 +117,10 @@ Do not silently dismiss comments. Every non-noise item should appear in the fina
 Review the PR diff against this repo's rules in `AGENTS.md`, especially:
 
 - New Rust domain functionality lives in a subdirectory under `src/openhuman/`, not as new root-level `src/openhuman/*.rs` files.
-- Domain exposure uses `schemas.rs` plus registered handlers wired through `src/core/all.rs`, not ad-hoc transport branches in `src/core/cli.rs` or `src/core/jsonrpc.rs`.
+- Domain exposure uses `schemas.rs` plus registered handlers wired through `crates/openhuman-core/src/core/all.rs`, not ad-hoc transport branches in `crates/openhuman-core/src/core/cli.rs` or `crates/openhuman-core/src/core/jsonrpc.rs`.
 - Frontend production code under `app/src` does not use dynamic `import()`, `React.lazy(() => import(...))`, or `await import(...)`.
 - `VITE_*` configuration is centralized in `app/src/utils/config.ts`; other frontend files do not read `import.meta.env` directly.
-- `app/src-tauri` remains desktop-only and does not grow Android or iOS branches.
+- `crates/openhuman-app` remains desktop-only and does not grow Android or iOS branches.
 - New or changed flows include grep-friendly debug or trace logging without secrets or sensitive payloads.
 - User-facing capability changes update `src/openhuman/about_app/`.
 - Files remain reasonably focused, preferably around 500 lines or less.
@@ -159,7 +159,7 @@ pnpm format
 pnpm test:unit
 cargo fmt --manifest-path Cargo.toml
 cargo check --manifest-path Cargo.toml
-cargo check --manifest-path app/src-tauri/Cargo.toml
+cargo check --manifest-path crates/openhuman-app/Cargo.toml
 cargo test --manifest-path Cargo.toml
 ```
 

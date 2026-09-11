@@ -4110,7 +4110,6 @@ dependencies = [
  "coins-bip39 0.8.7",
  "cpal",
  "cron",
- "crossterm",
  "curve25519-dalek",
  "dhat",
  "directories",
@@ -4143,7 +4142,6 @@ dependencies = [
  "parking_lot",
  "proptest",
  "rand 0.10.2",
- "ratatui",
  "rdev",
  "regex",
  "reqwest",
@@ -4202,7 +4200,6 @@ dependencies = [
  "tracing-appender",
  "tracing-log",
  "tracing-subscriber",
- "unicode-width",
  "url",
  "urlencoding",
  "uuid",
@@ -4213,6 +4210,25 @@ dependencies = [
  "x25519-dalek",
  "zeroize",
  "zip",
+]
+
+[[package]]
+name = "openhuman-tui"
+version = "0.63.25"
+dependencies = [
+ "anyhow",
+ "base64 0.22.1",
+ "chrono",
+ "crossterm",
+ "log",
+ "openhuman",
+ "ratatui",
+ "serde_json",
+ "tempfile",
+ "tokio",
+ "unicode-width",
+ "uuid",
+ "zeroize",
 ]
 
 [[package]]

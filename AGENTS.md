@@ -10,9 +10,12 @@ Architecture docs: [`gitbooks/developing/architecture.md`](gitbooks/developing/a
 
 | Path                    | Role                                                                                                                          |
 | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| **`app/`**              | pnpm workspace `openhuman-app`: Vite + React (`app/src/`), Tauri desktop host (`app/src-tauri/`), Vitest tests                |
-| **`src/`** (root)       | Rust lib crate `openhuman` + `openhuman-core` CLI binary (`src/main.rs`) — `src/core/` (transport), `src/openhuman/*` domains |
-| **`Cargo.toml`** (root) | Core crate; `cargo build --bin openhuman-core`. Also `openhuman-fleet`, `rss-bench` and `library-profile` in `src/bin/`.                  |
+| **`app/`**              | pnpm workspace `openhuman-app`: Vite + React (`app/src/`) and Vitest tests                                                     |
+| **`crates/openhuman-app/`** | Detached Cargo workspace for the Tauri desktop host                                                                       |
+| **`crates/openhuman-core/`** | Core package wrappers (`api`, transports, CLI, embedding API, binaries); links the domain tree below with `#[path]`       |
+| **`crates/openhuman-tui/`** | Standalone `openhuman-tui` terminal frontend; embeds `openhuman-core` in-process                                          |
+| **`src/openhuman/`**    | Authoritative Rust domain implementation                                                                                                             |
+| **`Cargo.toml`** (root) | Virtual Cargo workspace; `cargo build --bin openhuman-core` selects the `openhuman` member                                     |
 | **`docs/`**             | Deep internals. Public contributor docs in `gitbooks/developing/`.                                                            |
 
 Commands assume **repo root**. Root `package.json` is `openhuman-repo` (private, pnpm-enforced).
@@ -22,11 +25,13 @@ Commands assume **repo root**. Root `package.json` is `openhuman-repo` (private,
 ## Runtime scope
 
 - **Shipped product**: desktop — Windows, macOS, Linux. No Android/iOS in the Tauri host.
-- **Core runs in-process** as a tokio task (sidecar removed PR #1061). Lifecycle: `core_process::CoreProcessHandle` in `app/src-tauri/src/core_process.rs`. Frontend RPC → `http://127.0.0.1:<port>/rpc` with per-launch hex bearer handed in-memory via `run_server_embedded_with_ready(rpc_token: Some(_))`. Renderer reads bearer via `core_rpc_token` Tauri command. `OPENHUMAN_CORE_TOKEN` still honoured for CLI/docker/cloud. Set `OPENHUMAN_CORE_REUSE_EXISTING=1` for external core debugging.
+- **Core runs in-process** as a tokio task (sidecar removed PR #1061). Lifecycle: `core_process::CoreProcessHandle` in `crates/openhuman-app/src/core_process.rs`. Frontend RPC → `http://127.0.0.1:<port>/rpc` with per-launch hex bearer handed in-memory via `run_server_embedded_with_ready(rpc_token: Some(_))`. Renderer reads bearer via `core_rpc_token` Tauri command. `OPENHUMAN_CORE_TOKEN` still honoured for CLI/docker/cloud. Set `OPENHUMAN_CORE_REUSE_EXISTING=1` for external core debugging.
 
 **Where logic lives:**
 
-- **Rust core** (`src/`): business logic, execution, domains, RPC, persistence, CLI. Authoritative.
+- **Rust domains** (`src/openhuman/`): business logic, execution, domains, and persistence. Authoritative.
+- **Rust wrappers** (`crates/openhuman-core/`): CLI, RPC/transport, and embedding surfaces.
+- **Terminal UI** (`crates/openhuman-tui/`): ratatui frontend over the in-process core.
 - **Tauri + React** (`app/`): UX, screens, navigation, bridging. Presents and orchestrates only.
 
 ---
@@ -51,7 +56,8 @@ pnpm format:check         # Prettier check + cargo fmt --check
 # Rust
 cargo check --manifest-path Cargo.toml
 cargo build --manifest-path Cargo.toml --bin openhuman-core
-cargo check --manifest-path app/src-tauri/Cargo.toml   # or: pnpm rust:check
+cargo build --manifest-path Cargo.toml -p openhuman-tui
+cargo check --manifest-path crates/openhuman-app/Cargo.toml   # or: pnpm rust:check
 
 # macOS Apple Silicon workaround (llama.cpp)
 GGML_NATIVE=OFF cargo check --manifest-path Cargo.toml
@@ -59,7 +65,7 @@ GGML_NATIVE=OFF cargo check --manifest-path Cargo.toml
 
 `pnpm core:stage` is a no-op (sidecar removed).
 
-**Build speed**: both `Cargo.toml` files set `[profile.dev.package."*"] debug = false` — dependencies compile without DWARF in `dev`/`test` (faster builds + smaller `target/`); our own crates keep full debuginfo so panics/backtraces still resolve to file:line. Keep this stanza in sync across the root and `app/src-tauri/Cargo.toml` if you touch profiles.
+**Build speed**: the root workspace and detached desktop manifest both set `[profile.dev.package."*"] debug = false` — dependencies compile without DWARF in `dev`/`test` (faster builds + smaller `target/`); our own crates keep full debuginfo so panics/backtraces still resolve to file:line. Keep this stanza in sync across `Cargo.toml` and `crates/openhuman-app/Cargo.toml` if you touch profiles.
 
 **Binary size**: both `[profile.release]` blocks set `lto = "thin"`, `codegen-units = 1` and `strip = "symbols"` (#5541) — measured at **116.9 MB → 67.1 MB** for `openhuman-core` on the product feature set, with no feature removed and no dependency dropped. The win is not about dependencies: `cargo bloat` puts **59.5% of `.text` in `openhuman_core` itself** and only ~15 MB across all 379 third-party packages, and there is no hotspot — it is ~110k monomorphized methods, of which the default 16 codegen units emitted many twice (`Config::load_or_init_with_env_lookup::{{closure}}` appeared 6× at ~40 KB, and it is not even generic). `strip` is safe because Sentry symbolicates **server-side** from the separate dSYM/PDB/DWP that `scripts/upload_sentry_symbols.sh` uploads, matched by a debug ID `strip` preserves; if that ever broke, the script hard-exits on zero DIFs (#1403) instead of shipping un-symbolicated. Do not drop `debug = "line-tables-only"` — that is what makes the dSYM useful. `[profile.ci]` deliberately overrides all three, so the fast CI lanes are unaffected; release builds are slower by design.
 
@@ -178,13 +184,13 @@ No `UserProvider`/`AIProvider`/`SkillProvider` — auth lives in `CoreStateProvi
 
 ---
 
-## Tauri shell (`app/src-tauri/`)
+## Tauri shell (`crates/openhuman-app/`)
 
 Thin desktop host. Key modules: `core_process`, `core_rpc`, `dictation_hotkeys`, `file_logging`, `mascot_native_window`, `window_state`, `imessage_scanner`.
 
 The CDP-driven provider scanners (`discord_scanner`, `slack_scanner`, `telegram_scanner`, `whatsapp_scanner`, `wechat_scanner`, `gmessages_scanner`), the `webview_accounts` surface they ran inside, and the in-app Meet call window (`meet_call`, `meet_audio`, `meet_video`, `meet_scanner`, `fake_camera`) were removed in #5478 — CDP only exists under a Chromium engine, and the app moved to Wry in #5456. `imessage_scanner` is unaffected: it reads `chat.db` natively and never used CDP. Meet has since been removed from the product entirely (see below), so the `src/openhuman/meet/` and `backend_bot` paths those notes referred to are gone.
 
-IPC commands (authoritative list: `generate_handler!` in `app/src-tauri/src/lib.rs`): `core_rpc::relay_http_rpc`, `core_rpc_url`, `core_rpc_token`, `start_core_process`/`restart_core_process`, update commands (`check_app_update`, `apply_core_update`, …), window commands (`activate_main_window`, `mascot_window_*`, `notch_window_*`), `workspace_paths::*`, `artifact_commands::*`, hotkeys (dictation/PTT/companion), `native_notifications::*`, `mcp_commands::*`, `loopback_oauth::*`.
+IPC commands (authoritative list: `generate_handler!` in `crates/openhuman-app/src/lib.rs`): `core_rpc::relay_http_rpc`, `core_rpc_url`, `core_rpc_token`, `start_core_process`/`restart_core_process`, update commands (`check_app_update`, `apply_core_update`, …), window commands (`activate_main_window`, `mascot_window_*`, `notch_window_*`), `workspace_paths::*`, `artifact_commands::*`, hotkeys (dictation/PTT/companion), `native_notifications::*`, `mcp_commands::*`, `loopback_oauth::*`.
 
 ### Child webviews — no new JS injection
 
@@ -307,20 +313,20 @@ Consequences worth knowing before touching either seam:
   contributors and product-ON, and both are already forwarded to the desktop
   shell.
 
-### Backend API access — `src/api/` over `tinyhumans-sdk`
+### Backend API access — `crates/openhuman-core/src/api/` over `tinyhumans-sdk`
 
 Calls to the TinyHumans cloud backend go through the vendored
 [`tinyhumans-sdk`](https://github.com/tinyhumansai/sdk) crate at
 `vendor/tinyhumans-sdk` (git submodule, path dependency — the crate is not on
 crates.io, so unlike the other `vendor/` crates it has no `[patch.crates-io]`
 entry). **The SDK is the source of truth for backend routes.** A route missing
-from it belongs upstream in the SDK repo, not re-implemented in `src/api/`.
+from it belongs upstream in the SDK repo, not re-implemented in `crates/openhuman-core/src/api/`.
 
 The split:
 
 - **SDK** — routes, URL building, percent-encoding, credential headers,
   `{success,data}` envelope handling, and the admin/webhook-receiver route gate.
-- **`src/api/`** — the OpenHuman-specific layer on top: session-token retrieval
+- **`crates/openhuman-core/src/api/`** — the OpenHuman-specific layer on top: session-token retrieval
   (`jwt.rs`), base-URL/env resolution (`config.rs`), and the error
   classification + Sentry policy in `rest.rs`.
 
@@ -334,7 +340,7 @@ client stays token-less and concurrent calls with different bearers cannot
 race. (`clone()` is Arc-backed — the connection pool is shared, only the token
 field differs.)
 
-### Product identity — `x-sdk-name` (`src/api/product.rs`)
+### Product identity — `x-sdk-name` (`crates/openhuman-core/src/api/product.rs`)
 
 OpenHuman, OpenCompany and Medulla share one login and all three reach the
 backend through this crate, so every backend-bound request carries
@@ -430,7 +436,7 @@ UI rather than gated off, so there is no flag that brings them back:
 
 | Removed | What went | Notes |
 | --- | --- | --- |
-| Desktop companion | `app/src-tauri/src/companion{,_commands}.rs`, the `companion` Redux slice, `CompanionPanel`, `companionEvents`, the overlay/notch companion modes | Shell + UI only; the core never owned it. `mascot_native_window`, `notch_window` and `ptt_overlay` are unaffected. |
+| Desktop companion | `crates/openhuman-app/src/companion{,_commands}.rs`, the `companion` Redux slice, `CompanionPanel`, `companionEvents`, the overlay/notch companion modes | Shell + UI only; the core never owned it. `mascot_native_window`, `notch_window` and `ptt_overlay` are unaffected. |
 | AgentBox | `agent/agentbox/`, the `agentbox` RPC namespace, the GMI MaaS provider bridge, the `AgentBoxPanel` settings page | Moved to [tinybox](https://github.com/tinyhumansai/tinybox). The unauthenticated `/run` and `/jobs/` routes left `core::auth`'s public-path list with it — `agentbox_run_and_jobs_paths_are_no_longer_public` pins that they stay authenticated. |
 | Meetings | the `meet` Cargo gate and `openhuman::meet/` (join validation, live agent loop, backend bot), `MeetConfig`, the `meet`/`meet_agent`/`agent_meetings` namespaces, every `BackendMeet*`/`Meeting*` `DomainEvent`, the meetings UI, and `integrations/recall_calendar` (its only purpose was Meet auto-join) | `DomainGroup::Meet` is gone, so `DomainGroup::COUNT` dropped 23 → 22. The approval gate's in-call branch went with it — nothing set `APPROVAL_IN_CALL_CONTEXT` any more. |
 | Subconscious | `openhuman::subconscious/` (engine, heartbeat, planner, monitors, triggers, user_thread), the `openhuman subconscious` CLI, the monitor + `notify_user` agent tools, the Brain/Activity subconscious tabs | `DomainGroup::Automation` now means cron alone. **`HeartbeatConfig` stays** — `threads::goals::continuation` reads `heartbeat.goal_continuation_enabled` / `goal_idle_minutes`, and **the `subconscious` provider role stays** because `agent::triage::routing` resolves its provider through it. |
@@ -589,9 +595,9 @@ gated: `tools/` is kernel surface, so the trait compiles in every build. See the
 
 1. `mod.rs`: add `mod schemas;`, re-export `all_controller_schemas`/`all_registered_controllers`.
 2. `schemas.rs`: define schemas, handlers delegating to `ops.rs`.
-3. Wire into `src/core/all.rs`. Remove from `src/core/dispatch.rs`.
+3. Wire into `crates/openhuman-core/src/core/all.rs`. Remove from `crates/openhuman-core/src/core/dispatch.rs`.
 
-### `src/core/` — transport only
+### `crates/openhuman-core/src/core/` — transport only
 
 Modules: `all`, `auth`, `cli`, `dispatch`, `event_bus/`, `jsonrpc`, `logging`, `observability`, `types`, etc. No business logic here.
 
@@ -614,7 +620,7 @@ let out = harness.run("Summarize this repo.").await?;
 let next = harness.turn("Now the risks.").session(&out.session_id).send().await?;
 ```
 
-Layering: `embed::Core::agent()` is the typed turn surface for a host that already owns a `CoreRuntime` (the shell, an existing embedder); `Harness` builds that runtime for you and owns the workspace's lifetime. `embed::Core::auth()` types the session store. Everything routes through `CoreRuntime::invoke`, never `ops::*`, so `DomainSet` gating is honoured — see `src/embed/call.rs`.
+Layering: `embed::Core::agent()` is the typed turn surface for a host that already owns a `CoreRuntime` (the shell, an existing embedder); `Harness` builds that runtime for you and owns the workspace's lifetime. `embed::Core::auth()` types the session store. Everything routes through `CoreRuntime::invoke`, never `ops::*`, so `DomainSet` gating is honoured — see `crates/openhuman-core/src/embed/call.rs`.
 
 **Five things that bite, each of which cost a debugging session to find:**
 
@@ -632,10 +638,10 @@ Example: `examples/run_turn.rs`. End-to-end test: `tests/harness_embed.rs`.
 
 ### Runtime composition — `ServiceSet` + `DomainSet` + `ToolGroups` on `CoreBuilder`
 
-Three independent runtime axes on `CoreBuilder` (`src/core/runtime/builder.rs`):
+Three independent runtime axes on `CoreBuilder` (`crates/openhuman-core/src/core/runtime/builder.rs`):
 
 - **`ServiceSet`** selects which *background services / transports* run (`rpc_http`, `socketio`, `cron`, `channels`, `heartbeat`, …). Presets: `desktop()` / `headless_api()` / `none()`.
-- **`DomainSet`** selects which *domain families* exist at runtime, one flag per `DomainGroup` (`src/core/all.rs`). Presets: `full()` (default — byte-identical to before #4796), `harness()` (agent + memory + threads + config + security only), `none()`. Every controller is tagged with its `DomainGroup` at the single registration site in `src/core/all.rs`; the live surface (controllers/`/schema`/dispatch, agent tools, stores, subscribers) is filtered by the ambient `CoreContext::domains()`. A gated domain's controllers become unknown-method, its agent tools absent, its stores/subscribers uninitialized. `examples/embed_headless.rs` uses `DomainSet::harness()`; `examples/embed_kernel.rs` uses `DomainSet::kernel()` — the floor (threads + config + security, with `agent`/`memory` OFF) that a host opts subsystems back into by field assignment. Per-gate Cargo `[features]` (children #4797–#4804) narrow the compile-time surface further; `DomainSet` is the runtime axis they compose with.
+- **`DomainSet`** selects which *domain families* exist at runtime, one flag per `DomainGroup` (`crates/openhuman-core/src/core/all.rs`). Presets: `full()` (default — byte-identical to before #4796), `harness()` (agent + memory + threads + config + security only), `none()`. Every controller is tagged with its `DomainGroup` at the single registration site in `crates/openhuman-core/src/core/all.rs`; the live surface (controllers/`/schema`/dispatch, agent tools, stores, subscribers) is filtered by the ambient `CoreContext::domains()`. A gated domain's controllers become unknown-method, its agent tools absent, its stores/subscribers uninitialized. `examples/embed_headless.rs` uses `DomainSet::harness()`; `examples/embed_kernel.rs` uses `DomainSet::kernel()` — the floor (threads + config + security, with `agent`/`memory` OFF) that a host opts subsystems back into by field assignment. Per-gate Cargo `[features]` (children #4797–#4804) narrow the compile-time surface further; `DomainSet` is the runtime axis they compose with.
 
 - **`ToolGroups`** selects how each *tool group* reaches the model, one mode per compiled-in pack in `tools/toolpacks/registry.rs` (`src/openhuman/tools/toolpacks/groups.rs`). Presets: `packed()` (default — every group withheld, byte-identical to before the type existed), `advertised()`, `none()`, plus `.with(id, mode)`. Also on `Harness::builder()`.
 
@@ -655,12 +661,12 @@ So `GroupMode` has three states, not two:
 
 **`DomainGroup` tracks family directories 1:1.** After the domain reorg (#5328) each variant names a `src/openhuman/` family, so the runtime axis stopped sweeping half the surface into the `Platform` catch-all. Groups: the harness families (`Agent`, `Memory`, `Threads`, `Config`, `Security`), the compile-gate families (`Flows`, `Skills`, `Mcp`, `Channels`, `Web3`, `Voice`, `Media`, `Medulla`), the families carved out of `Platform` (`Inference`, `Integrations`, `Automation` = cron, `Runtimes` = runtime + sandbox, `Desktop`, `Hosted`, `Modules` = the native module host), and `Platform` itself — now only the kernel surfaces with no family of their own (`platform/`, `tools/`, `http_host/`, `test_support/`).
 
-That realignment fixed two real defects, both pinned by tests in `src/core/all_tests.rs`:
+That realignment fixed two real defects, both pinned by tests in `crates/openhuman-core/src/core/all_tests.rs`:
 
 - `harness()` claimed "agent + memory + threads + config + security" but silently dropped `agent::{harness_init, artifacts, learning}`, `security::{credentials, devices}`, `config::{workspace, migration_helpers}`, `memory::people` and `skills::webhooks` into `Platform`. An agent harness that never registers `harness_init` is a latent bug.
 - `embedded()` had to set `platform: true` purely to reach credentials and config, which dragged the desktop and hosted-backend surfaces along with it. Those are `Desktop` / `Hosted` now and stay off.
 
-**Adding a family directory means four edits, all compiler-enforced:** the `DomainGroup` variant (`src/core/all.rs`), the `DomainSet` field + `allows()` arm + every preset (`src/core/runtime/builder.rs`).
+**Adding a family directory means four edits, all compiler-enforced:** the `DomainGroup` variant (`crates/openhuman-core/src/core/all.rs`), the `DomainSet` field + `allows()` arm + every preset (`crates/openhuman-core/src/core/runtime/builder.rs`).
 
 Three more consumers are *not* compiler-enforced — `tool_group()` (`tools/ops.rs`), `StoreInitPlan` (`runtime/context.rs`) and `DomainSubscriberPlan` (`core/jsonrpc.rs`) — so **drift guards** stand in for the compiler. Each forces every variant into exactly one of two lists (owns-a-store / storeless, registers-subscribers / none, owns-tools / tool-less), so adding a family cannot compile-and-forget:
 
@@ -696,26 +702,26 @@ Per-domain Cargo features drop whole domains **at compile time** (smaller binary
 > --features flows` and never reads this list.
 | **Product** | `scripts/ci/product-features.txt` | What the shipped desktop app has. 16 gates. **540 packages / 7 native builds** (adds `bzip2-sys`, `libgit2-sys`, `libz-sys`, `zstd-sys`). |
 
-`default` used to be the product set, which made the inner loop pay for the whole product on every edit — web3's ethers/secp256k1 cohort, `documents`' zstd/bzip2 native builds (since removed from the graph entirely — the codecs run in a module now), the cpal/hound/arboard/enigo/rdev stack behind `voice`+`inference`, `contacts`' macOS objc2 cohort, `crash-reporting`'s sentry tree, `tui`'s ratatui. Those are default-OFF now. **This did not change what ships**: the shell has set `default-features = false` since #1061 and never inherited `default` anyway.
+`default` used to be the product set, which made the inner loop pay for the whole product on every edit — web3's ethers/secp256k1 cohort, `documents`' zstd/bzip2 native builds (since removed from the graph entirely — the codecs run in a module now), the cpal/hound/arboard/enigo/rdev stack behind `voice`+`inference`, `contacts`' macOS objc2 cohort, and `crash-reporting`'s sentry tree. Those are default-OFF now. **This did not change what ships**: the shell has set `default-features = false` since #1061 and never inherited `default` anyway. The ratatui cohort is owned by the separate `openhuman-tui` package rather than a core feature.
 
 What it *did* change: **a lane that relies on default features no longer covers the product.** Every CI lane that builds or tests the product passes `--features "$(bash scripts/ci/product-features.sh)"` — clippy, the unit lane, the coverage lane, `scripts/test-rust-with-mock.sh`. If you add a lane, decide which of the two sets it is testing and say so in a comment. Four `tests/*.rs` targets carry `required-features` for the same reason (`json_rpc_e2e`, `raw_coverage_all`, `observability_smoke`, `x402_twit_sh_live`); without those gates cargo **silently skips** them and the run still exits 0 — the same trap `--bins` without `bin-tools` already had.
 
 > **Adding a gate to either set? You must forward it to the desktop shell.**
-> `app/src-tauri/Cargo.toml` declares `openhuman_core` with `default-features = false` (set in #1061, before gates existed), so the shipped app does **not** inherit the core's `default` list. A gate in the product set but not in the shell's `features` list is **compiled out of the shipped desktop app** — with no build error and no failing test. This is not hypothetical: `voice` shipped missing from v0.58.19 to v0.61.x (56 users, ~93k Sentry events, #4901), and `tokenjuice-treesitter` was never forwarded once since #4123 and failed *soft*, silently degrading AST compression (#4918).
+> `crates/openhuman-app/Cargo.toml` declares `openhuman_core` with `default-features = false` (set in #1061, before gates existed), so the shipped app does **not** inherit the core's `default` list. A gate in the product set but not in the shell's `features` list is **compiled out of the shipped desktop app** — with no build error and no failing test. This is not hypothetical: `voice` shipped missing from v0.58.19 to v0.61.x (56 users, ~93k Sentry events, #4901), and `tokenjuice-treesitter` was never forwarded once since #4123 and failed *soft*, silently degrading AST compression (#4918).
 > `scripts/ci/check-feature-forwarding.mjs` (the **Feature Forwarding Gate** lane) asserts three things: the shell forwards **exactly** `product-features.txt` (set equality, both directions), every name in that file is a real core gate, and every `default` gate is forwarded or allow-listed. The equality check is the load-bearing one — the old subset-of-`default` check would have passed **vacuously** once `default` stopped being the product set, silently re-arming #4901. If a gate genuinely must not ship, add it to `INTENTIONALLY_NOT_FORWARDED` **with a reason** — an explicit exclusion is the only way "deliberate" stays distinguishable from "forgotten".
-> A gate in **neither** set (today `tui` and `e2e-test-support`) gets no compile coverage from the normal lanes at all, so the feature-gate-smoke lane checks it explicitly. Put new ones there too. `e2e-test-support` was in this position for its whole life without being listed here or checked anywhere (#6086) — it is the reason this sentence now names its members instead of claiming there is one.
+> A gate in **neither** set (today `e2e-test-support`) gets no compile coverage from the normal lanes at all, so the feature-gate-smoke lane checks it explicitly. Put new ones there too. `e2e-test-support` was in this position for its whole life without being listed here or checked anywhere (#6086).
 
-**Slim-profile convention** (no `full` meta-feature): build slim variants with `cargo build --no-default-features --features "<explicit list of gates you want>"`. This mirrors the existing standalone-feature style (`sandbox-landlock`, `browser-native`, …). Example — everything except voice:
+**Slim-profile convention** (no `full` meta-feature): build slim variants with `cargo build -p openhuman --no-default-features --features "<explicit list of gates you want>"`. Selecting the package matters now that the workspace also contains `openhuman-tui`. This mirrors the existing standalone-feature style (`sandbox-landlock`, `browser-native`, …). Example — everything except voice:
 
 ```bash
 # check / build without the voice family (incl. audio_toolkit)
 GGML_NATIVE=OFF cargo check --manifest-path Cargo.toml \
-  --no-default-features
+  -p openhuman --no-default-features
 ```
 
 #### The kernel profile, and the floor ratchet that protects it
 
-`--no-default-features --features flows` is the **kernel profile**: the surface a
+`-p openhuman --no-default-features --features flows` is the **kernel profile**: the surface a
 second host would embed to get workflow execution and nothing else. It is measured
 and ratcheted, because unmeasured it grows — `rusqlite`/bundled and
 `tokio-tungstenite` remain unconditional today (`git2`/vendored-libgit2 left the
@@ -776,7 +782,6 @@ Two columns because there are two sets (see above): **Contrib** is `[features] d
 | `skills` | ON | ON | `openhuman::skills` + `openhuman::skills::runtime` + `openhuman::skills::catalog` domains — SKILL.md discovery/parse/install, workflow execution + run logs, remote catalogs, the `skill_setup` / `skill_executor` builtin agents, and the 16 skill agent tools | none (see below) |
 | `flows` | ON | ON | `openhuman::flows` (saved automation graphs — create/run/schedule, the `workflow_builder` + `flow_discovery` agents), `openhuman::flows::tinyflows` (engine seam), `openhuman::flows::rhai` (`.ragsh` language-workflow tool). Pulls the four tinyflows workspace crates — see the seam note below | `tinyflows`, `tinyflows-catalog`, `tinyflows-copilot`, `tinyflows-sqlite`, `jaq-core`, `jaq-std`, `jaq-json`, `rhai` |
 | `mcp` | ON | ON | `openhuman::mcp::server` (the `openhuman mcp` stdio/HTTP server), `openhuman::mcp::registry` (dynamic Smithery installs — `mcp_clients` RPC namespace, SQLite, boot spawn, supervisor, OAuth), `openhuman::mcp::audit` (write-audit log), and the static config-declared server set in `openhuman::mcp::config_servers`. ~19 agent tools, ~20k LOC | **none** — and the `tinymcp` module extraction does not change that either; see the scope note |
-| `tui` | OFF | — | `openhuman::tui` — the tabbed ratatui/crossterm CLI UI (Logs, Chat, Config, Settings), auto-opened by bare `openhuman` on interactive non-container hosts and forced with `openhuman tui` (alias `chat`). Runs the core in-process. No controllers, no agent tools. **Intentionally NOT forwarded to the desktop shell** (allowlisted in `check-feature-forwarding.mjs`). | `ratatui`, `crossterm` |
 | `channels` | ON | ON | `openhuman::channels` (external-messaging providers — Telegram/Discord/Slack/Signal/WhatsApp/iMessage/IRC/… — plus the channel runtime, controllers, host, proactive messaging + inbound dispatch) and the `webview_notifications` bridge domain. **Carve-outs `channels::{traits, cli}` stay ungated.** The family now owns **no agent tool** — the three `whatsapp_data_*` tools were its only ones and went with the store (see below) — which is why `DomainGroup::Channels` is in `TOOL_LESS` in `tools/ops_tests.rs`. | **none in the kernel profile** — the gate swaps `tinychannels` for `tinychannels-bus` one-for-one, because every heavy dep it carried is shared. It buys ~31.7k lines of compile surface, not crates. The email + lark cohorts are shed only relative to a `channels`-ON build |
 | `contacts` | OFF | ON | `memory::people::address_book`'s macOS CNContactStore reader — the address-book seeding path for the people domain. Leaf gate over a **pre-existing** off-state: the module already shipped a non-macOS `imp` stub returning an empty contact list, so the gate only widens that stub's cfg. `read`/`read_with`/`AddressBookError`/`SystemContactsSource` and the whole `people` RPC surface stay compiled in every build; off ⇒ a refresh seeds nothing instead of failing. | **6** on macOS (`objc2`, `objc2-foundation`, `objc2-contacts`, `block2` + 2 transitive). **No-op on Linux/Windows** — never in those graphs, so the kernel-floor ratchet does not move. Verify cross-target: `cargo tree --target aarch64-apple-darwin -e normal -i objc2-contacts --no-default-features` (294 → 288 packages). |
 | `runtime-node` | OFF | ON | `runtime::node` (the client that asks the `tinyruntime` module for a Node.js toolchain), the `runtime::javascript` language slot, `runtime::pool::node`, the `node_exec` / `npm_exec` agent tools, and the `node_runtime` harness-init step. **Facade + stub** — `ShellTool` holds `Option<Arc<NodeBootstrap>>` and `shell.rs` is kernel, so the module cannot simply vanish; `runtime/node/stub.rs` carries the `NodeBootstrap` type surface while registration sites are leaf-gated. **The generic native-tool dispatcher (`runtime::node::ops` / `runtime::node::types`) is NOT gated** — it backs both the gated `javascript.*` controllers and the ungated `flows` `oh:` `NativeToolBackend`, so native flow tools (`memory_search`, file, shell, …) keep working when the managed Node runtime is off. Off ⇒ `try_cached`/`probe_installed` return `None` and the shell never prepends a managed bin dir, identical to today's `node.enabled = false` path. | **Nothing any more.** This gate used to shed `xz2` and its static liblzma C build; download and extraction moved into the `tinyruntime` module, so that native build left the manifest for **every** configuration rather than only for slim ones. The gate still buys the absence of the tools and controllers. |
@@ -809,7 +814,7 @@ Two places the carve-out doesn't reach, and why they are `#[cfg]` at the call si
 
 When skills are off: the `skills` / `skill_runtime` / `skill_registry` controllers are unregistered (unknown-method over `/rpc`, absent from `/schema`), the 16 skill agent tools (incl. `run_workflow` / `await_workflow`) are **absent** from the tool list rather than degraded to an error, the `skill_setup` / `skill_executor` builtin agents are gone, and the boot-time remote catalog refresh is skipped. Composes with the runtime `DomainSet::skills` flag (#4796) — that axis needed no change here; #4798 is compile-time only.
 
-**Leaf-gate pattern (`flows`).** Where `voice` needs a stub facade, `flows` needs **none** — and deliberately so. Every symbol reached from outside the gate is a *registration site* (controller push in `src/core/all.rs`, the `FlowTriggerSubscriber` in `src/core/jsonrpc.rs`, boot reconcile in `src/core/runtime/services.rs`, agent-tool `vec!` elements in `src/openhuman/tools/ops.rs`, `BuiltinAgent` entries in `agent/registry/agents/loader.rs`). Registration sites want **absence**: a stub that registered a controller returning `Err("flows disabled")` would make `flows.*` a *known* method that fails at runtime — the opposite of the intended "unknown method / omitted tool". So the family carries a **single** `#[cfg(feature = "flows")]` on `pub mod flows;` in `src/openhuman/mod.rs` — the nested `flows::tinyflows` and `flows::rhai` submodules inherit it — and each call site carries its own `#[cfg]`. The leaf gate holds only because no always-compiled domain has a real code edge into the tree: `memory/tools.rs` and `memory/tools/flavour.rs` name `flows::tinyflows` in comments only. There is no `openhuman flows` CLI subcommand, so no CLI stub is needed either. When flows is off: the `flows.*` controllers are unregistered (unknown-method over `/rpc`, absent from `/schema`), all 25 flow agent tools + the `rhai_workflows` tool are absent, and the `workflow_builder` / `flow_discovery` built-in agents are not advertised.
+**Leaf-gate pattern (`flows`).** Where `voice` needs a stub facade, `flows` needs **none** — and deliberately so. Every symbol reached from outside the gate is a *registration site* (controller push in `crates/openhuman-core/src/core/all.rs`, the `FlowTriggerSubscriber` in `crates/openhuman-core/src/core/jsonrpc.rs`, boot reconcile in `crates/openhuman-core/src/core/runtime/services.rs`, agent-tool `vec!` elements in `src/openhuman/tools/ops.rs`, `BuiltinAgent` entries in `agent/registry/agents/loader.rs`). Registration sites want **absence**: a stub that registered a controller returning `Err("flows disabled")` would make `flows.*` a *known* method that fails at runtime — the opposite of the intended "unknown method / omitted tool". So the family carries a **single** `#[cfg(feature = "flows")]` on `pub mod flows;` in `src/openhuman/mod.rs` — the nested `flows::tinyflows` and `flows::rhai` submodules inherit it — and each call site carries its own `#[cfg]`. The leaf gate holds only because no always-compiled domain has a real code edge into the tree: `memory/tools.rs` and `memory/tools/flavour.rs` name `flows::tinyflows` in comments only. There is no `openhuman flows` CLI subcommand, so no CLI stub is needed either. When flows is off: the `flows.*` controllers are unregistered (unknown-method over `/rpc`, absent from `/schema`), all 25 flow agent tools + the `rhai_workflows` tool are absent, and the `workflow_builder` / `flow_discovery` built-in agents are not advertised.
 
 **What is in `flows/` and what is upstream.** The domain used to own its whole
 stack; most of it was not OpenHuman's. Four crates in the vendored tinyflows
@@ -854,7 +859,7 @@ Two rules follow, and both are load-bearing:
 
 **Scope note (`flows` deps):** the gate sheds `tinyflows` + its `jaq-core` / `jaq-std` / `jaq-json` JSON-query stack, and `rhai`. It does **not** shed `tinyagents` — 26+ domains consume that crate. The issue-level DoD line reading "sheds the rhai scripting engine" is therefore true only at the **feature** level: `rhai` arrives via `tinyagents/repl`, which the root `Cargo.toml` no longer enables directly — the `flows` feature turns it on. Dropping `flows` drops `repl`, which drops `rhai`; `tinyagents` itself stays. Verify a claimed shed with `cargo tree -i <crate> --no-default-features` (must return nothing) — compiling clean is **not** proof that a dep was dropped.
 
-**Testing gotcha (applies to every gate).** The CI smoke lane runs `cargo check` only — it never runs `cargo test --no-default-features`, so CI stays green while the disabled-build **test** suite is broken. Tests that hard-assert a gated family (`.expect("a flows.* method exists")`, `assert!(full_ns.contains("flows"))`, `group_for_namespace("flows")`, built-in-agent id lists) must be `#[cfg]`-gated in lockstep with the feature. Run `GGML_NATIVE=OFF cargo test --lib --no-default-features core::` locally before pushing any gate change.
+**Testing gotcha (applies to every gate).** The CI smoke lane runs `cargo check` only — it never runs `cargo test --no-default-features`, so CI stays green while the disabled-build **test** suite is broken. Tests that hard-assert a gated family (`.expect("a flows.* method exists")`, `assert!(full_ns.contains("flows"))`, `group_for_namespace("flows")`, built-in-agent id lists) must be `#[cfg]`-gated in lockstep with the feature. Run `GGML_NATIVE=OFF cargo test -p openhuman --lib --no-default-features core::` locally before pushing any gate change.
 
 #### The `mcp` gate
 
@@ -873,7 +878,7 @@ After the extraction the stack lives in `tinymcp`, and the natural expectation �
 
 The gate is still worth having for the ~20k LOC / ~19 agent tools / RPC surface it removes. The `mcp = []` feature list in `Cargo.toml` is intentionally empty — do not "fix" it by adding `dep:` entries.
 
-**Step two of the extraction is registry-entered but not wired.** `src/openhuman/modules/registry.rs` pins the `tinymcp` v0.3.1 release, so the module can be downloaded, verified and loaded; the host still calls the library directly, and `Cargo.toml` still declares both `tinymcp` and `tinymcp-bus`. Cutting the path dependency needs contract additions that `tinymcp-bus` v0.3.1 does not carry — `OAuthComplete`, a connected-overview member for the already-exported `ConnectedServerOverview`, the boot-connect and reconnect-supervisor passes, the `ServerDetail` / `AuthDetection` / `AuthKind` reply types, the registry curation helpers, an error anchor for the `McpServerNeedsAuth` classifier coupling test in `src/core/observability.rs`, and `render_tool_result` / `redact_endpoint` for the ungated `gitbooks` tool. It also needs a per-`data_dir` object seam of the shape `modules::memory` already uses, because `mcp::host` keys one store per workspace and a loaded module receives one `data_dir` at load — and a desktop session moves workspace on login and again on logout. Those are upstream in `tinyhumansai/tinymcp` and must land and be released first.
+**Step two of the extraction is registry-entered but not wired.** `src/openhuman/modules/registry.rs` pins the `tinymcp` v0.3.1 release, so the module can be downloaded, verified and loaded; the host still calls the library directly, and `Cargo.toml` still declares both `tinymcp` and `tinymcp-bus`. Cutting the path dependency needs contract additions that `tinymcp-bus` v0.3.1 does not carry — `OAuthComplete`, a connected-overview member for the already-exported `ConnectedServerOverview`, the boot-connect and reconnect-supervisor passes, the `ServerDetail` / `AuthDetection` / `AuthKind` reply types, the registry curation helpers, an error anchor for the `McpServerNeedsAuth` classifier coupling test in `crates/openhuman-core/src/core/observability.rs`, and `render_tool_result` / `redact_endpoint` for the ungated `gitbooks` tool. It also needs a per-`data_dir` object seam of the shape `modules::memory` already uses, because `mcp::host` keys one store per workspace and a loaded module receives one `data_dir` at load — and a desktop session moves workspace on login and again on logout. Those are upstream in `tinyhumansai/tinymcp` and must land and be released first.
 
 **Static vs dynamic — the naming is INVERTED from intuition.** Both halves must be gated or the gate is only half-applied:
 
@@ -882,11 +887,11 @@ The gate is still worth having for the ~20k LOC / ~19 agent tools / RPC surface 
 | `mcp::config_servers` | the **STATIC**, config-declared server set (`[[mcp_client.servers]]` in TOML → `McpServerRegistry::from_config`) | TOML config | `mcp_list_servers`, `mcp_list_tools`, `mcp_call_tool` |
 | `mcp::registry` | the **DYNAMIC**, user-installed Smithery servers (live connection map, boot spawn, supervisor, OAuth) | SQLite `mcp_clients.db` | 11 × `mcp_registry_*` |
 
-**CLI when compiled out.** `src/core/cli.rs` is deliberately **untouched**: the `"mcp" | "mcp-server"` arm resolves to the stub's `run_stdio_from_cli`, which returns a "mcp feature disabled at compile time … rebuild with `--features mcp`" error. Deleting the arm would let `mcp` fall through to generic namespace resolution and fail with `unknown namespace: mcp` — which reads like a user typo rather than a build fact, and would leave an MCP host (Claude Desktop / Cursor) hanging on stdout that never speaks JSON-RPC. Pinned by `mcp_subcommand_reports_disabled_build_when_gate_off` in `src/core/cli_tests.rs`.
+**CLI when compiled out.** `crates/openhuman-core/src/core/cli.rs` is deliberately **untouched**: the `"mcp" | "mcp-server"` arm resolves to the stub's `run_stdio_from_cli`, which returns a "mcp feature disabled at compile time … rebuild with `--features mcp`" error. Deleting the arm would let `mcp` fall through to generic namespace resolution and fail with `unknown namespace: mcp` — which reads like a user typo rather than a build fact, and would leave an MCP host (Claude Desktop / Cursor) hanging on stdout that never speaks JSON-RPC. Pinned by `mcp_subcommand_reports_disabled_build_when_gate_off` in `crates/openhuman-core/src/core/cli_tests.rs`.
 
-**Dangling `mcp_agent` in the orchestrator TOML is expected and safe.** `agent.toml` is data and cannot be `#[cfg]`'d, so the orchestrator keeps listing `mcp_agent` in `subagents` even when the agent is compiled out. Both resolution sites already tolerate unknown ids — `collect_orchestrator_tools` warns and skips, `validate_tier_hierarchy` `continue`s — so the core still boots. `orchestrator_tolerates_unresolvable_subagent_id` / `orchestrator_tolerates_absent_mcp_agent` in `loader.rs` pin that contract; do not "tighten" unknown-subagent handling into a hard error without re-checking them. `src/core/legacy_aliases.rs`'s frontend-catalog drift tests ignore gated namespaces for the same data-vs-code reason.
+**Dangling `mcp_agent` in the orchestrator TOML is expected and safe.** `agent.toml` is data and cannot be `#[cfg]`'d, so the orchestrator keeps listing `mcp_agent` in `subagents` even when the agent is compiled out. Both resolution sites already tolerate unknown ids — `collect_orchestrator_tools` warns and skips, `validate_tier_hierarchy` `continue`s — so the core still boots. `orchestrator_tolerates_unresolvable_subagent_id` / `orchestrator_tolerates_absent_mcp_agent` in `loader.rs` pin that contract; do not "tighten" unknown-subagent handling into a hard error without re-checking them. `crates/openhuman-core/src/core/legacy_aliases.rs`'s frontend-catalog drift tests ignore gated namespaces for the same data-vs-code reason.
 
-`src/core/all.rs` needs **no** `#[cfg]` for this gate: the stub aggregators return empty vecs, so the registration sites keep compiling unchanged.
+`crates/openhuman-core/src/core/all.rs` needs **no** `#[cfg]` for this gate: the stub aggregators return empty vecs, so the registration sites keep compiling unchanged.
 
 ### Loadable native modules — `src/openhuman/modules/`
 
@@ -1093,12 +1098,12 @@ package named `tinycortex-api` found") before anything compiles. Both point into
 tinymemory's own vendored engine, `vendor/tinymemory/vendor/tinycortex` — there
 is no top-level `vendor/tinycortex` submodule any more — so the engine the tests
 link is the one the prebuilt module was built from, and a tinymemory re-pin
-moves it. The shell manifest (`app/src-tauri/Cargo.toml`) carries **no** such
+moves it. The shell manifest (`crates/openhuman-app/Cargo.toml`) carries **no** such
 entries: dev-dependencies of a path dependency are never resolved there and
 nothing forwards `memory-engine-seams` / `rss-bench`, so its copies sat under
-`[[patch.unused]]` in `app/src-tauri/Cargo.lock` from #5560 until they were
+`[[patch.unused]]` in `crates/openhuman-app/Cargo.lock` from #5560 until they were
 removed (`cargo tree --locked --all-features -e normal,dev,build --manifest-path
-app/src-tauri/Cargo.toml -i tinycortex` → not in the graph).
+crates/openhuman-app/Cargo.toml -i tinycortex` → not in the graph).
 
 `memory/direct_engine_refs_tests.rs` is still the ratchet over direct
 `tinymemory_core::` references, but **its non-empty list no longer implies a
@@ -1158,16 +1163,14 @@ The general shape of the warning still holds for *other* pairs: two crates with
 near-identical types are a real hazard, and a "free carve-out" is only free once
 the compiler says so. Probe before assuming, in either direction.
 
-#### The `tui` gate
+#### The `openhuman-tui` crate
 
-The tabbed terminal UI (`openhuman`, or explicitly `openhuman tui` / alias `chat`) lives in `src/openhuman/tui/` and follows the **`mcp`/`voice` facade+stub** pattern: `pub mod tui;` is always compiled; the behavioural submodules (`app`, `render`, `state`, `terminal`, `runner`) are `#[cfg(feature = "tui")]`; and `#[cfg(not(feature = "tui"))] mod stub;` re-exposes the one symbol an always-compiled caller reaches — `run_from_cli` — with a build-fact error body (`"tui feature disabled at compile time … --features tui"`). Bare-command auto-launch requires terminal stdin/stdout and `HostKind::Cli`; Docker, CI, pipes, and `--no-tui` retain the non-TUI CLI path.
-
-- **The `"tui" | "chat"` CLI arm in `src/core/cli.rs` is un-`#[cfg]`'d on purpose.** In a slim build it resolves to `tui::stub::run_from_cli`, which bails with the disabled-error rather than falling through to `unknown namespace: tui` (which reads like a typo, not a build fact). Same reasoning as the `mcp` arm. Pinned by `tui_subcommand_reports_disabled_build_when_gate_off` / `chat_alias_reports_disabled_build_when_gate_off` in `src/core/cli_tests.rs` (both `#[cfg(not(feature = "tui"))]`). `"tui" | "chat"` is also added to the banner-suppression `matches!` (a TUI owns the terminal — a banner would corrupt it).
+The tabbed terminal UI is the standalone `openhuman-tui` workspace package in `crates/openhuman-tui/`. It depends on and boots `openhuman-core` in-process; the core package has no ratatui/crossterm dependencies or `tui` feature. The historical `openhuman tui` / `chat` arms remain only as migration diagnostics that point users to `openhuman-tui` instead of falling through to an `unknown namespace` error.
 - **No controllers, no agent tools, no `all.rs` changes.** The TUI is a pure *client* of existing registered controllers — it boots the core in-process (`CoreBuilder::new(HostKind::detect_standalone()).domains(DomainSet::full()).services(ServiceSet::none())`), sends chat turns through `web_chat`, reads a bounded in-memory copy of the file-only core log stream, edits only curated safe config getters/updaters, and invokes auth controllers for account/status actions. Never render `config.get` wholesale because the full snapshot can contain secrets.
 - **Terminal hygiene is load-bearing.** `logging::init_for_tui` installs a **file-only** subscriber (never stderr) — a single core boot log on stdout/stderr would corrupt the alternate-screen UI. `terminal::TerminalGuard` restores raw mode + the main screen on `Drop`, and a panic hook chains a restore ahead of the default hook. All `[tui]` state-transition logs go to the file, never `println!`.
-- **Intentionally NOT forwarded to the desktop shell** (the app ships its own Tauri UI). It carries the only current entry in `INTENTIONALLY_NOT_FORWARDED` in `scripts/ci/check-feature-forwarding.mjs`; the pure reducer lives in `src/openhuman/tui/state.rs` (`TranscriptState::apply_event`) with unit tests, so most behaviour is testable without a terminal.
+- **Independent of the desktop shell** (the app ships its own Tauri UI). The pure reducer lives in `crates/openhuman-tui/src/state.rs` (`TranscriptState::apply_event`) with unit tests, so most behaviour is testable without a terminal.
 
-Drops the exclusive `ratatui` + `crossterm` deps when off. Verify with `cargo tree -i ratatui --no-default-features` (must return nothing).
+Verify the boundary with `cargo tree -p openhuman -i ratatui` (must return nothing) and build the terminal client with `cargo check -p openhuman-tui`.
 #### The `channels` gate (#4801 — last child of #4795)
 
 Leaf-gate pattern with **two ungated carve-outs and no stub file** — the reach-map put every gated symbol at a *registration/leaf* call site, so absence (unknown-method / omitted tool), not a disabled-error stub, is the correct off-state (same rationale as `flows`).
@@ -1207,14 +1210,14 @@ module, then pin it, then switch `channels/runtime` onto the bus.
 
   (`whatsapp-web` is a **refinement inside** the gate — `whatsapp-web = ["channels", "tinychannels/whatsapp-web"]`.)
 - **Two ungated carve-outs.** `pub mod traits;` (a one-line `tinychannels_bus` `Channel`/`SendMessage` re-export) and `pub mod cli;` (`CliChannel`, a dependency-free local stdin/stdout REPL) stay compiled in **all** builds — both are reached by the always-on agent-harness interactive loop (`agent::harness::session::runtime::run_interactive`). Same shape as the other ungated carve-outs. `channels::mod.rs` `#[cfg(feature = "channels")]`s everything else; nothing inside the gated submodules changes.
-- **The in-app web chat is NOT gated.** `openhuman::web_chat` (RPC namespace `channel`, decoupled from `channels/` in #5002 + #5003 which also moved `learning` out) is core product surface and stays always-compiled even though its runtime tag is `DomainGroup::Channels`. Its registration push in `src/core/all.rs` is deliberately left ungated; the both-ways test pins `channel` present with the feature OFF.
+- **The in-app web chat is NOT gated.** `openhuman::web_chat` (RPC namespace `channel`, decoupled from `channels/` in #5002 + #5003 which also moved `learning` out) is core product surface and stays always-compiled even though its runtime tag is `DomainGroup::Channels`. Its registration push in `crates/openhuman-core/src/core/all.rs` is deliberately left ungated; the both-ways test pins `channel` present with the feature OFF.
 - **Three mis-housed imports were retargeted (no stub needed).** `cron/bus.rs` (`Channel`/`SendMessage`/`ChannelMessage`) and `memory_conversations/bus.rs` (`ChannelMessage` + `context::conversation_history_key`) reached the gated domain only to pick up contract vocabulary that actually lives in `tinychannels_bus`; pointing them straight at the contract crate removes the always-on → gated edge. `voice/audio_toolkit/ops.rs` (`providers::email_channel::EmailChannel`) is different — `EmailChannel` is a provider, not contract vocabulary, so it stays on `tinychannels` itself (and is why voice keeps `dep:tinychannels` — see above). The old `channels::` paths were 1-line delegations / `pub use` re-exports of exactly these.
-- **Leaf-gated call sites** (each carries its own `#[cfg]`): the controller-registration pushes in `src/core/all.rs` (channels controllers, `webview_notifications`), the `ChannelInboundSubscriber` + web-only-proactive block in `src/core/jsonrpc.rs`, and `spawn_channels_service` in `src/core/runtime/services.rs`. `webview_notifications` moved under `desktop/` in the family reorg and stays leaf-gated there. String-match arms (`"channels" =>` descriptions) stay **ungated** — they are data.
+- **Leaf-gated call sites** (each carries its own `#[cfg]`): the controller-registration pushes in `crates/openhuman-core/src/core/all.rs` (channels controllers, `webview_notifications`), the `ChannelInboundSubscriber` + web-only-proactive block in `crates/openhuman-core/src/core/jsonrpc.rs`, and `spawn_channels_service` in `crates/openhuman-core/src/core/runtime/services.rs`. `webview_notifications` moved under `desktop/` in the family reorg and stays leaf-gated there. String-match arms (`"channels" =>` descriptions) stay **ungated** — they are data.
 - **`start_bootstrap_jobs`' `services.channels` block keeps running slim** — it drives composio sync / workspace-memory sync / orchestration drain and names **no** `channels::` symbol, so it stays ungated by design.
 - **No CLI change.** There is no `openhuman channels` subcommand; generic namespace resolution yields "unknown namespace" when off (the `flows` precedent — acceptable).
-- **Both-ways tests.** `channels_controllers_{registered_when_feature_on,absent_when_feature_off}` in `src/core/all_tests.rs` pin the controller surface (the OFF half also asserts `channel`/web_chat survives), and `whatsapp_data_tools_are_gone_in_every_build` in `src/openhuman/tools/ops_tests.rs` pins that the removed tool family stays removed in both directions of the gate. CI's smoke lane runs `cargo check` only, so run `cargo test --lib --no-default-features core::all::tests` locally after touching any gated surface.
+- **Both-ways tests.** `channels_controllers_{registered_when_feature_on,absent_when_feature_off}` in `crates/openhuman-core/src/core/all_tests.rs` pin the controller surface (the OFF half also asserts `channel`/web_chat survives), and `whatsapp_data_tools_are_gone_in_every_build` in `src/openhuman/tools/ops_tests.rs` pins that the removed tool family stays removed in both directions of the gate. CI's smoke lane runs `cargo check` only, so run `cargo test -p openhuman --lib --no-default-features core::all::tests` locally after touching any gated surface.
 
-### Event bus (`src/core/event_bus/`)
+### Event bus (`crates/openhuman-core/src/core/event_bus/`)
 
 Typed pub/sub + native request/response. Both singletons — use module-level functions.
 
@@ -1227,7 +1230,7 @@ Domains: `agent`, `memory`, `channel`, `cron`, `skill`, `tool`, `webhook`, `syst
 
 Each domain owns `bus.rs` with handlers. Convention: `<Purpose>Subscriber`, `name()` → `"<domain>::<purpose>"`.
 
-**Adding events:** add to `DomainEvent`, extend `domain()` match, create `<domain>/bus.rs`, register at startup, publish via `publish_global`, and bump `EVENTS_VERSION` in [`src/core/bus.rs`](src/core/bus.rs) — minor for an added variant or field, major (plus a new interface name) for anything an older subscriber cannot parse. Peers exchange that version through the manifest, so skipping the bump turns a version skew into a decode failure later instead of a startup warning.
+**Adding events:** add to `DomainEvent`, extend `domain()` match, create `<domain>/bus.rs`, register at startup, publish via `publish_global`, and bump `EVENTS_VERSION` in [`crates/openhuman-core/src/core/bus.rs`](crates/openhuman-core/src/core/bus.rs) — minor for an added variant or field, major (plus a new interface name) for anything an older subscriber cannot parse. Peers exchange that version through the manifest, so skipping the bump turns a version skew into a decode failure later instead of a startup warning.
 
 **Adding native handlers:** define req/resp types (`Send + 'static`, not `Serialize`), register at startup keyed by `"<domain>.<verb>"`, dispatch via `request_native_global`.
 
@@ -1293,9 +1296,9 @@ upstream  git@github.com:tinyhumansai/openhuman.git     (fetch-only)
 
 ## Platform notes
 
-- **Vendored CEF-aware `tauri-cli`**: only the vendored CLI at `app/src-tauri/vendor/tauri-cef/crates/tauri-cli` bundles Chromium correctly. Stock `@tauri-apps/cli` produces broken bundles. Reinstall: `cargo install --locked --path app/src-tauri/vendor/tauri-cef/crates/tauri-cli`.
+- **Vendored CEF-aware `tauri-cli`**: only the vendored CLI at `crates/openhuman-app/vendor/tauri-cef/crates/tauri-cli` bundles Chromium correctly. Stock `@tauri-apps/cli` produces broken bundles. Reinstall: `cargo install --locked --path crates/openhuman-app/vendor/tauri-cef/crates/tauri-cli`.
 - **macOS deep links**: require built `.app` bundle, not just `tauri dev`.
-- **Windows deep links**: `openhuman://` registered via `tauri-plugin-deep-link::register_all`. Check in `app/src-tauri/src/deep_link_registration_check.rs`.
+- **Windows deep links**: `openhuman://` registered via `tauri-plugin-deep-link::register_all`. Check in `crates/openhuman-app/src/deep_link_registration_check.rs`.
 - **Core standalone debugging**: `./target/debug/openhuman-core serve` (token at `{workspace}/core.token`). Public endpoints: `GET /health`, `GET /schema`, `GET /events`.
 
 ---

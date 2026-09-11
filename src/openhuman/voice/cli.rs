@@ -4,7 +4,7 @@
 //! long-lived, blocking standalone dictation server (hotkey → record →
 //! transcribe → insert). This flow doesn't fit the request/response controller
 //! registry pattern because it blocks forever on the hotkey listener, so the
-//! adapter lives here inside the voice domain rather than in `src/core/cli.rs`.
+//! adapter lives here inside the voice domain rather than in `crates/openhuman-core/src/core/cli.rs`.
 
 use anyhow::{anyhow, Result};
 

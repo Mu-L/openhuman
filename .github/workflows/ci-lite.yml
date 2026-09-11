@@ -155,6 +155,8 @@ jobs:
               - 'scripts/ci/check-openhuman-rust-layout.mjs'
               - 'scripts/ci/list-feature-gated-rust-tests.mjs'
               - 'Cargo.toml'
+              - 'crates/openhuman-core/**'
+              - 'crates/openhuman-tui/**'
               - 'Cargo.lock'
               - 'build.rs'
               - '.cargo/config.toml'
@@ -186,6 +188,8 @@ jobs:
               - 'scripts/ci/assert-coverage-presence.sh'
               - 'scripts/ci/coverage-presence-allowlist.txt'
               - 'Cargo.toml'
+              - 'crates/openhuman-core/Cargo.toml'
+              - 'crates/openhuman-tui/Cargo.toml'
               - 'Cargo.lock'
               - 'build.rs'
               - '.cargo/config.toml'
@@ -199,13 +203,16 @@ jobs:
               - 'vendor/**'
             rust-core-src:
               - 'src/**'
+              - 'crates/openhuman-core/src/**'
+              - 'crates/openhuman-tui/src/**'
+              - 'crates/openhuman-tui/tests/**'
               - 'tests/**'
             rust-tauri:
               - '.github/workflows/ci-lite.yml'
               - 'Cargo.lock'
               - '.cargo/config.toml'
               - 'rust-toolchain.toml'
-              - 'app/src-tauri/**'
+              - 'crates/openhuman-app/**'
               - 'scripts/ci-cancel-aware.sh'
               # The shell is a second Cargo world with its own duplicate
               # `[patch.crates-io]` table pointing at the same submodules, so it
@@ -240,7 +247,7 @@ jobs:
             inventory:
               - '.github/workflows/**'
               - 'package.json'
-              - 'src/core/all.rs'
+              - 'crates/openhuman-core/src/core/all.rs'
               - 'tests/**'
               - 'scripts/**/*.test.mjs'
               - 'scripts/tests/**'
@@ -404,7 +411,7 @@ jobs:
         with:
           workspaces: |
             . -> target
-            app/src-tauri -> target
+            crates/openhuman-app -> target
           cache-on-failure: true
           # shared-key (not key) so the cache name is stable and not suffixed
           # with the job id. Swatinem caches the full target/, which is why we
@@ -451,13 +458,13 @@ jobs:
           path: |
             ~/Library/Caches/tauri-cef
             ~/.cache/tauri-cef
-          key: cef-x86_64-unknown-linux-gnu-v2-${{ hashFiles('app/src-tauri/Cargo.toml') }}
+          key: cef-x86_64-unknown-linux-gnu-v2-${{ hashFiles('crates/openhuman-app/Cargo.toml') }}
           restore-keys: |
             cef-x86_64-unknown-linux-gnu-v2-
 
       - name: Run clippy (Tauri shell)
         if: needs.changes.outputs['rust-tauri'] == 'true'
-        run: bash scripts/ci-cancel-aware.sh cargo clippy --manifest-path app/src-tauri/Cargo.toml -- -D warnings
+        run: bash scripts/ci-cancel-aware.sh cargo clippy --manifest-path crates/openhuman-app/Cargo.toml -- -D warnings
 
   # Feature-gate smoke: proves the core still compiles with a domain gate turned
   # OFF. The disabled build is the ONLY thing that catches stub-facade signature
@@ -504,15 +511,14 @@ jobs:
         # a #[cfg] and so do not compile with the gates off. That cleanup is tracked
         # in #5021 alongside running the full gates-off suite; until it lands, this
         # lane checks the lib and RUNS the gate-contract lib tests below.
-        run: bash scripts/ci-cancel-aware.sh cargo check --manifest-path Cargo.toml --no-default-features
+        run: bash scripts/ci-cancel-aware.sh cargo check --manifest-path Cargo.toml -p openhuman --no-default-features
 
-      - name: Check the gates that are in NEITHER the contributor nor the product set
-        # Two gates are default-OFF *and* absent from the product set, so
+      - name: Check the gate that is in neither the contributor nor the product set
+        # This gate is default-OFF *and* absent from the product set, so
         # nothing else in CI compiles them: the product lanes do not select
         # them, the contributor lanes no longer default them on, and the
         # gates-off check above turns them off.
         #
-        #   tui               — a terminal front-end; the app ships its own UI.
         #   e2e-test-support  — the `test`/`test_support` RPC family, turned on
         #                       only by app/scripts/e2e-build.sh for the packaged
         #                       desktop E2E binary. It includes
@@ -527,15 +533,10 @@ jobs:
         # `e2e-test-support` sat in this position from the day it was added
         # until #6086 and was never `cargo check`ed by CI in either state.
         #
-        # Checked in SEPARATE invocations on purpose: `--features tui,e2e-test-support`
-        # would let one gate compile only because the other pulled a dependency
-        # in, which is the false pass this lane exists to prevent.
-        #
         # If a future gate lands in this same neither-set position, add it here
         # AND to the list in CLAUDE.md's "gate in neither set" note.
         run: |
-          bash scripts/ci-cancel-aware.sh cargo check --manifest-path Cargo.toml --no-default-features --features tui
-          bash scripts/ci-cancel-aware.sh cargo check --manifest-path Cargo.toml --no-default-features --features e2e-test-support
+          bash scripts/ci-cancel-aware.sh cargo check --manifest-path Cargo.toml -p openhuman --no-default-features --features e2e-test-support
 
       - name: Run the gate-contract tests with the default domain gates disabled
         # `cargo check` (even --all-targets) never RUNS tests, so a gated family that
@@ -691,7 +692,6 @@ jobs:
           openhuman/web3/stub.rs
           openhuman/web3/wallet/stub.rs
           openhuman/web3/x402/stub.rs
-          tui/runner.rs
           EOF
           )
           ACTUAL=$(node scripts/ci/list-feature-gated-rust-tests.mjs | sort -u)
@@ -953,7 +953,7 @@ jobs:
         with:
           workspaces: |
             . -> target
-            app/src-tauri -> target
+            crates/openhuman-app -> target
           cache-on-failure: true
           # Tauri shell coverage (instrumented) — its own stable cache; reuses
           # its warm dependency tree run-over-run.
@@ -966,7 +966,7 @@ jobs:
           path: |
             ~/Library/Caches/tauri-cef
             ~/.cache/tauri-cef
-          key: cef-x86_64-unknown-linux-gnu-v2-${{ hashFiles('app/src-tauri/Cargo.toml') }}
+          key: cef-x86_64-unknown-linux-gnu-v2-${{ hashFiles('crates/openhuman-app/Cargo.toml') }}
           restore-keys: |
             cef-x86_64-unknown-linux-gnu-v2-
 
@@ -974,11 +974,11 @@ jobs:
         uses: taiki-e/install-action@cargo-llvm-cov
 
       - name: Clear stale Tauri coverage artifacts
-        # rust-cache restores app/src-tauri/target, including llvm-cov-target.
+        # rust-cache restores crates/openhuman-app/target, including llvm-cov-target.
         # cargo's fingerprints do not distinguish a previously restored
         # non-instrumented test executable, which then runs successfully but
         # produces no .profraw file for cargo-llvm-cov to merge.
-        run: cargo llvm-cov clean --manifest-path app/src-tauri/Cargo.toml
+        run: cargo llvm-cov clean --manifest-path crates/openhuman-app/Cargo.toml
 
       - name: Run cargo llvm-cov for Tauri shell
         run: |
@@ -989,7 +989,7 @@ jobs:
           # The job-level linker flag must also be cleared: llvm-cov sets the
           # same variable with `-C instrument-coverage` for this invocation.
           unset RUSTFLAGS
-          bash scripts/ci-cancel-aware.sh cargo llvm-cov --no-rustc-wrapper --manifest-path app/src-tauri/Cargo.toml --lcov --output-path lcov-tauri.info
+          bash scripts/ci-cancel-aware.sh cargo llvm-cov --no-rustc-wrapper --manifest-path crates/openhuman-app/Cargo.toml --lcov --output-path lcov-tauri.info
         env:
           # Serialize codegen/link to cap peak memory + disk during the
           # instrumented Tauri-shell link (SIGBUS otherwise). Mirrors
@@ -1069,7 +1069,7 @@ jobs:
 
       # Node-only guard (no workspace deps): asserts every script-level test is
       # invoked by a package.json script/workflow, and every controller domain
-      # in src/core/all.rs is referenced under tests/.
+      # in crates/openhuman-core/src/core/all.rs is referenced under tests/.
       - name: Run test-inventory guard
         run: pnpm test:inventory
 

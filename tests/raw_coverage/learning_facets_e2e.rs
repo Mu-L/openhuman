@@ -663,7 +663,7 @@ async fn learning_facet_lifecycle_from_rebuild_to_reset() {
 /// The wording asserted here is **`core::all::validate_params`'**, not the
 /// handlers'. Every dispatch is schema-validated for required-presence, unknown
 /// params and declared types *before* the handler body runs
-/// (`src/core/all.rs:1334`), so the handlers' own
+/// (`crates/openhuman-core/src/core/all.rs:1334`), so the handlers' own
 /// ``missing required `class` `` strings are unreachable over RPC. Asserting the
 /// handler's wording would pass only if that uniform gate were removed.
 #[tokio::test]

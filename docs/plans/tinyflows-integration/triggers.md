@@ -4,7 +4,7 @@
 
 ## 0. Thesis
 
-Almost every automated behavior in OpenHuman is already shaped like *event → conditions → actions*: cron jobs, Composio app events, channel-message reactions, subconscious escalations, meeting follow-ups, notification triage. Today each has bespoke plumbing. tinyflows gives us one uniform substrate (a tinyagents graph per run, durable, observable, approval-gated), and the event bus (`src/core/event_bus/events.rs`, ~130 `DomainEvent` variants) is already the spine every one of those signals travels on.
+Almost every automated behavior in OpenHuman is already shaped like *event → conditions → actions*: cron jobs, Composio app events, channel-message reactions, subconscious escalations, meeting follow-ups, notification triage. Today each has bespoke plumbing. tinyflows gives us one uniform substrate (a tinyagents graph per run, durable, observable, approval-gated), and the event bus (`crates/openhuman-core/src/core/event_bus/events.rs`, ~130 `DomainEvent` variants) is already the spine every one of those signals travels on.
 
 **End state**: *Workflows are the single user-facing automation concept.* A trigger is just a subscription that seeds a flow run; the trigger catalog is a curated projection of the event bus plus time and manual entry points.
 

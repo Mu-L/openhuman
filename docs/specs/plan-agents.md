@@ -364,7 +364,7 @@ rather than moved:
   in Phase 4, so the fallback was left rather than risk silently disabling
   integration fetching for setter-built sessions.
 - `harness/definition.rs:781` — `load_for_default_workspace()`, a convenience
-  constructor with exactly one caller: `src/core/agent_cli.rs:415`. It is a CLI
+  constructor with exactly one caller: `crates/openhuman-core/src/core/agent_cli.rs:415`. It is a CLI
   boundary helper that stays host-side when `definition.rs` moves.
 
 **2. Blocked on Phase 2 — the session cannot drop `AgentConfig` yet.**
@@ -637,7 +637,7 @@ rust:check`, deletion-ledger totals reconciled, architecture docs rewritten.
 - **≥ 80% diff-coverage gate** on a program of this size — Phases 4 and 5 touch
   hundreds of files. Check `diff-cover` per slice.
 - **Two Cargo worlds** — every crate bump regenerates root and
-  `app/src-tauri` lockfiles (#3877).
+  `crates/openhuman-app` lockfiles (#3877).
 - **`RUST_MIN_STACK=16777216`** — the subagent runner's large futures already
   overflow the default stack on Apple Silicon; Phase 5's subagent move is
   exactly where that resurfaces.

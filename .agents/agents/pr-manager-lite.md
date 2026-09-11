@@ -84,10 +84,10 @@ Never silently dismiss. Every non-noise item appears in the final report.
 Review the diff against `AGENTS.md`:
 
 - New Rust domain functionality lives under `src/openhuman/<domain>/`, not root-level `src/openhuman/*.rs` files.
-- Domain exposure via `schemas.rs` + registered handlers wired through `src/core/all.rs` — not ad-hoc branches in `src/core/cli.rs` / `src/core/jsonrpc.rs`.
+- Domain exposure via `schemas.rs` + registered handlers wired through `crates/openhuman-core/src/core/all.rs` — not ad-hoc branches in `crates/openhuman-core/src/core/cli.rs` / `crates/openhuman-core/src/core/jsonrpc.rs`.
 - No dynamic `import()`, `React.lazy(() => import(...))`, or `await import(...)` in `app/src` production code.
 - `VITE_*` reads centralized in `app/src/utils/config.ts`.
-- `app/src-tauri` stays desktop-only.
+- `crates/openhuman-app` stays desktop-only.
 - New/changed flows have grep-friendly debug/trace logging; no secrets.
 - User-facing capability changes update `src/openhuman/about_app/`.
 - Files reasonably focused (~500 lines max preferred).
@@ -126,7 +126,7 @@ pnpm format
 pnpm test:unit
 cargo fmt --manifest-path Cargo.toml
 cargo check --manifest-path Cargo.toml
-cargo check --manifest-path app/src-tauri/Cargo.toml
+cargo check --manifest-path crates/openhuman-app/Cargo.toml
 cargo test --manifest-path Cargo.toml
 ```
 

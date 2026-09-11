@@ -47,7 +47,7 @@ const ALL_FUNCTIONS: &[&str] = &[
 ];
 
 /// The exact ordered `memory.*` registration sequence. Order matters: it is the
-/// order `src/core/all.rs` pushes controllers in, which is the order `/schema`
+/// order `crates/openhuman-core/src/core/all.rs` pushes controllers in, which is the order `/schema`
 /// and the CLI catalog advertise them in.
 ///
 /// Unlike [`ALL_FUNCTIONS`] — an unordered membership list — this is ordered

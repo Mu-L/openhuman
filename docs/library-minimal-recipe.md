@@ -16,7 +16,7 @@ Opencompany recipe (production embed — no benchmark/harness code):
 
 ```bash
 GGML_NATIVE=OFF cargo build --release \
-  --no-default-features --features "skills,flows"
+  -p openhuman --no-default-features --features "skills,flows"
 ```
 
 - `GGML_NATIVE=OFF` was the Apple-Silicon dev workaround for whisper-rs/llama.
@@ -28,7 +28,7 @@ GGML_NATIVE=OFF cargo build --release \
 
   ```bash
   GGML_NATIVE=OFF cargo build --release \
-    --no-default-features --features "rss-bench,skills,flows" \
+    -p openhuman --no-default-features --features "rss-bench,skills,flows" \
     --bin library-profile --bin rss-bench
   ```
 
@@ -42,10 +42,11 @@ There are two sets now (AGENTS.md, "Compile-time domain gates"): **Contrib** is
 `[features] default`, what a bare `cargo check` compiles; **Product** is
 `scripts/ci/product-features.txt`, what the desktop app ships. Both columns
 below are current. `desktop-automation` has since been removed from the tree
-altogether, hence the dashes; `tui` is in neither set.
+altogether, hence the dashes. The TUI is now a separate workspace package, not
+a core gate.
 
 Note how much of this recipe the contributor set already gives you for free —
-`voice`, `web3`, `meet` and `tui` are default-OFF today. The Decision column
+`voice`, `web3`, and `meet` are default-OFF today. The Decision column
 still records what a **library host** wants, which is the thing this document
 is actually for.
 
@@ -59,7 +60,6 @@ is actually for.
 | `meet` | OFF | ON | **DROP** | Google-Meet join/live-STT/TTS bot — no headless use | none |
 | `mcp` | ON | ON | **DROP** | MCP stdio/HTTP server + Smithery registry (~20k LOC, ~19 tools) — a library host is not an MCP host | none (hand-rolled over tokio/reqwest/axum) |
 | `desktop-automation` | — | — | **DROP** | AX / `computer` tool family drives a **local desktop UI** — meaningless headless | `uiautomation` |
-| `tui` | OFF | — | **DROP** | `openhuman tui`/`chat` terminal UI — no terminal in a library host | `ratatui`, `crossterm`, `unicode-width` |
 
 **Non-default optional features** (`sandbox-landlock`, `sandbox-bubblewrap`,
 `peripheral-rpi`, `browser-native`/`fantoccini`, `landlock`, `whatsapp-web`,
@@ -144,7 +144,8 @@ build-fact error:
 - **desktop-automation:** `accessibility` / `autocomplete`
   / `desktop_companion` domains + the `computer` tool family (`ax_interact`,
   `automate`, mouse/keyboard) absent.
-- **tui:** `openhuman tui` / `chat` returns "tui feature disabled at compile time".
+- **tui:** not part of the core feature graph; build the separate
+  `openhuman-tui` package only when a terminal frontend is wanted.
 
 Everything the opencompany use cases need remains: the agent harness + turn
 runner, subagent delegation (`spawn_parallel_agents`), the full memory stack
@@ -159,11 +160,11 @@ The disabled-build test gotcha (AGENTS.md: CI's smoke lane runs `cargo check`
 only and never compiles `--no-default-features` test code) was checked directly:
 
 ```bash
-GGML_NATIVE=OFF cargo test --lib --no-default-features --features "skills,flows" core::
+GGML_NATIVE=OFF cargo test -p openhuman --lib --no-default-features --features "skills,flows" core::
 # result: ok. 660 passed; 0 failed; 1 ignored; 10513 filtered out
 ```
 
-The both-ways gate tests in `src/core/all_tests.rs` (which assert dropped domains
+The both-ways gate tests in `crates/openhuman-core/src/core/all_tests.rs` (which assert dropped domains
 become unknown-method) pass under this recipe. No pre-existing failures.
 
 ## CI note

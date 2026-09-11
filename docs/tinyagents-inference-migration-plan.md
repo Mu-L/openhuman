@@ -86,7 +86,7 @@ Verified against 1.7.1 source; re-audit at Phase 0 since the crate moves fast.
   style in the catalog; upstream what's missing.
 - **G7 — Repeat-output guard**: `compatible_repeat.rs` (degenerate-repetition detection). Decide: upstream as an optional stream guard, or accept the loss (note #4463 already tracks deleted repeat guards).
 
-Upstream flow: change in `vendor/tinyagents` (submodule working tree) → PR to `tinyhumansai/tinyagents` → publish → bump the crates.io pin in **both** Cargo worlds (root + `app/src-tauri`) and the submodule ref in lockstep. Nothing in openhuman may depend on unpublished vendored-only API at a merge point.
+Upstream flow: change in `vendor/tinyagents` (submodule working tree) → PR to `tinyhumansai/tinyagents` → publish → bump the crates.io pin in **both** Cargo worlds (root + `crates/openhuman-app`) and the submodule ref in lockstep. Nothing in openhuman may depend on unpublished vendored-only API at a merge point.
 
 ---
 
@@ -158,7 +158,7 @@ Each phase compiles green in both Cargo worlds, keeps ≥80% diff coverage, and 
 - **Wire-format regressions are silent until a provider hiccups.** The compat client encodes years of quirk handling (SSE edge cases, malformed tool-arg fragments, providers that omit usage). Mitigation: Phase 0 golden dumps + per-provider live smoke tests gated on env keys, run against the real BYOK matrix before each deletion.
 - **Cost accounting**: the event bridge + `record_unobserved_turn_usage` fallback were hard-won ($0-turn bug). Any `Usage` shape change must keep cached-token and USD flow intact end-to-end (dashboard + footer).
 - **Streaming UI parity**: tool-start events (G2) and post-hoc reasoning still ride the out-of-band forwarder; deleting it before the crate gap closes breaks the tool timeline.
-- **Two Cargo worlds**: root and `app/src-tauri` pin tinyagents independently — every crate bump lands in both lockfiles plus the submodule ref, same commit.
+- **Two Cargo worlds**: root and `crates/openhuman-app` pin tinyagents independently — every crate bump lands in both lockfiles plus the submodule ref, same commit.
 - **Vendored-crate discipline**: the path patch means local vendor edits silently take effect; CI and other clones need the submodule at the matching ref. Never merge openhuman code that requires unpublished crate API.
 - **Sentry noise contract**: `ops.rs` deliberately demotes provider/user-config failures to `warn!`. The new host classifier over `TinyAgentsError` must preserve `expected_error_kind` behavior or Sentry floods.
 - **Test serialization**: everything runs under `inference_test_guard()` (process-global mutex over the runtime singleton + config); new tests must too.

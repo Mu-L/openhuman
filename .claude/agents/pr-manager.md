@@ -82,7 +82,7 @@ Also do a standards pass against `CLAUDE.md` on the full diff, as a safety net f
 - Controllers exposed via `schemas.rs` + registry, not ad-hoc branches in `core/cli.rs` / `core/jsonrpc.rs`.
 - No dynamic `import()` in production `app/src` code.
 - Frontend reads `VITE_*` via `app/src/utils/config.ts`, not `import.meta.env` directly.
-- `app/src-tauri` is desktop-only; no Android/iOS branches there.
+- `crates/openhuman-app` is desktop-only; no Android/iOS branches there.
 - Debug logging present on new flows; no secrets logged.
 - Files under ~500 lines preferred.
 
@@ -110,7 +110,7 @@ cd app && pnpm test:unit
 # Rust
 cargo fmt --manifest-path Cargo.toml
 cargo check --manifest-path Cargo.toml
-cargo check --manifest-path app/src-tauri/Cargo.toml
+cargo check --manifest-path crates/openhuman-app/Cargo.toml
 cargo test --manifest-path Cargo.toml   # if changes touch Rust
 ```
 

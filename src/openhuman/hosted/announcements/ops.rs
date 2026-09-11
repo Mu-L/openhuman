@@ -21,7 +21,7 @@ fn require_token(config: &Config) -> Result<String, String> {
 }
 
 /// `true` when `err` is the typed `BackendApiError::AnnouncementNotFound` 404
-/// (see `src/api/rest.rs`) — the backend has no announcement for this user,
+/// (see `crates/openhuman-core/src/api/rest.rs`) — the backend has no announcement for this user,
 /// which is a normal outcome for this best-effort feature, not a failure.
 fn is_announcement_not_found(err: &anyhow::Error) -> bool {
     matches!(

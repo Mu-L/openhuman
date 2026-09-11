@@ -73,6 +73,12 @@ llvm_cov() {
   bash scripts/ci-cancel-aware.sh cargo llvm-cov --features "${PRODUCT_FEATURES}" "$@"
 }
 
+# The TUI is a separate package and has no copy of the core's product feature
+# vocabulary. Its dependency on openhuman-core uses the contributor defaults.
+llvm_cov_tui() {
+  bash scripts/ci-cancel-aware.sh cargo llvm-cov "$@"
+}
+
 # Total libtest cases executed across every scoped/full run in this invocation.
 # `run_counted` tees libtest output so the count can be read without changing
 # what the log looks like. `${PIPESTATUS[0]}` — not `$?` — carries the cargo
@@ -244,6 +250,7 @@ run_full() {
   llvm_cov clean --workspace
   llvm_cov --no-report --no-fail-fast -p openhuman --lib
   llvm_cov --no-report --no-fail-fast -p openhuman --bins
+  llvm_cov_tui --no-report --no-fail-fast -p openhuman-tui --all-targets
   while IFS= read -r target; do
     [ -n "${target}" ] || continue
     log "running full-suite integration target: ${target}"
@@ -299,6 +306,22 @@ for f in "${files[@]}"; do
     log "ignoring deleted rust-relevant path: ${f}"
     continue
   fi
+  original_f="${f}"
+  case "${f}" in
+    crates/openhuman-core/src/*) f="src/${f#crates/openhuman-core/src/}" ;;
+    crates/openhuman-tui/src/*)
+      lib_filters_raw="${lib_filters_raw}__openhuman_tui__
+"
+      log "${original_f} → openhuman-tui unit suite"
+      continue
+      ;;
+    crates/openhuman-tui/tests/*)
+      lib_filters_raw="${lib_filters_raw}__openhuman_tui__
+"
+      log "${original_f} → openhuman-tui test suite"
+      continue
+      ;;
+  esac
   case "${f}" in
     src/lib.rs | src/main.rs)
       run_full "root module ${f} changed — whole-crate scope"
@@ -323,7 +346,7 @@ for f in "${files[@]}"; do
       fi
       lib_filters_raw="${lib_filters_raw}${key}
 "
-      log "${f} → libtest filter '${key}'"
+      log "${original_f} → libtest filter '${key}'"
       while IFS= read -r extra_target; do
         [ -n "${extra_target}" ] || continue
         test_targets_raw="${test_targets_raw}${extra_target}
@@ -344,7 +367,7 @@ for f in "${files[@]}"; do
       fi
       lib_filters_raw="${lib_filters_raw}${key}
 "
-      log "${f} → libtest filter '${key}' (embedded asset)"
+      log "${original_f} → libtest filter '${key}' (embedded asset)"
       while IFS= read -r extra_target; do
         [ -n "${extra_target}" ] || continue
         test_targets_raw="${test_targets_raw}${extra_target}
@@ -405,9 +428,24 @@ fi
 llvm_cov clean --workspace
 
 if [ "${#lib_filters[@]}" -gt 0 ]; then
-  log "running scoped lib unit tests with filters: ${lib_filters[*]}"
-  # libtest ORs multiple positional filters — one run covers all domains.
-  run_counted llvm_cov --no-report --no-fail-fast -p openhuman --lib -- "${lib_filters[@]}"
+  declare -a core_filters=()
+  run_tui=false
+  for filter in "${lib_filters[@]}"; do
+    if [ "${filter}" = "__openhuman_tui__" ]; then
+      run_tui=true
+    else
+      core_filters+=("${filter}")
+    fi
+  done
+  if [ "${#core_filters[@]}" -gt 0 ]; then
+    log "running scoped lib unit tests with filters: ${core_filters[*]}"
+    # libtest ORs multiple positional filters — one run covers all domains.
+    run_counted llvm_cov --no-report --no-fail-fast -p openhuman --lib -- "${core_filters[@]}"
+  fi
+  if [ "${run_tui}" = true ]; then
+    log "running openhuman-tui tests"
+    run_counted llvm_cov_tui --no-report --no-fail-fast -p openhuman-tui --all-targets
+  fi
 fi
 
 if [ "${#test_targets[@]}" -gt 0 ]; then

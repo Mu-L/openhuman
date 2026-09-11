@@ -251,11 +251,11 @@ cargo check --locked -p openhuman --features "$(bash scripts/ci/product-features
 cargo test -p openhuman --lib -- memory:: modules::      # multi-filter needs `-- a b`
 
 # Two Cargo worlds, two lockfiles — the root command does NOT validate the
-# shell's. Check both, or a stale `app/src-tauri/Cargo.lock` fails the release
+# shell's. Check both, or a stale `crates/openhuman-app/Cargo.lock` fails the release
 # lane in "Enforce Linux TLS dependency policy" with a --locked error that
 # names neither the lockfile nor the pin that moved.
 cargo metadata --locked
-cargo metadata --locked --manifest-path app/src-tauri/Cargo.toml
+cargo metadata --locked --manifest-path crates/openhuman-app/Cargo.toml
 
 # criterion 2, the real gate. NOT `cargo tree -i`: it exits non-zero when the
 # crate is absent (so "gone" and "command failed" are the same signal) and

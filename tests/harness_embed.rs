@@ -42,7 +42,7 @@ fn chat_completion(content: &str) -> serde_json::Value {
 }
 
 /// A config that keeps the turn offline: no local runtimes, no spaCy, no
-/// embeddings endpoint. Mirrors `src/bin/library_profile/harness.rs::fixture()`,
+/// embeddings endpoint. Mirrors `crates/openhuman-core/src/bin/library_profile/harness.rs::fixture()`,
 /// which is the recipe already proven against real turns.
 fn offline_config() -> Config {
     let mut config = Config::default();

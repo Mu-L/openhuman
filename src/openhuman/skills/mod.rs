@@ -41,7 +41,7 @@ pub mod types;
 // Facade children — the `pub mod` line stays UNGATED because each child is
 // itself a facade+stub for the same `skills` feature and its stub must resolve
 // in a skills-less build (the `meet/` pilot's rule). `webhooks` is ungated
-// outright: it has always-compiled callers in `src/core/` and is not part of
+// outright: it has always-compiled callers in `crates/openhuman-core/src/core/` and is not part of
 // the `skills` gate at all.
 pub mod catalog;
 pub mod runtime;

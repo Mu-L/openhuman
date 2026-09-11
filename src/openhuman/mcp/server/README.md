@@ -1,6 +1,6 @@
 # mcp/server
 
-Opt-in **Model Context Protocol (MCP) server** that exposes a curated, security-gated slice of OpenHuman's tool surface (memory-tree reads/writes, core/agent introspection, subagent execution, SearXNG search) and bundled prompt assets to external MCP clients (Claude Desktop, Cursor, Windsurf, …). Started via `openhuman-core mcp` — stdio transport by default, or `--transport http` for Streamable HTTP + SSE on a local bind address. It is a JSON-RPC dispatcher, not a registered RPC domain: it has no `schemas.rs`/controllers and is wired only through `src/core/cli.rs`, translating each MCP `tools/call` into an existing registered core RPC method.
+Opt-in **Model Context Protocol (MCP) server** that exposes a curated, security-gated slice of OpenHuman's tool surface (memory-tree reads/writes, core/agent introspection, subagent execution, SearXNG search) and bundled prompt assets to external MCP clients (Claude Desktop, Cursor, Windsurf, …). Started via `openhuman-core mcp` — stdio transport by default, or `--transport http` for Streamable HTTP + SSE on a local bind address. It is a JSON-RPC dispatcher, not a registered RPC domain: it has no `schemas.rs`/controllers and is wired only through `crates/openhuman-core/src/core/cli.rs`, translating each MCP `tools/call` into an existing registered core RPC method.
 
 ## Responsibilities
 
@@ -83,7 +83,7 @@ No `store.rs`. The only durable side effect is the **MCP write-audit log**, writ
 
 ## Used by
 
-- `src/core/cli.rs` — dispatches `mcp` / `mcp-server` subcommands to `run_stdio_from_cli`; the only production entry point. (`src/core/legacy_aliases.rs` references the command surface; `about_app/catalog.rs` lists it in the capability catalog.)
+- `crates/openhuman-core/src/core/cli.rs` — dispatches `mcp` / `mcp-server` subcommands to `run_stdio_from_cli`; the only production entry point. (`crates/openhuman-core/src/core/legacy_aliases.rs` references the command surface; `about_app/catalog.rs` lists it in the capability catalog.)
 - The other `mcp/` members (`mcp::registry`, `mcp::config_servers`, `mcp::http_client`, `mcp::audit`) and `tool_registry` are **siblings** in the broader MCP feature set, not consumers of this server's code paths (except the test-only `McpHttpClient` round-trip).
 
 ## Notes / gotchas

@@ -34,7 +34,7 @@ remaining consolidation work is tracked in
 
 **Wiring already pre-staged:**
 - `.gitmodules` has `vendor/tinycortex` → `tinyhumansai/tinycortex`.
-- Root `Cargo.toml` `[patch.crates-io]` block includes `tinycortex = { path = "vendor/tinycortex" }` (same mechanism as tinyagents: crates.io version pin + path patch). `app/src-tauri/Cargo.toml` has a matching path entry.
+- Root `Cargo.toml` `[patch.crates-io]` block includes `tinycortex = { path = "vendor/tinycortex" }` (same mechanism as tinyagents: crates.io version pin + path patch). `crates/openhuman-app/Cargo.toml` has a matching path entry.
 - CI (`test-reusable.yml`, `build-ci-image.yml`, release workflows) already checks out submodules recursively. **No new CI plumbing needed.**
 
 **Gap:** zero `.rs` files in `src/` import `tinycortex`. There is no `[dependencies] tinycortex = "0.1"` entry activating the patch. The host still runs entirely on the in-tree engine, which has continued to evolve since the port was taken.
@@ -102,7 +102,7 @@ This phase produces documents and upstream issues only; it is the gate for every
 
 **0.3 Data-format parity audit.** Existing user workspaces must open unchanged after cutover. Verify byte/schema compatibility for: chunks.db SQLite schema + migrations, jobs table, tree tables, vector table encoding (packed f32), markdown content store paths + YAML frontmatter, entity markdown, git diff-ledger layout, deterministic chunk IDs. Output: a parity checklist with a fixture-based verification harness design (golden workspace snapshot opened by both engines, compared). Any mismatch is an upstream fix, not a host workaround.
 
-**0.4 Toolchain baseline.** Add `tinycortex = { version = "0.1" }` under `[dependencies]` (activating the existing `[patch.crates-io]` override); align `rusqlite` versions between host and crate (both must link one bundled SQLite); check edition (crate is 2021), feature flags, and that **both Cargo worlds** (root crate and `app/src-tauri`) compile with the dep active; confirm `GGML_NATIVE=OFF` macOS builds. Verify the release workflows' submodule-init covers `vendor/tinycortex` (the tinyagents wave needed +5-line fixes there).
+**0.4 Toolchain baseline.** Add `tinycortex = { version = "0.1" }` under `[dependencies]` (activating the existing `[patch.crates-io]` override); align `rusqlite` versions between host and crate (both must link one bundled SQLite); check edition (crate is 2021), feature flags, and that **both Cargo worlds** (root crate and `crates/openhuman-app`) compile with the dep active; confirm `GGML_NATIVE=OFF` macOS builds. Verify the release workflows' submodule-init covers `vendor/tinycortex` (the tinyagents wave needed +5-line fixes there).
 
 **0.5 Type-unification decision.** Host `memory::traits` types and crate types are wire-compatible twins. Decide: host re-exports crate types (preferred — one source of truth, 30+ consumer sites unchanged via `pub use`), vs. keeping host types + `From` conversions (fallback if serde/API divergence is found in 0.3). Special care: `MemoryTaint` is **security-critical provenance** (fails closed to `ExternalSync`, drives external-effect-tool gating) — its semantics, serde representation, and fail-closed defaults must be proven identical before re-exporting.
 
@@ -167,7 +167,7 @@ Ordering rule for this migration: **within each workstream, the implementation (
 | **On-disk format divergence** (SQLite schemas, chunk IDs, vault layout) breaking existing user workspaces | High | Phase 0.3 golden-workspace parity harness; upstream fixes only, never host shims |
 | **`MemoryTaint` / `source_scope` security semantics** silently weakened across the boundary | High | Dedicated seam tests for fail-closed taint and scope enforcement; treated as security review items in W2/W5 |
 | **Blast radius** of `memory::traits` (30+ sites), `global` (25), `chat` (~20), `redact` (12) | Medium | Re-export strategy keeps import paths stable; `redact`/`chat`/`global` never move |
-| **rusqlite / dependency version skew** (two bundled SQLites, two Cargo worlds) | Medium | Phase 0.4 alignment before any dep activation; watch `app/src-tauri` lockfile too |
+| **rusqlite / dependency version skew** (two bundled SQLites, two Cargo worlds) | Medium | Phase 0.4 alignment before any dep activation; watch `crates/openhuman-app` lockfile too |
 | **Coverage gate vs. vendored tests** (host CI can't count crate-side tests) | Medium | Host-side seam/boundary tests in the same PR as impl (§5.3) |
 | **Sibling `#[path]` tests bound to private internals** won't move cleanly | Medium | Explicit test-port slice per workstream; crate-local fixtures replace host globals |
 | **Queue driver behavior change** (crate has no scheduler; host loop replaces tokio pool + Sentry hooks) | Medium | W4 keeps worker cadence/backoff/error-reporting parity; verbose `[memory]`-prefixed logging per repo logging rules |
@@ -265,4 +265,4 @@ ledger's **D4** entry.
 W-EMB is independent of W-SYNC and may run in parallel; land W-EMB.2 **before** the W-SYNC.3 flip
 so `SyncContext` is defined against the tinyagents trait once. New risk: `tinycortex → tinyagents`
 crate coupling — version bumps move in lockstep in both `[patch.crates-io]` blocks (root +
-`app/src-tauri`).
+`crates/openhuman-app`).

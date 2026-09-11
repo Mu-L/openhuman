@@ -693,7 +693,7 @@ Linux real-artifact check, after building an amd64 AppImage:
 ```bash
 APPIMAGE_RUNTIME_SMOKE=1 \
   bash scripts/release/validate-appimage-runtime.sh \
-  app/src-tauri/target/x86_64-unknown-linux-gnu/release/bundle/appimage/*.AppImage
+  crates/openhuman-app/target/x86_64-unknown-linux-gnu/release/bundle/appimage/*.AppImage
 ```
 
 If the artifact exists under the root target tree instead, use the one exact

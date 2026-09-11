@@ -78,7 +78,7 @@ Each tick:
    - If any check is `FAILURE` or `CANCELLED`, branch by check type: when `link` matches `/actions/runs/<id>/` (Actions-backed), extract `<id>` and fetch logs with `gh run view <id> --log-failed --repo tinyhumansai/openhuman`; when it doesn't (e.g. the `CodeRabbit` virtual check or any other status posted directly via the Checks API without an Actions run), skip `gh run view` and work from the `name`/`state`/`description` fields plus any review comments. Then fix the underlying issue: edit code, commit (conventional prefix), push to `origin`. Do NOT skip hooks or disable failing tests to make CI green.
    - For local repro of common failures before pushing fixes:
      - Frontend: `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `pnpm test`.
-     - Rust: `cargo check --manifest-path Cargo.toml`, `cargo check --manifest-path app/src-tauri/Cargo.toml`, `pnpm test:rust`.
+     - Rust: `cargo check --manifest-path Cargo.toml`, `cargo check --manifest-path crates/openhuman-app/Cargo.toml`, `pnpm test:rust`.
      - Feature E2E: `pnpm test:rust:e2e -- --suite <suite>` for core/RPC behavior, or `pnpm --filter openhuman-app test:e2e:web:build` plus `bash app/scripts/e2e-web-session.sh test/e2e/specs/<spec>.spec.ts` for frontend flows.
      - Coverage gate is **≥ 80% on changed lines** (`.github/workflows/coverage.yml`) — if coverage fails, add tests for changed lines, not just happy path.
 2. **Fetch CodeRabbit review comments**:

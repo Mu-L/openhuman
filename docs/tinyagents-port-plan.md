@@ -116,7 +116,7 @@ Each phase is a coherent PR set: tinyagents PR(s) → release/tag → host `chor
 
 ### Phase 0 — Version alignment & baseline (no behavior change)
 
-1. **Done:** bump `vendor/tinyagents` to **v1.6.0** and the host requirement `1.5.0` → `1.6.0` (both root and `app/src-tauri` manifests; keep the `[patch.crates-io]` path entries).
+1. **Done:** bump `vendor/tinyagents` to **v1.6.0** and the host requirement `1.5.0` → `1.6.0` (both root and `crates/openhuman-app` manifests; keep the `[patch.crates-io]` path entries).
 2. **Done:** fix seam fallout from the bump: SHA-256 prompt fingerprint vs the seam's KV-cache drift guard (`tinyagents/middleware.rs`), idempotent `RedactionMiddleware` vs `journal.rs` double-redaction, adopt `ToolCompleted` outcome fields in `observability.rs` (retire `ToolFailureMap` reconstruction). The context-preserving `invoke_stream` host path is now closed by the `Send` stream follow-up released in TinyAgents `v1.7.1`.
 3. Record a baseline: LOC per module, test counts, and the duplication map (§0.2) as the drift ledger for this migration (mirroring `docs/tinycortex-drift-ledger.md`).
 4. **Exit:** host builds and full release lane passes on tinyagents 1.6.0 with zero in-tree deletions yet. The host has since moved on to the Phase 1 `v1.7.1` partial cutover.

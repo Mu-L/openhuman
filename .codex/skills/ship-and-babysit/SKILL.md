@@ -143,7 +143,7 @@ If the loop reaches the hard cap, stop and report the PR URL, current CI snapsho
 - `pnpm format:check`
 - `pnpm test`
 - `cargo check --manifest-path Cargo.toml`
-- `cargo check --manifest-path app/src-tauri/Cargo.toml`
+- `cargo check --manifest-path crates/openhuman-app/Cargo.toml`
 - `pnpm test:rust`
 - `pnpm test:rust:e2e -- --suite <suite>`
 - `pnpm --filter openhuman-app test:e2e:web:build`

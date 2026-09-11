@@ -106,12 +106,12 @@ The in-process connection registry (`connections.rs`) is a `OnceLock<RwLock<Hash
 ## Used by
 
 - `src/openhuman/mcp/mod.rs` — declares `pub mod registry`.
-- `src/core/all.rs` — registers `all_mcp_registry_registered_controllers()` + `all_mcp_registry_controller_schemas()`.
-- `src/core/jsonrpc.rs` — calls `boot::spawn_installed_servers` during startup.
+- `crates/openhuman-core/src/core/all.rs` — registers `all_mcp_registry_registered_controllers()` + `all_mcp_registry_controller_schemas()`.
+- `crates/openhuman-core/src/core/jsonrpc.rs` — calls `boot::spawn_installed_servers` during startup.
 - `src/openhuman/tools/registry/ops.rs` — uses `connections` to surface MCP tools to agents.
 - `src/openhuman/tools/ops.rs` + `src/openhuman/tools/impl/network/mcp_setup.rs` — agent tool wrappers.
 - `src/openhuman/platform/about_app/catalog.rs` — capability entry `channels.mcp_registry_browse`.
-- `src/bin/test_mcp_stub.rs` + `tests/mcp_registry_e2e.rs` — E2E stub server.
+- `crates/openhuman-core/src/bin/test_mcp_stub.rs` + `tests/mcp_registry_e2e.rs` — E2E stub server.
 
 ## Notes / gotchas
 

@@ -390,4 +390,4 @@ attribution + cap before real 1000-agent runs), and p95 latency at N=500 on
 
 - [`docs/resource-profiling-session-2026-07-21.md`](resource-profiling-session-2026-07-21.md) — the full manual investigation (deep attribution, cold-path CPU, library-design implications, recommended optimization order).
 - [`scripts/profile/README.md`](../scripts/profile/README.md) — script quick reference.
-- `src/bin/library_profile/main.rs` — the scenario implementations.
+- `crates/openhuman-core/src/bin/library_profile/main.rs` — the scenario implementations.

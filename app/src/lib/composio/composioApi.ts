@@ -30,7 +30,7 @@ import type {
 /**
  * Every `composio_*` op on the Rust side returns an `RpcOutcome` with a
  * user-visible log line attached. `RpcOutcome::into_cli_compatible_json`
- * (see `src/rpc/mod.rs`) therefore wraps the payload as
+ * (see `crates/openhuman-core/src/rpc/mod.rs`) therefore wraps the payload as
  * `{ "result": <flat shape>, "logs": [...] }` before handing it to the
  * JSON-RPC layer. This helper peels that envelope back off so every
  * caller in this file can work with the flat shapes declared in

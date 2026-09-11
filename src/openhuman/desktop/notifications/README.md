@@ -50,7 +50,7 @@ Namespace `notification` (10 controllers, registered via `all_notifications_regi
 | `core_list` | `only_unread?` (true), `limit?` (100) | `{ items, unread_count }` — persisted core notifications (#3805), newest first; sync-down for events fired while the app was closed. |
 | `core_mark_read` | `id` | `{ ok }` (true when a row matched) |
 
-Schemas + handlers are wired into the controller registry in `src/core/all.rs`.
+Schemas + handlers are wired into the controller registry in `crates/openhuman-core/src/core/all.rs`.
 
 ### Core-notification persistence (#3805)
 
@@ -94,9 +94,9 @@ SQLite DB at `{workspace_dir}/notifications/notifications.db`, opened per-call v
 
 ## Used by
 
-- `src/core/all.rs` — registers the controllers/schemas into the RPC registry.
-- `src/core/jsonrpc.rs` — calls `register_notification_bridge_subscriber()` at startup.
-- `src/core/socketio.rs` — calls `subscribe_core_notifications()` to forward events to web clients.
+- `crates/openhuman-core/src/core/all.rs` — registers the controllers/schemas into the RPC registry.
+- `crates/openhuman-core/src/core/jsonrpc.rs` — calls `register_notification_bridge_subscriber()` at startup.
+- `crates/openhuman-core/src/core/socketio.rs` — calls `subscribe_core_notifications()` to forward events to web clients.
 - `src/openhuman/cron/scheduler.rs` and `src/openhuman/heartbeat/planner/*` reference the notification surface (e.g. triggering/observing notifications).
 
 ## Notes / gotchas

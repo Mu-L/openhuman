@@ -56,7 +56,7 @@
 //!   Rust source with a line scanner is fragile, and getting it wrong silently
 //!   *hides* production sites. Four files are therefore allowlisted for a
 //!   match that lives only in an inline test module; each says so.
-//! - **`app/src-tauri/` is not scanned.** It links `openhuman_core` with
+//! - **`crates/openhuman-app/` is not scanned.** It links `openhuman_core` with
 //!   `default-features = false` and cannot name `pub(crate)` items at all, so
 //!   there is nothing there to scan. The omission is deliberate, not an
 //!   oversight.
@@ -137,12 +137,12 @@ const BYPASS_PATTERNS: &[(&str, &str)] = &[
 const ALLOWED: &[(&str, &str, &str)] = &[
     // ── Metadata-only reads: driver identity, never memory content ──
     (
-        "src/core/cli_capability.rs",
+        "crates/openhuman-core/src/core/cli_capability.rs",
         "binding::for_workspace(",
         "reads driver_id + advertised capabilities only (what memory.provider_status already reports); no CoreContext exists on a CLI invocation, so there is no guard to route through",
     ),
     (
-        "src/core/memory_cli.rs",
+        "crates/openhuman-core/src/core/memory_cli.rs",
         "binding::for_workspace(",
         "the contract-routed subcommands (docs/graph/namespaces/clear) need the binding itself: driver_id() is what names the driver in a missing-family refusal, and no CoreContext exists on a CLI invocation — the same reason cli_capability.rs is listed above",
     ),
@@ -151,12 +151,12 @@ const ALLOWED: &[(&str, &str, &str)] = &[
     // memory/ops/provider.rs (allowlisted above).
     // ── The bind site itself: it produces the guard ──
     (
-        "src/core/runtime/context.rs",
+        "crates/openhuman-core/src/core/runtime/context.rs",
         ".memory_binding(",
         "CoreContext owns the binding; memory() is the guarded accessor built from it",
     ),
     (
-        "src/core/runtime/context.rs",
+        "crates/openhuman-core/src/core/runtime/context.rs",
         "binding::for_workspace(",
         "the per-workspace bind site — guarding it would be a cycle",
     ),
@@ -305,7 +305,7 @@ fn collect_rs_files(dir: &Path, out: &mut Vec<PathBuf>) {
 /// Comment lines are skipped so that doc-comment references — of which this
 /// module and `memory/global.rs` have several — are not mistaken for calls.
 fn scan() -> BTreeSet<(String, String)> {
-    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let root = Path::new(env!("OPENHUMAN_REPOSITORY_ROOT"));
     let mut files = Vec::new();
     collect_rs_files(&root.join("src"), &mut files);
     // The memory subsystem was extracted into `tinymemory-core`, and most of
@@ -464,7 +464,7 @@ fn bypass_allowlist_has_no_stale_entries() {
 /// than a rename to finish.
 #[test]
 fn bypass_allowlist_paths_all_exist() {
-    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let root = Path::new(env!("OPENHUMAN_REPOSITORY_ROOT"));
     let missing: Vec<&str> = ALLOWED
         .iter()
         .map(|(path, _, _)| *path)

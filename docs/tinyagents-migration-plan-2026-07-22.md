@@ -267,7 +267,7 @@ force).
 
 1. Bump `vendor/tinyagents` submodule to tag `v2.1.0` (fast-forward; picks up
    `BarrierRelief` #62 and the bytes bump). Regenerate root and
-   `app/src-tauri` lockfiles. `cargo check` both worlds +
+   `crates/openhuman-app` lockfiles. `cargo check` both worlds +
    the slim disabled build (`--no-default-features`) per repo convention.
 2. Update `tinyagents-drift-ledger.md` Anchors (pin row → v2.1.0; add rows
    closing out #4780/#4782/#4783/#4784 which the ledger still lists as
@@ -462,7 +462,7 @@ changes remain gated on explicit approval of that proposal.
   locally needs `GGML_NATIVE=OFF` (unrelated to this migration but will bite
   every WP's validation loop).
 - **Two Cargo worlds:** every vendor bump must update both the root and
-  `app/src-tauri` lockfiles (until the workspace convergence tracked in
+  `crates/openhuman-app` lockfiles (until the workspace convergence tracked in
   #3877).
 
 ---

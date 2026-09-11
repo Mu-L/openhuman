@@ -69,20 +69,20 @@ ledger. Re-export covers the data types (`MemoryEntry`, `MemoryCategory`, `Memor
 | Check | Result |
 | --- | --- |
 | Crate edition | 2021 (matches host) ✅ |
-| `[patch.crates-io] tinycortex = { path = "vendor/tinycortex" }` | pre-staged in **both** worlds (root + `app/src-tauri`) ✅ |
+| `[patch.crates-io] tinycortex = { path = "vendor/tinycortex" }` | pre-staged in **both** worlds (root + `crates/openhuman-app`) ✅ |
 | CI submodule checkout | recursive on all build/test lanes; covers `vendor/tinycortex` ✅ (verify release lanes in W1, as tinyagents needed) |
 | **rusqlite alignment** | ✅ **resolved & merged (#59).** Crate was pinned `0.32` (bundled), host pins `=0.40.0` (bundled). Two `links = "sqlite3"` = hard Cargo error. Fixed in #59 (bump to `0.40` + `usize`→`i64`/`try_from` — the same sweep that closed drift **D3**). |
 | **git2 alignment** | ✅ **resolved & merged (#59).** Crate was pinned `0.19`, host `0.21` (vendored-libgit2). Two `links = "git2"`. Fixed in #59 (bump to `0.21` + API deltas: `Tag::message`, `StringArray::Iter`, `Buf::as_str`). |
 | Crate compiles with aligned deps | ✅ `cargo check --all-targets` clean; 38 diff/checkpoint tests pass. |
 | **Host root world compiles with dep active** | ✅ `cargo check --manifest-path Cargo.toml --lib` **exit 0** with `tinycortex = "0.1"` active (`Cargo.toml:116`) + submodule at `33dda94`. **No `multiple packages link to native library` error** — one bundled SQLite + one libgit2 confirmed. **Now landed** (post-#59-merge): the `[dependencies]` line and gitlink are committed on the working branch, not reverted. Re-verified 2026-07-09. |
-| Host `app/src-tauri` world | to verify in W1 (separate Cargo world / lockfile). |
+| Host `crates/openhuman-app` world | to verify in W1 (separate Cargo world / lockfile). |
 | `GGML_NATIVE=OFF` macOS ARM | to verify on a macOS runner in W1 (no macOS host here). |
 
 **Activation landed (post-#59).** The native-dep alignment merged upstream as **#59** and the host
 gitlink was bumped to `33dda94`, so — per the submodule rule (bump only to a **merged** SHA) — W1's
 activation is now in place: `[dependencies] tinycortex = "0.1"` is active in the root world
 (`Cargo.toml:116`), the seam (`src/openhuman/memory/tinycortex/`) is wired (`src/openhuman/mod.rs:140`), and
-`cargo check --lib` is **exit 0**. Remaining §0.4 follow-ups: the `app/src-tauri` world and the
+`cargo check --lib` is **exit 0**. Remaining §0.4 follow-ups: the `crates/openhuman-app` world and the
 `GGML_NATIVE=OFF` macOS-runner check still verify in W1 (see rows above).
 
 ---

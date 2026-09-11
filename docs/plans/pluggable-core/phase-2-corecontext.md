@@ -32,20 +32,20 @@ current dispatch — is delivered with a `tokio::task_local!` ambient context:
   `CoreContext::current()` instead. Once its state lives on the context, two
   contexts dispatched under distinct `CoreContext::scope`s read isolated state —
   exactly the Phase 3 exit criterion, verified by the unit tests in
-  `src/core/runtime/context.rs` (`scope_sets_current_context`,
+  `crates/openhuman-core/src/core/runtime/context.rs` (`scope_sets_current_context`,
   `nested_scope_overrides_then_restores`).
 
 One implementation note: the extra future layer at the chokepoint pushed the
 `Send` auto-trait solver past the default depth on the deepest axum→tinyagents
 routes; the scoped future is re-boxed into a `ControllerFuture` and the crate
-sets `#![recursion_limit = "256"]` (both in `src/lib.rs` / `src/core/all.rs`).
+sets `#![recursion_limit = "256"]` (both in `src/lib.rs` / `crates/openhuman-core/src/core/all.rs`).
 
 This is strictly a better realization of Stage B's intent; the explicit-param
 approach is not planned.
 
 ## 2.b Registry collapse
 
-Replace the three hand-maintained parallel lists in `src/core/all.rs`
+Replace the three hand-maintained parallel lists in `crates/openhuman-core/src/core/all.rs`
 (handlers `:105-344`, schemas `:375-509`, namespace descriptions `:530-690`)
 with one per-domain struct:
 
@@ -118,10 +118,10 @@ pub enum StorageBackend { WorkspaceFs }   // CoreBuilder::storage(..); only impl
 
 ## 2.d `DomainSet` — the runtime composition axis (#4796)
 
-`DomainSet` (in `src/core/runtime/builder.rs`, sibling of `ServiceSet`) is the
+`DomainSet` (in `crates/openhuman-core/src/core/runtime/builder.rs`, sibling of `ServiceSet`) is the
 **runtime** axis that selects which domain *families* exist, complementing
 `ServiceSet` (which selects background services). One flag per `DomainGroup`
-(`src/core/all.rs`); presets `full()` (default — byte-identical to pre-#4796),
+(`crates/openhuman-core/src/core/all.rs`); presets `full()` (default — byte-identical to pre-#4796),
 `harness()` (agent + memory + threads + config + security only), `none()`.
 
 Mechanism (Shape B — filter seam, **not** the full per-domain
@@ -152,5 +152,5 @@ Mechanism (Shape B — filter seam, **not** the full per-domain
   propagation through registered RPC invocation.
 - `DomainSet`: `full_registration_is_byte_identical`,
   `harness_excludes_gated_namespaces`, `dispatch_returns_none_for_gated_method`,
-  `group_mapping_smoke` (`src/core/all_tests.rs`) +
+  `group_mapping_smoke` (`crates/openhuman-core/src/core/all_tests.rs`) +
   `domain_set_presets_have_expected_flags` (`builder.rs`).

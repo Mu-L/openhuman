@@ -20,12 +20,12 @@ Scheduled-job runtime. Owns cron-expression and human-delay parsing, the persist
 - `src/openhuman/config/` — `Config` provides poll interval, workspace dir, autonomy policy.
 - `src/openhuman/platform/health/` — `health::bus::register_health_subscriber` on startup.
 - `src/openhuman/channels/` — `bus.rs` can fan delivery events into channels.
-- `src/core/event_bus/` — `init_global`, `publish_global(DomainEvent::Cron(*))`.
+- `crates/openhuman-core/src/core/event_bus/` — `init_global`, `publish_global(DomainEvent::Cron(*))`.
 
 ## Called by
 
 - `src/openhuman/tools/impl/system/schedule.rs` — `schedule` tool exposes cron operations to agents.
-- `src/core/all.rs` — controller registry wires `all_cron_*`.
+- `crates/openhuman-core/src/core/all.rs` — controller registry wires `all_cron_*`.
 - Channel and agent runtimes consume `Cron` events via the bus.
 
 ## Delivery modes

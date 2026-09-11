@@ -33,7 +33,7 @@ Unified **read-only** tool registry for OpenHuman. It builds a single discovery 
 
 ## RPC / controllers
 
-Namespace `tool_registry`, registered via `all_tool_registry_registered_controllers` (wired in `src/core/all.rs`):
+Namespace `tool_registry`, registered via `all_tool_registry_registered_controllers` (wired in `crates/openhuman-core/src/core/all.rs`):
 
 | Method | Inputs | Output |
 | --- | --- | --- |
@@ -59,7 +59,7 @@ No owned persistence. `diagnostics()` reads (read-only) the `mcp_writes` table v
 
 ## Used by
 
-- `src/core/all.rs` — registers controllers/schemas and routes the `tool_registry` namespace.
+- `crates/openhuman-core/src/core/all.rs` — registers controllers/schemas and routes the `tool_registry` namespace.
 - `src/openhuman/agent/tinyagents/middleware.rs` — calls `tool_registry::denials::record(...)` to log agent-tool policy denials.
 - `src/openhuman/platform/about_app/catalog.rs` — capability catalog references the registry surface.
 - `src/openhuman/mcp/registry/connections.rs` — provides `all_connected_tools()` for registry integration.

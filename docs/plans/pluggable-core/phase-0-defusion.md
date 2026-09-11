@@ -9,15 +9,15 @@ startup log lines.
 
 ### 0.1 Delete the dead dispatch tier
 
-`src/rpc/dispatch.rs:10-15` always returns `None` (module doc says the
+`crates/openhuman-core/src/rpc/dispatch.rs:10-15` always returns `None` (module doc says the
 registry is authoritative). Remove the module and its tier-3 call site in
-`src/core/dispatch.rs::dispatch`. `src/rpc/` keeps `structured_error.rs`
+`crates/openhuman-core/src/core/dispatch.rs::dispatch`. `crates/openhuman-core/src/rpc/` keeps `structured_error.rs`
 (still used) — only the dispatch shim dies.
 
 ### 0.2 Extract inline service spawns
 
 Each inline `tokio::spawn` block in `run_server_inner` becomes a named
-function in a new `src/core/runtime/services.rs`:
+function in a new `crates/openhuman-core/src/core/runtime/services.rs`:
 
 | Service                                                                     | Today (approx.)         | Extracted fn                              |
 | --------------------------------------------------------------------------- | ----------------------- | ----------------------------------------- |
@@ -44,7 +44,7 @@ Rules:
 
 `jsonrpc.rs:1807-1892` (memory, whatsapp_data, people, attachments global
 inits) → `fn init_stores(config: &Config, workspace_dir: &Path) ->
-anyhow::Result<()>` in `src/core/runtime/context.rs` (file seeded here,
+anyhow::Result<()>` in `crates/openhuman-core/src/core/runtime/context.rs` (file seeded here,
 grows in phase 1/2). Preserve init order exactly; comment each step with the
 prior `jsonrpc.rs` line range so the diff is auditable.
 

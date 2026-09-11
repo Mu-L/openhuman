@@ -5,7 +5,7 @@
 Issue #5019 identifies a platform gap in Rust lint coverage. CI Lite runs the
 root-core and Tauri clippy commands on Ubuntu, so code compiled only on macOS is
 not checked with warnings denied. The existing `build-macos-full` job builds the
-Tauri app on `macos-latest`, warming `app/src-tauri/target` (including the
+Tauri app on `macos-latest`, warming `crates/openhuman-app/target` (including the
 path-dependent core in that Cargo graph), and feeds its result into the blocking
 CI Full gate. Its Rust cache covers both Cargo workspaces, but the independent
 root `target/` can remain cold on a cache miss.

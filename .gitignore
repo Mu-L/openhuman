@@ -70,7 +70,7 @@ scripts/ci-secrets.local.json
 *.sln
 *.sw?
 references/
-app/src-tauri/runtime-skill-*
+crates/openhuman-app/runtime-skill-*
 .mypy_cache
 .ruff_cache
 .kotlin

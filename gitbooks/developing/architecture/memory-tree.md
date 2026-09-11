@@ -72,7 +72,7 @@ All retrieval handlers consult `memory_store::trees::hotness` so warm content su
 
 ## Controller registry
 
-`memory_tree::mod.rs` re-exports two controller registries that get wired into the global registry in `src/core/all.rs`:
+`memory_tree::mod.rs` re-exports two controller registries that get wired into the global registry in `crates/openhuman-core/src/core/all.rs`:
 
 - `all_memory_tree_controller_schemas` / `all_memory_tree_registered_controllers`: sourced from `memory::schema` (the orchestrator hosts them; this module just surfaces them under the `memory_tree` path).
 - `all_retrieval_controller_schemas` / `all_retrieval_registered_controllers`: the agent-facing read tools listed above.

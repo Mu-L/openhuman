@@ -7,7 +7,7 @@ icon: terminal
 
 This page is the contributor-facing reference for compiling the Rust core on a fresh machine.
 
-It covers the **repo-root crate only**:
+It covers the **core workspace member only**:
 
 - Cargo package: `openhuman`
 - Binary: `openhuman-core`
@@ -40,11 +40,15 @@ git clone https://github.com/tinyhumansai/openhuman.git
 cd openhuman
 ```
 
-That is enough for the root crate.
+That is enough for the Rust workspace. Core wrapper sources and the package
+manifest live under `crates/openhuman-core/`; the authoritative domain
+implementation intentionally remains under the repository-root
+`src/openhuman/` tree. The terminal frontend is the sibling
+`crates/openhuman-tui/` package.
 
 Desktop/Tauri work is different:
 
-- `app/src-tauri/vendor/` submodules are only needed when building the desktop shell or CEF-aware Tauri tooling.
+- `crates/openhuman-app/vendor/` submodules are only needed when building the desktop shell or CEF-aware Tauri tooling.
 - For that flow, follow [Getting Set Up](getting-set-up.md) and run `git submodule update --init --recursive`.
 
 ## 3. Build commands
@@ -57,6 +61,9 @@ cargo check --manifest-path Cargo.toml
 
 # Debug build of the actual CLI / RPC binary
 cargo build --manifest-path Cargo.toml --bin openhuman-core
+
+# Build the terminal frontend (embeds the core in-process)
+cargo build --manifest-path Cargo.toml -p openhuman-tui
 
 # Release build
 cargo build --manifest-path Cargo.toml --release --bin openhuman-core
@@ -185,7 +192,7 @@ sudo pacman -S --needed gtk3 webkit2gtk-4.1 libayatana-appindicator \
   mesa pango cairo libxshmfence
 ```
 
-Use the desktop lists only when you need `app/src-tauri/`; for root-crate work, the smaller core-only list above is the relevant baseline.
+Use the desktop lists only when you need `crates/openhuman-app/`; for root-crate work, the smaller core-only list above is the relevant baseline.
 
 ## 6. Windows prerequisites
 

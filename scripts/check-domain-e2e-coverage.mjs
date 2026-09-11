@@ -96,7 +96,7 @@ const UNREACHABLE_NAMESPACES = {
   test: {
     feature: 'e2e-test-support',
     reason:
-      '`openhuman.test_reset` wipes sidecar state in place, and src/core/all.rs registers it behind ' +
+      '`openhuman.test_reset` wipes sidecar state in place, and crates/openhuman-core/src/core/all.rs registers it behind ' +
       '`#[cfg(feature = "e2e-test-support")]` precisely so a shipped binary never carries the destructive RPC. ' +
       'Only app/scripts/e2e-build.sh turns that gate on; under the feature string scripts/test-rust-e2e.sh ' +
       'builds every e2e target with, dispatching it answers `unknown method`.',
@@ -118,7 +118,7 @@ const UNREACHABLE_NAMESPACES = {
 // decides real cases: `medulla` is absent from product-features.txt but present
 // in `[features] default`, so its nine controllers ARE dispatchable in an e2e
 // build and are genuine obligations, not exclusions.
-const CORE_MANIFEST = path.join(ROOT, 'Cargo.toml');
+const CORE_MANIFEST = path.join(ROOT, 'crates/openhuman-core/Cargo.toml');
 const PRODUCT_FEATURES_FILE = path.join(ROOT, 'scripts', 'ci', 'product-features.txt');
 
 // Where `ControllerSchema` literals live.
