@@ -232,8 +232,8 @@ pub async fn mcp_clients_update_custom(
         };
         let env_btree: std::collections::BTreeMap<String, String> = env.into_iter().collect();
         Ok((record, env_btree))
-    })
-    .map_err(|e| e.to_string())?;
+        })
+        .map_err(|e| e.to_string())?;
 
     // Only now drop the live connection: it was dialed with the previous command
     // or URL, so leaving it up would keep serving tools from the old
