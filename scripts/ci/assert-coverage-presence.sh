@@ -132,6 +132,9 @@ for line in sys.stdin:
     marker = path.rfind("/crates/openhuman-core/src/")
     if marker != -1:
         print(path[marker + 1 :])
+    marker = path.rfind("/crates/openhuman-embed/src/")
+    if marker != -1:
+        print(path[marker + 1 :])
     marker = path.rfind("/crates/openhuman-tui/src/")
     if marker != -1:
         print(path[marker + 1 :])
@@ -185,7 +188,7 @@ eligible() {
   base="$(basename "${f}")"
 
   case "${f}" in *.rs) ;; *) return 1 ;; esac  # non-Rust: assets, .md, fixtures
-  case "${f}" in src/* | crates/openhuman-core/src/* | crates/openhuman-tui/src/*) ;; *) return 1 ;; esac
+  case "${f}" in src/* | crates/openhuman-core/src/* | crates/openhuman-embed/src/* | crates/openhuman-tui/src/*) ;; *) return 1 ;; esac
   [ -f "${f}" ] || return 1                    # deleted / renamed-away
   case "${f}" in src/lib.rs | src/main.rs | src/bin/* | crates/openhuman-core/src/lib.rs | crates/openhuman-core/src/main.rs | crates/openhuman-core/src/bin/* | crates/openhuman-tui/src/lib.rs | crates/openhuman-tui/src/main.rs) return 1 ;; esac
   # Test-only sources. We do not demand coverage OF test code, and a test file
@@ -226,11 +229,11 @@ if [ "${MODE}" = all ]; then
   # working tree would also be checked, which is harmless (it is a real file
   # that either compiled or did not).
   listing=""
-  if listing="$(git ls-files 'src/*.rs' 'src/**/*.rs' 'crates/openhuman-core/src/*.rs' 'crates/openhuman-core/src/**/*.rs' 'crates/openhuman-tui/src/*.rs' 'crates/openhuman-tui/src/**/*.rs' 2>/dev/null)" && [ -n "${listing}" ]; then
+  if listing="$(git ls-files 'src/*.rs' 'src/**/*.rs' 'crates/openhuman-core/src/*.rs' 'crates/openhuman-core/src/**/*.rs' 'crates/openhuman-embed/src/*.rs' 'crates/openhuman-embed/src/**/*.rs' 'crates/openhuman-tui/src/*.rs' 'crates/openhuman-tui/src/**/*.rs' 2>/dev/null)" && [ -n "${listing}" ]; then
     log "enumerating tracked sources with git ls-files"
   else
     log "git ls-files unavailable or empty — falling back to a filesystem walk"
-    listing="$(find src crates/openhuman-core/src crates/openhuman-tui/src -type f -name '*.rs' 2>/dev/null || true)"
+    listing="$(find src crates/openhuman-core/src crates/openhuman-embed/src crates/openhuman-tui/src -type f -name '*.rs' 2>/dev/null || true)"
   fi
   while IFS= read -r f; do
     [ -n "${f}" ] && candidates+=("${f}")

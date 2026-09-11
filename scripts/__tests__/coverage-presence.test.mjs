@@ -114,6 +114,13 @@ test("treats standalone TUI sources as coverage-eligible", () => {
   assert.match(res.output, /checked 1 eligible/);
 });
 
+test("treats embedding facade sources as coverage-eligible", () => {
+  const source = "crates/openhuman-embed/src/lib.rs";
+  const res = run({ [source]: WITH_FN }, [source], ["--files", source]);
+  assert.equal(res.status, 0);
+  assert.match(res.output, /checked 1 eligible/);
+});
+
 test("skips barrel modules that declare no fn", () => {
   const res = run({ "src/a/mod.rs": NO_FN }, [], ["--files", "src/a/mod.rs"]);
   assert.equal(res.status, 0);
