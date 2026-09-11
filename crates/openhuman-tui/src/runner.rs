@@ -22,6 +22,7 @@ use openhuman_core::core::types::HostKind;
 ///   * `--new` — force a brand-new thread (default when `--thread` is absent).
 ///   * `--last` / `--resume` — resume the newest thread, optionally opening the picker.
 ///   * `--no-alt-screen` — render in the current terminal buffer.
+///   * `--provider <id>` / `--model <id>` — transient inference overrides.
 ///   * a positional prompt — send immediately after startup.
 ///   * `-v` / `--verbose` — debug-level file logging.
 pub fn run_from_cli(args: &[String]) -> anyhow::Result<()> {
@@ -35,6 +36,8 @@ pub fn run_from_cli(args: &[String]) -> anyhow::Result<()> {
     let mut resume_picker = false;
     let mut use_last = false;
     let mut no_alt_screen = false;
+    let mut provider: Option<String> = None;
+    let mut model: Option<String> = None;
     let mut prompt_parts = Vec::new();
 
     let mut i = 0usize;
@@ -64,6 +67,22 @@ pub fn run_from_cli(args: &[String]) -> anyhow::Result<()> {
                 no_alt_screen = true;
                 i += 1;
             }
+            "--provider" | "--provider-id" | "-p" => {
+                provider = Some(option_value(args, i, args[i].as_str())?);
+                i += 2;
+            }
+            "--model" | "--model-id" | "-m" => {
+                model = Some(option_value(args, i, args[i].as_str())?);
+                i += 2;
+            }
+            arg if arg.starts_with("--provider=") || arg.starts_with("--provider-id=") => {
+                provider = Some(inline_option_value(arg)?);
+                i += 1;
+            }
+            arg if arg.starts_with("--model=") || arg.starts_with("--model-id=") => {
+                model = Some(inline_option_value(arg)?);
+                i += 1;
+            }
             "-v" | "--verbose" => {
                 verbose = true;
                 i += 1;
@@ -81,6 +100,11 @@ pub fn run_from_cli(args: &[String]) -> anyhow::Result<()> {
             }
         }
     }
+
+    openhuman_core::core::cli::set_transient_inference_overrides(
+        provider.as_deref(),
+        model.as_deref(),
+    );
 
     // File-only logging — never stderr while the TUI owns the terminal.
     let data_dir = resolve_data_dir();
@@ -111,6 +135,29 @@ pub fn run_from_cli(args: &[String]) -> anyhow::Result<()> {
         use_last || resume_picker,
         options,
     ))
+}
+
+fn option_value(args: &[String], index: usize, flag: &str) -> anyhow::Result<String> {
+    let value = args
+        .get(index + 1)
+        .filter(|value| !value.starts_with('-'))
+        .ok_or_else(|| anyhow::anyhow!("missing value for {flag}"))?;
+    nonempty_option_value(value, flag)
+}
+
+fn inline_option_value(arg: &str) -> anyhow::Result<String> {
+    let (flag, value) = arg
+        .split_once('=')
+        .ok_or_else(|| anyhow::anyhow!("missing value for {arg}"))?;
+    nonempty_option_value(value, flag)
+}
+
+fn nonempty_option_value(value: &str, flag: &str) -> anyhow::Result<String> {
+    let value = value.trim();
+    if value.is_empty() {
+        return Err(anyhow::anyhow!("empty value for {flag}"));
+    }
+    Ok(value.to_string())
 }
 
 async fn async_main(
@@ -229,6 +276,8 @@ fn print_help() {
     println!("  --resume        Open the saved-thread picker (starts on the latest thread).");
     println!("  --last          Resume the most recent thread.");
     println!("  --no-alt-screen Draw in the current terminal buffer.");
+    println!("  -p, --provider <id>  Override the provider for this TUI session.");
+    println!("  -m, --model <id>     Override the model for this TUI session.");
     println!("  -v, --verbose   Debug-level logging (written to the log file, never the UI).");
     println!();
     println!("Keys: Ctrl+Tab or Alt+1-4 switch tabs · Enter send · Shift+Enter newline ·");

@@ -96,6 +96,16 @@ pub fn run_from_cli_args(args: &[String]) -> Result<()> {
     }
 }
 
+/// Apply process-local provider/model overrides for a standalone frontend.
+///
+/// The values affect config loaded later in this process and are never written
+/// back to the user's config file. This keeps independently packaged frontends
+/// such as `openhuman-tui` compatible with the core CLI's launch flags.
+#[doc(hidden)]
+pub fn set_transient_inference_overrides(provider: Option<&str>, model: Option<&str>) {
+    crate::openhuman::config::set_cli_inference_overrides(provider, model);
+}
+
 #[derive(Debug, Default, PartialEq, Eq)]
 struct CliLaunchOptions {
     args: Vec<String>,
