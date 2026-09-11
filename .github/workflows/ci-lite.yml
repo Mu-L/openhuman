@@ -156,6 +156,7 @@ jobs:
               - 'scripts/ci/list-feature-gated-rust-tests.mjs'
               - 'Cargo.toml'
               - 'crates/openhuman-core/**'
+              - 'crates/openhuman-embed/**'
               - 'crates/openhuman-tui/**'
               - 'Cargo.lock'
               - 'build.rs'
@@ -189,6 +190,7 @@ jobs:
               - 'scripts/ci/coverage-presence-allowlist.txt'
               - 'Cargo.toml'
               - 'crates/openhuman-core/Cargo.toml'
+              - 'crates/openhuman-embed/Cargo.toml'
               - 'crates/openhuman-tui/Cargo.toml'
               - 'Cargo.lock'
               - 'build.rs'
@@ -204,6 +206,8 @@ jobs:
             rust-core-src:
               - 'src/**'
               - 'crates/openhuman-core/src/**'
+              - 'crates/openhuman-embed/src/**'
+              - 'crates/openhuman-embed/tests/**'
               - 'crates/openhuman-tui/src/**'
               - 'crates/openhuman-tui/tests/**'
               - 'tests/**'
@@ -450,6 +454,12 @@ jobs:
         # and would land red on every contributor's machine while CI stayed
         # green. Cheap: this graph is ~356 packages against the product's ~567.
         run: bash scripts/ci-cancel-aware.sh cargo clippy -p openhuman -- -D warnings
+
+      - name: Check embedding facade
+        if: needs.changes.outputs['rust-core'] == 'true'
+        run: |
+          bash scripts/ci-cancel-aware.sh cargo clippy -p openhuman-embed --all-targets -- -D warnings
+          bash scripts/ci-cancel-aware.sh cargo check -p openhuman-embed --no-default-features
 
       - name: Cache CEF binary distribution
         if: needs.changes.outputs['rust-tauri'] == 'true'
