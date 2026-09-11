@@ -260,7 +260,10 @@ impl ChatModel<()> for ClaudeAgentSdkProvider {
         Some(format!(
             "claude_agent_sdk:{}:{}",
             self.config.binary,
-            self.profile.model.as_deref().unwrap_or(&self.config.default_model)
+            self.profile
+                .model
+                .as_deref()
+                .unwrap_or(&self.config.default_model)
         ))
     }
 

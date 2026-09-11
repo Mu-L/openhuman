@@ -103,7 +103,10 @@ pub(crate) struct CrateOpenAiConfig<'a> {
 pub(crate) fn endpoint_is_openrouter(endpoint: &str) -> bool {
     url::Url::parse(endpoint.trim())
         .ok()
-        .and_then(|url| url.host_str().map(|host| host.eq_ignore_ascii_case("openrouter.ai")))
+        .and_then(|url| {
+            url.host_str()
+                .map(|host| host.eq_ignore_ascii_case("openrouter.ai"))
+        })
         .unwrap_or(false)
 }
 

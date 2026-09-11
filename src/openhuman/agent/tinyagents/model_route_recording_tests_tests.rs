@@ -120,8 +120,8 @@ fn profile_override_cache_identity_includes_request_model() {
     let inner: Arc<dyn ChatModel<()>> = Arc::new(IdentifiedModel);
     let first = ProfileOverrideModel::new(inner.clone(), ModelProfile::default())
         .with_request_model("model-a");
-    let second = ProfileOverrideModel::new(inner, ModelProfile::default())
-        .with_request_model("model-b");
+    let second =
+        ProfileOverrideModel::new(inner, ModelProfile::default()).with_request_model("model-b");
 
     assert_ne!(first.cache_identity(), second.cache_identity());
 }
