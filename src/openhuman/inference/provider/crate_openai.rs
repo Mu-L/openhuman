@@ -205,6 +205,7 @@ pub(crate) fn make_crate_openai_chat_model(
         responses_omit_max_output_tokens: false,
         extra_query_params: &[],
         user_agent: None,
+        explicit_cache_control: false,
     })
 }
 
@@ -248,6 +249,7 @@ pub(crate) fn make_crate_local_runtime_chat_model(
         responses_omit_max_output_tokens: false,
         extra_query_params: &[],
         user_agent: None,
+        explicit_cache_control: false,
     })
 }
 
