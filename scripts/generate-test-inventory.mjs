@@ -180,7 +180,7 @@ function computeOrphans(scriptTests) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 function discoverControllerDomains() {
-  const allRs = read(path.join(ROOT, 'src', 'core', 'all.rs'));
+  const allRs = read(path.join(ROOT, 'crates', 'openhuman-core', 'src', 'core', 'all.rs'));
   const domains = new Set();
   // crate::openhuman::<domain>[::<sub>...]::all_<name>_(registered|internal)_controllers
   const re =
