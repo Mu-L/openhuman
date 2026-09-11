@@ -7318,7 +7318,6 @@ const messages: TranslationMap = {
   'settings.mcpServer.tools.treeReadChunk': 'मेमोरी ट्री का अंश पढ़ता है',
   'settings.mcpServer.tools.treeBrowse': 'मेमोरी ट्री की संरचना ब्राउज़ करता है',
   'settings.mcpServer.tools.treeTopEntities': 'मेमोरी ट्री से शीर्ष एंटिटी प्राप्त करता है',
-  'settings.mcpServer.tools.treeListSources': 'मेमोरी ट्री के स्रोत सूचीबद्ध करता है',
   'settings.notifications.category.messages.title': 'संदेश',
   'settings.notifications.category.messages.desc':
     'एम्बेडेड वेबव्यू खातों (Slack, WhatsApp, …) से नए संदेश।',
@@ -7342,13 +7341,11 @@ const messages: TranslationMap = {
   'settings.notifications.categoryToggleAria': '{name} सूचनाएँ चालू या बंद करें',
   'settings.cron.jobs.runFinishedAt': '{time} पर {status}',
   'settings.cron.jobs.scheduleAt': '{time} पर',
-  'settings.gateway.binaryRequired': 'उस मशीन पर openhuman-core का पथ बताएँ।',
   'settings.gateway.portInvalid': 'SSH पोर्ट एक संख्या होनी चाहिए।',
   'devOptions.gateway': 'स्थान',
   'devOptions.provisionedCore': 'इस ऐप द्वारा शुरू किया गया कोर',
   'devOptions.gatewayId': 'स्थान',
   // S9 i18n audit fixes (hardcoded English in files that already hold useT()).
-  'settings.ai.picker.title': 'प्रदाता और मॉडल चुनें',
   'settings.ai.picker.subtitle': 'कॉन्फ़िगर किए गए प्रदाताओं और उपलब्ध मॉडलों में खोजें।',
   'settings.ai.picker.useThisModel': 'यह मॉडल उपयोग करें',
   'settings.ai.picker.searchPlaceholder': 'प्रदाता और मॉडल खोजें',
@@ -7362,16 +7359,8 @@ const messages: TranslationMap = {
   'settings.ai.loops.memoryTreeWorkers.risk':
     '{workers} वर्कर हर {seconds} सेकंड में कतार जाँचते हैं; LLM तभी कॉल होता है जब कतार में extract/seal/digest/topic कार्य हों।',
   'settings.ai.loops.reflectionRebuild.name': 'रिफ्लेक्शन पुनर्निर्माण',
-  'settings.ai.loops.cadence.thirtyMin': '30 मिनट',
-  'settings.ai.loops.reflectionRebuild.work':
     'मेमोरी गतिविधि के बाद रिफ्लेक्शन स्थिति को ताज़ा करता है।',
-  'settings.ai.loops.reflectionRebuild.risk':
     '{count} जागरण/सप्ताह; LLM तभी काम करता है जब पुनर्निर्माण को रिफ्लेक्शन की ज़रूरत हो।',
-  'settings.ai.loops.composioSync.name': 'Composio सिंक',
-  'settings.ai.loops.cadence.twentyMin': '20 मिनट',
-  'settings.ai.loops.composioSync.route': 'इंटीग्रेशन API',
-  'settings.ai.loops.composioSync.work': 'जब प्रदाता सिंक का समय हो, तो जुड़े हुए टूल जाँचता है।',
-  'settings.ai.loops.composioSync.risk':
     '{count} जागरण/सप्ताह; {active} सक्रिय कनेक्शन(स) स्कैन करता है।',
   'settings.ai.openaiOauthCompleteError':
     'ChatGPT साइन-इन पूरा नहीं हुआ। रीडायरेक्ट URL जाँचें और फिर कोशिश करें।',
@@ -7389,7 +7378,6 @@ const messages: TranslationMap = {
   'memorySources.codingSessions.stillRunning': 'आयात अब भी चल रहा है',
   'memorySources.codingSessions.stillRunningMessage':
     'अब तक आयात किए गए सत्र: {processed}. आयात अपनी समय सीमा में पूरा नहीं हुआ, लेकिन पृष्ठभूमि में चल रहा है; इसे दोबारा शुरू करने के बजाय एक मिनट बाद देखें।',
-  'sync.pipeline.vectorsPending':
     'वेक्टर की प्रतीक्षा में चंक्स: {count}। सिमेंटिक खोज जल्द ही उन्हें शामिल करेगी।',
   'chat.sources.usedCount': '{n} स्रोतों का उपयोग किया',
   // Gateways: cores this app provisions and runs elsewhere.
@@ -7411,30 +7399,10 @@ const messages: TranslationMap = {
     'जब एजेंट, टूल और सिस्टम काम करते हैं तो घटनाएँ यहाँ दिखती हैं। अभी तक कुछ नहीं हुआ है।',
   'settings.developerMenu.eventLog.notConnectedHint':
     'स्ट्रीम फिर से शुरू करने के लिए कोर से दोबारा कनेक्ट करें।',
-  'settings.appearance.showChatMascot': 'मैसेज बॉक्स पर Tiny दिखाएँ',
-  'settings.appearance.showChatMascotDesc':
     'मैस्कॉट लिखने के बॉक्स पर खड़ा रहता है। छिपाने पर चैट सिर्फ़ टेक्स्ट रहेगी, जब तक आप इसे दोबारा चालू न करें।',
-  'settings.mascot.customGifUpload': 'इमेज अपलोड करें',
-  'settings.mascot.customGifInvalidType':
     'असमर्थित फ़ाइल प्रकार। PNG, GIF, JPEG, WebP, या BMP इमेज अपलोड करें।',
-  'settings.mascot.customGifTooLarge': 'इमेज बहुत बड़ी है। 1.5 MB तक की फ़ाइल अपलोड करें।',
-  'settings.mascot.customGifReadError': 'यह इमेज पढ़ी नहीं जा सकी। कृपया दूसरी फ़ाइल आज़माएँ।',
-  'walletBalances.colNetwork': 'नेटवर्क',
-  'walletBalances.colAddress': 'पता',
-  'walletBalances.colBalance': 'बैलेंस',
-  'walletBalances.colActions': 'कार्रवाइयां',
-  'settings.agents.editor.modelManaged': 'प्रबंधित मॉडल',
-  'keyring.settings.mode.localEncryptedFile': 'एन्क्रिप्टेड फ़ाइल',
-  'keyring.settings.mode.localPlaintextFile': 'बिना एन्क्रिप्शन वाली फ़ाइल',
   'memoryTree.status.statusBudgetExhausted': 'रुका हुआ: एम्बेडिंग बजट समाप्त',
-  'composer.humanMode': 'मानव मोड',
-  'userErrors.action.openConnections': 'कनेक्शन खोलें',
-  'userErrors.integrationDegraded.title': 'कनेक्शन पुरानी स्थिति दिखा रहे हैं',
-  'userErrors.integrationDegraded.body':
     'एक जुड़ा हुआ इंटीग्रेशन त्रुटियां लौटा रहा है, इसलिए ऐप में दिख रही कनेक्शन स्थिति पुरानी हो सकती है।',
-  'userErrors.action.openEmbeddingsSettings': 'एम्बेडिंग सेट करें',
-  'userErrors.localModelUnavailable.title': 'लोकल मॉडल उपलब्ध नहीं है',
-  'userErrors.localModelUnavailable.body':
     'कॉन्फ़िगर किए गए एंडपॉइंट पर Ollama तक पहुँच नहीं है, या ज़रूरी मॉडल वहाँ इंस्टॉल नहीं है। Ollama शुरू करके उसी एंडपॉइंट पर मॉडल पुल करें, या इस काम को किसी क्लाउड प्रोवाइडर पर ले जाएँ।',
   'memorySources.repair.title': 'पुरानी यादें सुधारें?',
   'memorySources.repair.message':
@@ -7462,9 +7430,6 @@ const messages: TranslationMap = {
   'conversations.subagent.awaitingTitle': 'आपके उत्तर की प्रतीक्षा',
   'conversations.subagent.answerPlaceholder': 'अपना उत्तर लिखें',
   'conversations.subagent.answerSend': 'उत्तर भेजें',
-  'conversations.subagent.answerSent': 'उत्तर भेजा गया',
-  'flows.canvas.description': 'इस स्वचालन को चरण दर चरण बनाएं, फिर उसे सहेजकर चलाएं।',
-  'settings.ai.providers.groupCloud': 'क्लाउड',
   'brain.refreshError': 'आपका ब्रेन रिफ़्रेश नहीं हो सका। पिछली बार लोड हुआ डेटा दिखाया जा रहा है।',
   'common.working': 'काम चल रहा है…',
   'common.noResults': 'कोई परिणाम नहीं',
@@ -7491,6 +7456,61 @@ const messages: TranslationMap = {
     'Tavily द्वारा संचालित वेब, समाचार और वित्त खोज। इसके लिए आपकी अपनी Tavily API key आवश्यक है। सर्च और पेज सामग्री निकालने के टूल जोड़ता है।',
   'settings.search.tavilyKeyLabel': 'Tavily API कुंजी',
   'settings.search.placeholderTavily': 'tvly-...',
+  'userErrors.memoryStoreCorrupt.title': 'Memory index was corrupted',
+  'userErrors.memoryStoreCorrupt.body':
+  'userErrors.action.openMemorySync': 'Re-sync memory',
+  'userErrors.scope.workspace': 'Workspace',
+  'userErrors.scope.memory': 'Memory',
+  'memoryBudget.approachingTitle': 'Memory is approaching its embedding limit',
+  'memoryBudget.approachingMessage':
+  'memoryBudget.exhaustedTitle': 'Memory has stopped growing',
+  'memoryBudget.exhaustedMessage':
+  'memoryBudget.cta': 'Set up embeddings',
+  'settings.ai.apiReadsFormula': 'background API reads/week / remaining = {reads} / {remaining}',
+  'settings.ai.needUsageToEstimate': 'Need usage response to estimate.',
+  'settings.ai.composioSyncScansDetail':
+  'settings.ai.totalApiReadBudgetDetail':
+  'settings.ai.memoryWorkerPollsDetail': '4 workers * 5s poll; LLM calls only for queued jobs',
+  'settings.ai.managedSourceLabel': 'Managed by OpenHuman',
+  'settings.ai.managedSourceDetail': 'Automatic model selection',
+  'settings.ai.workload.columnHeader': 'Workload',
+  'settings.cron.jobs.scheduleEvery': 'every {ms}ms',
+  'settings.developerMenu.eventLog.workspaceScope': 'Workspace scope',
+  'settings.mcpServer.tools.listTools': 'List all available MCP tools',
+  'settings.mcpServer.tools.toolInstructions': 'Get usage instructions for a tool',
+  'settings.ai.openaiOauthTitle': 'Sign in with ChatGPT',
+  'settings.ai.openaiOauthDescription':
+  'settings.ai.openaiOauthConnect': 'Sign in with ChatGPT',
+  'settings.ai.openaiOauthConnected': 'Connected with ChatGPT',
+  'settings.ai.openaiOauthOpening': 'Opening sign-in…',
+  'settings.ai.openaiOauthCallbackHint':
+  'settings.ai.openaiOauthCallbackPlaceholder':
+  'settings.ai.openaiOauthFinish': 'Finish ChatGPT sign-in',
+  'settings.ai.openaiOauthDisconnect': 'Disconnect ChatGPT',
+  'settings.ai.openaiOauthDesktopOnly': 'ChatGPT sign-in is only available in the desktop app.',
+  'settings.ai.openaiOauthStartError':
+  'memorySources.allIn.allFailed': 'No sync could start. Check each source for the reason.',
+  'memorySources.allIn.partial': 'Syncs started: {triggered}. Could not start: {failed}.',
+  'memorySources.repair.button': 'Repair older memories',
+  'voice.mode.title': 'Voice mode',
+  'voice.mode.desc': 'Choose how the assistant talks in the Human tab.',
+  'voice.mode.realtime': 'Realtime voice (beta)',
+  'voice.mode.realtimeDesc': 'Stream a live conversation instead of taking turns.',
+  'voice.mode.start': 'Start voice chat',
+  'invites.redeemHeading': 'Have a referral code?',
+  'invites.redeemPlaceholder': 'Referral code',
+  'invites.redeemSubmit': 'Redeem',
+  'settings.gateway.nameLabel': 'Name',
+  'common.notAvailable': 'n/a',
+  'skills.category.all': 'All',
+  'skills.category.builtIn': 'Built-in',
+  'skills.category.channels': 'Channels',
+  'skills.category.productivity': 'Productivity',
+  'skills.category.chat': 'Chat',
+  'skills.category.toolsAutomation': 'Tools & Automation',
+  'skills.category.social': 'Social',
+  'skills.category.platform': 'Platform',
+  'skills.category.other': 'Other',
 };
 
 export default messages;

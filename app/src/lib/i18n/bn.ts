@@ -7319,7 +7319,6 @@ const messages: TranslationMap = {
   'settings.mcpServer.tools.treeReadChunk': 'মেমরি ট্রি-র একটি খণ্ড পড়ে',
   'settings.mcpServer.tools.treeBrowse': 'মেমরি ট্রি-র গঠন ব্রাউজ করে',
   'settings.mcpServer.tools.treeTopEntities': 'মেমরি ট্রি থেকে শীর্ষ এনটিটি পায়',
-  'settings.mcpServer.tools.treeListSources': 'মেমরি ট্রি-র উৎসের তালিকা দেয়',
   'settings.notifications.category.messages.title': 'বার্তা',
   'settings.notifications.category.messages.desc':
     'এমবেডেড ওয়েবভিউ অ্যাকাউন্ট (Slack, WhatsApp, …) থেকে নতুন বার্তা।',
@@ -7344,13 +7343,11 @@ const messages: TranslationMap = {
   'settings.notifications.categoryToggleAria': '{name} বিজ্ঞপ্তি চালু বা বন্ধ করুন',
   'settings.cron.jobs.runFinishedAt': '{time}-এ {status}',
   'settings.cron.jobs.scheduleAt': '{time}-এ',
-  'settings.gateway.binaryRequired': 'ওই মেশিনে openhuman-core-এর পথ লিখুন।',
   'settings.gateway.portInvalid': 'SSH পোর্ট একটি সংখ্যা হতে হবে।',
   'devOptions.gateway': 'অবস্থান',
   'devOptions.provisionedCore': 'এই অ্যাপের চালু করা কোর',
   'devOptions.gatewayId': 'অবস্থান',
   // S9 i18n audit fixes (hardcoded English in files that already hold useT()).
-  'settings.ai.picker.title': 'প্রদানকারী ও মডেল বেছে নিন',
   'settings.ai.picker.subtitle': 'কনফিগার করা প্রদানকারী এবং উপলব্ধ মডেল খুঁজুন।',
   'settings.ai.picker.useThisModel': 'এই মডেল ব্যবহার করুন',
   'settings.ai.picker.searchPlaceholder': 'প্রদানকারী ও মডেল খুঁজুন',
@@ -7364,15 +7361,7 @@ const messages: TranslationMap = {
   'settings.ai.loops.memoryTreeWorkers.risk':
     '{workers} জন ওয়ার্কার প্রতি {seconds} সেকেন্ডে সারি পরীক্ষা করে; সারিতে extract/seal/digest/topic কাজ থাকলেই কেবল LLM কল হয়।',
   'settings.ai.loops.reflectionRebuild.name': 'রিফ্লেকশন পুনর্নির্মাণ',
-  'settings.ai.loops.cadence.thirtyMin': '৩০ মিনিট',
-  'settings.ai.loops.reflectionRebuild.work': 'মেমরি কার্যকলাপের পর রিফ্লেকশন অবস্থা রিফ্রেশ করে।',
-  'settings.ai.loops.reflectionRebuild.risk':
     '{count} জাগরণ/সপ্তাহ; পুনর্নির্মাণে রিফ্লেকশন দরকার হলেই কেবল LLM কাজ করে।',
-  'settings.ai.loops.composioSync.name': 'Composio সিঙ্ক',
-  'settings.ai.loops.cadence.twentyMin': '২০ মিনিট',
-  'settings.ai.loops.composioSync.route': 'ইন্টিগ্রেশন API',
-  'settings.ai.loops.composioSync.work': 'প্রদানকারী সিঙ্কের সময় হলে সংযুক্ত টুল পরীক্ষা করে।',
-  'settings.ai.loops.composioSync.risk':
     '{count} জাগরণ/সপ্তাহ; {active} সক্রিয় সংযোগ স্ক্যান করে।',
   'settings.ai.openaiOauthCompleteError':
     'ChatGPT সাইন-ইন সম্পূর্ণ হয়নি। রিডাইরেক্ট URL পরীক্ষা করে আবার চেষ্টা করুন।',
@@ -7391,7 +7380,6 @@ const messages: TranslationMap = {
   'memorySources.codingSessions.stillRunning': 'ইম্পোর্ট এখনও চলছে',
   'memorySources.codingSessions.stillRunningMessage':
     'এখন পর্যন্ত ইম্পোর্ট হওয়া সেশন: {processed}টি। নির্ধারিত সময়ের মধ্যে ইম্পোর্ট শেষ হয়নি, তবে সেটি ব্যাকগ্রাউন্ডে চলছে; আবার শুরু না করে এক মিনিট পরে দেখুন।',
-  'sync.pipeline.vectorsPending':
     'ভেক্টরের জন্য অপেক্ষমাণ চাংক: {count}। শব্দার্থিক অনুসন্ধান শীঘ্রই সেগুলি অন্তর্ভুক্ত করবে।',
   'chat.sources.usedCount': '{n}টি উৎস ব্যবহার করা হয়েছে',
   // Gateways: cores this app provisions and runs elsewhere.
@@ -7413,30 +7401,10 @@ const messages: TranslationMap = {
     'এজেন্ট, টুল ও সিস্টেম কাজ করলে ঘটনাগুলি এখানে দেখা যাবে। এখনও কিছু ঘটেনি।',
   'settings.developerMenu.eventLog.notConnectedHint':
     'স্ট্রিম আবার চালু করতে কোরের সঙ্গে পুনরায় সংযোগ করুন।',
-  'settings.appearance.showChatMascot': 'মেসেজ বক্সে Tiny দেখান',
-  'settings.appearance.showChatMascotDesc':
     'ম্যাসকটটি লেখার বাক্সের উপরে দাঁড়িয়ে থাকবে। লুকালে আবার চালু না করা পর্যন্ত চ্যাট শুধু টেক্সট থাকবে।',
-  'settings.mascot.customGifUpload': 'ইমেজ আপলোড করুন',
-  'settings.mascot.customGifInvalidType':
     'অসমর্থিত ফাইলের ধরন। একটি PNG, GIF, JPEG, WebP, বা BMP ইমেজ আপলোড করুন।',
-  'settings.mascot.customGifTooLarge': 'ইমেজটি খুব বড়। ১.৫ MB পর্যন্ত একটি ফাইল আপলোড করুন।',
-  'settings.mascot.customGifReadError': 'ইমেজটি পড়া যায়নি। অন্য একটি ফাইল চেষ্টা করুন।',
-  'walletBalances.colNetwork': 'নেটওয়ার্ক',
-  'walletBalances.colAddress': 'ঠিকানা',
-  'walletBalances.colBalance': 'ব্যালেন্স',
-  'walletBalances.colActions': 'অ্যাকশন',
-  'settings.agents.editor.modelManaged': 'পরিচালিত মডেল',
-  'keyring.settings.mode.localEncryptedFile': 'এনক্রিপ্টেড ফাইল',
-  'keyring.settings.mode.localPlaintextFile': 'এনক্রিপ্ট করা হয়নি এমন ফাইল',
   'memoryTree.status.statusBudgetExhausted': 'বিরতি: এমবেডিং বাজেট শেষ',
-  'composer.humanMode': 'হিউম্যান মোড',
-  'userErrors.action.openConnections': 'সংযোগ খুলুন',
-  'userErrors.integrationDegraded.title': 'সংযোগগুলি পুরনো অবস্থা দেখাচ্ছে',
-  'userErrors.integrationDegraded.body':
     'একটি সংযুক্ত ইন্টিগ্রেশন ত্রুটি ফেরত দিচ্ছে, তাই অ্যাপে দেখানো সংযোগের অবস্থা পুরনো হতে পারে।',
-  'userErrors.action.openEmbeddingsSettings': 'এমবেডিং সেট আপ করুন',
-  'userErrors.localModelUnavailable.title': 'লোকাল মডেল অনুপলব্ধ',
-  'userErrors.localModelUnavailable.body':
     'কনফিগার করা এন্ডপয়েন্টে Ollama-তে পৌঁছানো যাচ্ছে না, অথবা সেখানে প্রয়োজনীয় মডেলটি ইনস্টল করা নেই। Ollama চালু করে সেই এন্ডপয়েন্টে মডেলটি পুল করুন, অথবা এই কাজটি কোনো ক্লাউড প্রোভাইডারে সরিয়ে নিন।',
   'memorySources.repair.title': 'পুরোনো স্মৃতি মেরামত করবেন?',
   'memorySources.repair.message':
@@ -7464,9 +7432,6 @@ const messages: TranslationMap = {
   'conversations.subagent.awaitingTitle': 'আপনার উত্তরের অপেক্ষায়',
   'conversations.subagent.answerPlaceholder': 'আপনার উত্তর লিখুন',
   'conversations.subagent.answerSend': 'উত্তর পাঠান',
-  'conversations.subagent.answerSent': 'উত্তর পাঠানো হয়েছে',
-  'flows.canvas.description': 'ধাপে ধাপে এই অটোমেশনটি তৈরি করুন, তারপর সংরক্ষণ করে চালান।',
-  'settings.ai.providers.groupCloud': 'ক্লাউড',
   'brain.refreshError': 'আপনার ব্রেইন রিফ্রেশ করা যায়নি। সর্বশেষ লোড হওয়া তথ্য দেখানো হচ্ছে।',
   'common.working': 'কাজ চলছে…',
   'common.noResults': 'কোনো ফলাফল নেই',
@@ -7493,6 +7458,61 @@ const messages: TranslationMap = {
     'Tavily দ্বারা চালিত ওয়েব, সংবাদ এবং আর্থিক সার্চ। আপনার নিজের Tavily API key প্রয়োজন। সার্চ ও পেজ কনটেন্ট আনার টুল যোগ করে।',
   'settings.search.tavilyKeyLabel': 'Tavily API কী',
   'settings.search.placeholderTavily': 'tvly-...',
+  'userErrors.memoryStoreCorrupt.title': 'Memory index was corrupted',
+  'userErrors.memoryStoreCorrupt.body':
+  'userErrors.action.openMemorySync': 'Re-sync memory',
+  'userErrors.scope.workspace': 'Workspace',
+  'userErrors.scope.memory': 'Memory',
+  'memoryBudget.approachingTitle': 'Memory is approaching its embedding limit',
+  'memoryBudget.approachingMessage':
+  'memoryBudget.exhaustedTitle': 'Memory has stopped growing',
+  'memoryBudget.exhaustedMessage':
+  'memoryBudget.cta': 'Set up embeddings',
+  'settings.ai.apiReadsFormula': 'background API reads/week / remaining = {reads} / {remaining}',
+  'settings.ai.needUsageToEstimate': 'Need usage response to estimate.',
+  'settings.ai.composioSyncScansDetail':
+  'settings.ai.totalApiReadBudgetDetail':
+  'settings.ai.memoryWorkerPollsDetail': '4 workers * 5s poll; LLM calls only for queued jobs',
+  'settings.ai.managedSourceLabel': 'Managed by OpenHuman',
+  'settings.ai.managedSourceDetail': 'Automatic model selection',
+  'settings.ai.workload.columnHeader': 'Workload',
+  'settings.cron.jobs.scheduleEvery': 'every {ms}ms',
+  'settings.developerMenu.eventLog.workspaceScope': 'Workspace scope',
+  'settings.mcpServer.tools.listTools': 'List all available MCP tools',
+  'settings.mcpServer.tools.toolInstructions': 'Get usage instructions for a tool',
+  'settings.ai.openaiOauthTitle': 'Sign in with ChatGPT',
+  'settings.ai.openaiOauthDescription':
+  'settings.ai.openaiOauthConnect': 'Sign in with ChatGPT',
+  'settings.ai.openaiOauthConnected': 'Connected with ChatGPT',
+  'settings.ai.openaiOauthOpening': 'Opening sign-in…',
+  'settings.ai.openaiOauthCallbackHint':
+  'settings.ai.openaiOauthCallbackPlaceholder':
+  'settings.ai.openaiOauthFinish': 'Finish ChatGPT sign-in',
+  'settings.ai.openaiOauthDisconnect': 'Disconnect ChatGPT',
+  'settings.ai.openaiOauthDesktopOnly': 'ChatGPT sign-in is only available in the desktop app.',
+  'settings.ai.openaiOauthStartError':
+  'memorySources.allIn.allFailed': 'No sync could start. Check each source for the reason.',
+  'memorySources.allIn.partial': 'Syncs started: {triggered}. Could not start: {failed}.',
+  'memorySources.repair.button': 'Repair older memories',
+  'voice.mode.title': 'Voice mode',
+  'voice.mode.desc': 'Choose how the assistant talks in the Human tab.',
+  'voice.mode.realtime': 'Realtime voice (beta)',
+  'voice.mode.realtimeDesc': 'Stream a live conversation instead of taking turns.',
+  'voice.mode.start': 'Start voice chat',
+  'invites.redeemHeading': 'Have a referral code?',
+  'invites.redeemPlaceholder': 'Referral code',
+  'invites.redeemSubmit': 'Redeem',
+  'settings.gateway.nameLabel': 'Name',
+  'common.notAvailable': 'n/a',
+  'skills.category.all': 'All',
+  'skills.category.builtIn': 'Built-in',
+  'skills.category.channels': 'Channels',
+  'skills.category.productivity': 'Productivity',
+  'skills.category.chat': 'Chat',
+  'skills.category.toolsAutomation': 'Tools & Automation',
+  'skills.category.social': 'Social',
+  'skills.category.platform': 'Platform',
+  'skills.category.other': 'Other',
 };
 
 export default messages;

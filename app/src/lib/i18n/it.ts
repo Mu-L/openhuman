@@ -7457,7 +7457,6 @@ const messages: TranslationMap = {
   'settings.mcpServer.tools.treeReadChunk': "Legge un blocco dell'albero di memoria",
   'settings.mcpServer.tools.treeBrowse': "Esplora la struttura dell'albero di memoria",
   'settings.mcpServer.tools.treeTopEntities': "Ottiene le entità principali dell'albero di memoria",
-  'settings.mcpServer.tools.treeListSources': "Elenca le fonti dell'albero di memoria",
   'settings.notifications.category.messages.title': 'Messaggi',
   'settings.notifications.category.messages.desc':
     'Nuovi messaggi da account webview integrati (Slack, WhatsApp, …).',
@@ -7482,13 +7481,11 @@ const messages: TranslationMap = {
   'settings.notifications.categoryToggleAria': 'Attiva o disattiva le notifiche di {name}',
   'settings.cron.jobs.runFinishedAt': '{status} alle {time}',
   'settings.cron.jobs.scheduleAt': 'alle {time}',
-  'settings.gateway.binaryRequired': 'Indica il percorso di openhuman-core su quella macchina.',
   'settings.gateway.portInvalid': 'La porta SSH deve essere un numero.',
   'devOptions.gateway': 'Posizione',
   'devOptions.provisionedCore': 'Core avviato da questa app',
   'devOptions.gatewayId': 'ID della posizione',
   // S9 i18n audit fixes (hardcoded English in files that already hold useT()).
-  'settings.ai.picker.title': 'Scegli provider e modello',
   'settings.ai.picker.subtitle': 'Cerca tra i provider configurati e i modelli disponibili.',
   'settings.ai.picker.useThisModel': 'Usa questo modello',
   'settings.ai.picker.searchPlaceholder': 'Cerca provider e modelli',
@@ -7502,17 +7499,9 @@ const messages: TranslationMap = {
   'settings.ai.loops.memoryTreeWorkers.risk':
     "{workers} worker interrogano la coda ogni {seconds}s; l'LLM viene chiamato solo quando la coda contiene attività di estrazione/sigillo/digest/argomento.",
   'settings.ai.loops.reflectionRebuild.name': 'Ricostruzione della riflessione',
-  'settings.ai.loops.cadence.thirtyMin': '30 min',
-  'settings.ai.loops.reflectionRebuild.work':
     "Aggiorna lo stato di riflessione dopo l'attività di memoria.",
-  'settings.ai.loops.reflectionRebuild.risk':
     "{count} risvegli/settimana; l'LLM lavora solo quando la ricostruzione richiede riflessione.",
-  'settings.ai.loops.composioSync.name': 'Sincronizzazione Composio',
-  'settings.ai.loops.cadence.twentyMin': '20 min',
-  'settings.ai.loops.composioSync.route': 'API di integrazione',
-  'settings.ai.loops.composioSync.work':
     'Interroga gli strumenti connessi quando è dovuta una sincronizzazione con il provider.',
-  'settings.ai.loops.composioSync.risk':
     '{count} risvegli/settimana; esamina {active} connessione/i attiva/e.',
   'settings.ai.openaiOauthCompleteError':
     'L’accesso a ChatGPT non è stato completato. Controlla l’URL di reindirizzamento e riprova.',
@@ -7531,7 +7520,6 @@ const messages: TranslationMap = {
   'memorySources.codingSessions.stillRunning': 'Importazione ancora in corso',
   'memorySources.codingSessions.stillRunningMessage':
     "Sessioni importate finora: {processed}. L'importazione non si è conclusa entro il tempo previsto ma prosegue in background; ricontrolla tra un minuto invece di avviarla di nuovo.",
-  'sync.pipeline.vectorsPending':
     'Chunk in attesa dei vettori: {count}. La ricerca semantica li coprirà a breve.',
   'chat.sources.usedCount': 'Utilizzate {n} fonti',
   // Gateways: cores this app provisions and runs elsewhere.
@@ -7553,30 +7541,10 @@ const messages: TranslationMap = {
     'Gli eventi compaiono qui mentre agenti, strumenti e sistema lavorano. Per ora non è successo nulla.',
   'settings.developerMenu.eventLog.notConnectedHint':
     'Riconnettiti al core per riprendere lo streaming.',
-  'settings.appearance.showChatMascot': 'Mostra Tiny sul campo messaggi',
-  'settings.appearance.showChatMascotDesc':
     'La mascotte resta in piedi sul campo di scrittura. Se la nascondi, la chat resta solo testo finché non la riattivi.',
-  'settings.mascot.customGifUpload': 'Carica immagine',
-  'settings.mascot.customGifInvalidType':
     'Tipo di file non supportato. Carica un’immagine PNG, GIF, JPEG, WebP o BMP.',
-  'settings.mascot.customGifTooLarge': 'Immagine troppo grande. Carica un file fino a 1,5 MB.',
-  'settings.mascot.customGifReadError': 'Impossibile leggere l’immagine. Prova con un altro file.',
-  'walletBalances.colNetwork': 'Rete',
-  'walletBalances.colAddress': 'Indirizzo',
-  'walletBalances.colBalance': 'Saldo',
-  'walletBalances.colActions': 'Azioni',
-  'settings.agents.editor.modelManaged': 'Modelli gestiti',
-  'keyring.settings.mode.localEncryptedFile': 'File crittografato',
-  'keyring.settings.mode.localPlaintextFile': 'File non crittografato',
   'memoryTree.status.statusBudgetExhausted': 'In pausa: budget di embedding raggiunto',
-  'composer.humanMode': 'Modalità umano',
-  'userErrors.action.openConnections': 'Apri connessioni',
-  'userErrors.integrationDegraded.title': 'Le connessioni mostrano uno stato non aggiornato',
-  'userErrors.integrationDegraded.body':
     "Un'integrazione collegata restituisce errori, quindi lo stato delle connessioni mostrato nell'app potrebbe non essere aggiornato.",
-  'userErrors.action.openEmbeddingsSettings': 'Configura gli embedding',
-  'userErrors.localModelUnavailable.title': 'Modello locale non disponibile',
-  'userErrors.localModelUnavailable.body':
     "Ollama non è raggiungibile sull'endpoint configurato, oppure il modello necessario non è installato lì. Avvia Ollama e scarica il modello su quell'endpoint, oppure sposta questo lavoro su un provider cloud.",
   'memorySources.repair.title': 'Riparare i ricordi meno recenti?',
   'memorySources.repair.message':
@@ -7605,9 +7573,6 @@ const messages: TranslationMap = {
   'conversations.subagent.awaitingTitle': 'In attesa della tua risposta',
   'conversations.subagent.answerPlaceholder': 'Scrivi la tua risposta',
   'conversations.subagent.answerSend': 'Invia risposta',
-  'conversations.subagent.answerSent': 'Risposta inviata',
-  'flows.canvas.description': 'Crea questa automazione passo dopo passo, poi salvala ed eseguila.',
-  'settings.ai.providers.groupCloud': 'Cloud',
   'brain.refreshError':
     'Impossibile aggiornare il tuo cervello. Vengono mostrati gli ultimi dati caricati.',
   'common.working': 'Elaborazione…',
@@ -7635,6 +7600,61 @@ const messages: TranslationMap = {
     'Ricerca sul web, di notizie e finanziaria con Tavily. Richiede la tua chiave API Tavily. Aggiunge strumenti di ricerca ed estrazione di pagine.',
   'settings.search.tavilyKeyLabel': 'Chiave API Tavily',
   'settings.search.placeholderTavily': 'tvly-...',
+  'userErrors.memoryStoreCorrupt.title': 'Memory index was corrupted',
+  'userErrors.memoryStoreCorrupt.body':
+  'userErrors.action.openMemorySync': 'Re-sync memory',
+  'userErrors.scope.workspace': 'Workspace',
+  'userErrors.scope.memory': 'Memory',
+  'memoryBudget.approachingTitle': 'Memory is approaching its embedding limit',
+  'memoryBudget.approachingMessage':
+  'memoryBudget.exhaustedTitle': 'Memory has stopped growing',
+  'memoryBudget.exhaustedMessage':
+  'memoryBudget.cta': 'Set up embeddings',
+  'settings.ai.apiReadsFormula': 'background API reads/week / remaining = {reads} / {remaining}',
+  'settings.ai.needUsageToEstimate': 'Need usage response to estimate.',
+  'settings.ai.composioSyncScansDetail':
+  'settings.ai.totalApiReadBudgetDetail':
+  'settings.ai.memoryWorkerPollsDetail': '4 workers * 5s poll; LLM calls only for queued jobs',
+  'settings.ai.managedSourceLabel': 'Managed by OpenHuman',
+  'settings.ai.managedSourceDetail': 'Automatic model selection',
+  'settings.ai.workload.columnHeader': 'Workload',
+  'settings.cron.jobs.scheduleEvery': 'every {ms}ms',
+  'settings.developerMenu.eventLog.workspaceScope': 'Workspace scope',
+  'settings.mcpServer.tools.listTools': 'List all available MCP tools',
+  'settings.mcpServer.tools.toolInstructions': 'Get usage instructions for a tool',
+  'settings.ai.openaiOauthTitle': 'Sign in with ChatGPT',
+  'settings.ai.openaiOauthDescription':
+  'settings.ai.openaiOauthConnect': 'Sign in with ChatGPT',
+  'settings.ai.openaiOauthConnected': 'Connected with ChatGPT',
+  'settings.ai.openaiOauthOpening': 'Opening sign-in…',
+  'settings.ai.openaiOauthCallbackHint':
+  'settings.ai.openaiOauthCallbackPlaceholder':
+  'settings.ai.openaiOauthFinish': 'Finish ChatGPT sign-in',
+  'settings.ai.openaiOauthDisconnect': 'Disconnect ChatGPT',
+  'settings.ai.openaiOauthDesktopOnly': 'ChatGPT sign-in is only available in the desktop app.',
+  'settings.ai.openaiOauthStartError':
+  'memorySources.allIn.allFailed': 'No sync could start. Check each source for the reason.',
+  'memorySources.allIn.partial': 'Syncs started: {triggered}. Could not start: {failed}.',
+  'memorySources.repair.button': 'Repair older memories',
+  'voice.mode.title': 'Voice mode',
+  'voice.mode.desc': 'Choose how the assistant talks in the Human tab.',
+  'voice.mode.realtime': 'Realtime voice (beta)',
+  'voice.mode.realtimeDesc': 'Stream a live conversation instead of taking turns.',
+  'voice.mode.start': 'Start voice chat',
+  'invites.redeemHeading': 'Have a referral code?',
+  'invites.redeemPlaceholder': 'Referral code',
+  'invites.redeemSubmit': 'Redeem',
+  'settings.gateway.nameLabel': 'Name',
+  'common.notAvailable': 'n/a',
+  'skills.category.all': 'All',
+  'skills.category.builtIn': 'Built-in',
+  'skills.category.channels': 'Channels',
+  'skills.category.productivity': 'Productivity',
+  'skills.category.chat': 'Chat',
+  'skills.category.toolsAutomation': 'Tools & Automation',
+  'skills.category.social': 'Social',
+  'skills.category.platform': 'Platform',
+  'skills.category.other': 'Other',
 };
 
 export default messages;

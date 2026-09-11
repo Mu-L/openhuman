@@ -7357,7 +7357,6 @@ const messages: TranslationMap = {
   'settings.mcpServer.tools.treeReadChunk': 'Membaca potongan pohon memori',
   'settings.mcpServer.tools.treeBrowse': 'Menjelajahi struktur pohon memori',
   'settings.mcpServer.tools.treeTopEntities': 'Mendapatkan entitas teratas dari pohon memori',
-  'settings.mcpServer.tools.treeListSources': 'Mencantumkan sumber pohon memori',
   'settings.notifications.category.messages.title': 'Pesan',
   'settings.notifications.category.messages.desc':
     'Pesan baru dari akun webview tersemat (Slack, WhatsApp, …).',
@@ -7382,13 +7381,11 @@ const messages: TranslationMap = {
   'settings.notifications.categoryToggleAria': 'Aktifkan atau nonaktifkan notifikasi {name}',
   'settings.cron.jobs.runFinishedAt': '{status} pada {time}',
   'settings.cron.jobs.scheduleAt': 'pada {time}',
-  'settings.gateway.binaryRequired': 'Isi path ke openhuman-core di mesin itu.',
   'settings.gateway.portInvalid': 'Port SSH harus berupa angka.',
   'devOptions.gateway': 'Lokasi',
   'devOptions.provisionedCore': 'Core yang dijalankan aplikasi ini',
   'devOptions.gatewayId': 'Lokasi',
   // S9 i18n audit fixes (hardcoded English in files that already hold useT()).
-  'settings.ai.picker.title': 'Pilih penyedia dan model',
   'settings.ai.picker.subtitle':
     'Cari di antara penyedia yang dikonfigurasi dan model yang tersedia.',
   'settings.ai.picker.useThisModel': 'Gunakan model ini',
@@ -7403,17 +7400,9 @@ const messages: TranslationMap = {
   'settings.ai.loops.memoryTreeWorkers.risk':
     '{workers} worker memeriksa antrean setiap {seconds}dtk; LLM hanya dipanggil saat antrean memiliki tugas ekstrak/segel/ringkasan/topik.',
   'settings.ai.loops.reflectionRebuild.name': 'Pembangunan ulang refleksi',
-  'settings.ai.loops.cadence.thirtyMin': '30 mnt',
-  'settings.ai.loops.reflectionRebuild.work':
     'Menyegarkan status refleksi setelah aktivitas memori.',
-  'settings.ai.loops.reflectionRebuild.risk':
     '{count} aktivasi/minggu; LLM hanya bekerja saat pembangunan ulang membutuhkan refleksi.',
-  'settings.ai.loops.composioSync.name': 'Sinkronisasi Composio',
-  'settings.ai.loops.cadence.twentyMin': '20 mnt',
-  'settings.ai.loops.composioSync.route': 'API integrasi',
-  'settings.ai.loops.composioSync.work':
     'Memeriksa alat yang terhubung saat sinkronisasi penyedia sudah waktunya.',
-  'settings.ai.loops.composioSync.risk':
     '{count} aktivasi/minggu; memindai {active} koneksi aktif.',
   'settings.ai.openaiOauthCompleteError':
     'Proses masuk ChatGPT tidak selesai. Periksa URL pengalihan lalu coba lagi.',
@@ -7430,7 +7419,6 @@ const messages: TranslationMap = {
   'memorySources.codingSessions.stillRunning': 'Impor masih berjalan',
   'memorySources.codingSessions.stillRunningMessage':
     'Sesi yang sudah diimpor: {processed}. Impor belum selesai dalam batas waktunya tetapi masih berjalan di latar belakang; periksa lagi sebentar lagi daripada memulainya ulang.',
-  'sync.pipeline.vectorsPending':
     'Chunk yang menunggu vektor: {count}. Pencarian semantik akan segera mencakupnya.',
   'chat.sources.usedCount': 'Menggunakan {n} sumber',
   // Gateways: cores this app provisions and runs elsewhere.
@@ -7452,30 +7440,10 @@ const messages: TranslationMap = {
     'Peristiwa muncul di sini saat agen, alat, dan sistem bekerja. Belum ada yang terjadi.',
   'settings.developerMenu.eventLog.notConnectedHint':
     'Hubungkan kembali ke core untuk melanjutkan aliran.',
-  'settings.appearance.showChatMascot': 'Tampilkan Tiny di kotak pesan',
-  'settings.appearance.showChatMascotDesc':
     'Maskot tetap berdiri di kotak tulis. Jika disembunyikan, obrolan hanya berupa teks sampai Anda menyalakannya lagi.',
-  'settings.mascot.customGifUpload': 'Unggah gambar',
-  'settings.mascot.customGifInvalidType':
     'Tipe berkas tidak didukung. Unggah gambar PNG, GIF, JPEG, WebP, atau BMP.',
-  'settings.mascot.customGifTooLarge': 'Gambar terlalu besar. Unggah berkas hingga 1,5 MB.',
-  'settings.mascot.customGifReadError': 'Tidak dapat membaca gambar itu. Coba berkas lain.',
-  'walletBalances.colNetwork': 'Jaringan',
-  'walletBalances.colAddress': 'Alamat',
-  'walletBalances.colBalance': 'Saldo',
-  'walletBalances.colActions': 'Tindakan',
-  'settings.agents.editor.modelManaged': 'Model terkelola',
-  'keyring.settings.mode.localEncryptedFile': 'Berkas terenkripsi',
-  'keyring.settings.mode.localPlaintextFile': 'Berkas tanpa enkripsi',
   'memoryTree.status.statusBudgetExhausted': 'Dijeda: batas embedding tercapai',
-  'composer.humanMode': 'Mode manusia',
-  'userErrors.action.openConnections': 'Buka koneksi',
-  'userErrors.integrationDegraded.title': 'Koneksi menampilkan status yang usang',
-  'userErrors.integrationDegraded.body':
     'Sebuah integrasi yang terhubung mengembalikan galat, sehingga status koneksi yang ditampilkan mungkin sudah tidak akurat.',
-  'userErrors.action.openEmbeddingsSettings': 'Siapkan embedding',
-  'userErrors.localModelUnavailable.title': 'Model lokal tidak tersedia',
-  'userErrors.localModelUnavailable.body':
     'Ollama tidak dapat dijangkau di endpoint yang dikonfigurasi, atau model yang dibutuhkan belum terpasang di sana. Jalankan Ollama dan unduh modelnya di endpoint tersebut, atau alihkan pekerjaan ini ke penyedia cloud.',
   'memorySources.repair.title': 'Perbaiki memori lama?',
   'memorySources.repair.message':
@@ -7503,10 +7471,7 @@ const messages: TranslationMap = {
   'conversations.subagent.awaitingTitle': 'Menunggu jawaban Anda',
   'conversations.subagent.answerPlaceholder': 'Ketik jawaban Anda',
   'conversations.subagent.answerSend': 'Kirim jawaban',
-  'conversations.subagent.answerSent': 'Jawaban terkirim',
-  'flows.canvas.description':
     'Bangun otomatisasi ini langkah demi langkah, lalu simpan dan jalankan.',
-  'settings.ai.providers.groupCloud': 'Cloud',
   'brain.refreshError': 'Tidak dapat menyegarkan otak Anda. Menampilkan data terakhir yang dimuat.',
   'common.working': 'Memproses…',
   'common.noResults': 'Tidak ada hasil',
@@ -7533,6 +7498,61 @@ const messages: TranslationMap = {
     'Pencarian web, berita, dan keuangan yang didukung Tavily. Memerlukan API key Tavily Anda sendiri. Menambahkan alat pencarian dan ekstraksi konten halaman.',
   'settings.search.tavilyKeyLabel': 'Kunci API Tavily',
   'settings.search.placeholderTavily': 'tvly-...',
+  'userErrors.memoryStoreCorrupt.title': 'Memory index was corrupted',
+  'userErrors.memoryStoreCorrupt.body':
+  'userErrors.action.openMemorySync': 'Re-sync memory',
+  'userErrors.scope.workspace': 'Workspace',
+  'userErrors.scope.memory': 'Memory',
+  'memoryBudget.approachingTitle': 'Memory is approaching its embedding limit',
+  'memoryBudget.approachingMessage':
+  'memoryBudget.exhaustedTitle': 'Memory has stopped growing',
+  'memoryBudget.exhaustedMessage':
+  'memoryBudget.cta': 'Set up embeddings',
+  'settings.ai.apiReadsFormula': 'background API reads/week / remaining = {reads} / {remaining}',
+  'settings.ai.needUsageToEstimate': 'Need usage response to estimate.',
+  'settings.ai.composioSyncScansDetail':
+  'settings.ai.totalApiReadBudgetDetail':
+  'settings.ai.memoryWorkerPollsDetail': '4 workers * 5s poll; LLM calls only for queued jobs',
+  'settings.ai.managedSourceLabel': 'Managed by OpenHuman',
+  'settings.ai.managedSourceDetail': 'Automatic model selection',
+  'settings.ai.workload.columnHeader': 'Workload',
+  'settings.cron.jobs.scheduleEvery': 'every {ms}ms',
+  'settings.developerMenu.eventLog.workspaceScope': 'Workspace scope',
+  'settings.mcpServer.tools.listTools': 'List all available MCP tools',
+  'settings.mcpServer.tools.toolInstructions': 'Get usage instructions for a tool',
+  'settings.ai.openaiOauthTitle': 'Sign in with ChatGPT',
+  'settings.ai.openaiOauthDescription':
+  'settings.ai.openaiOauthConnect': 'Sign in with ChatGPT',
+  'settings.ai.openaiOauthConnected': 'Connected with ChatGPT',
+  'settings.ai.openaiOauthOpening': 'Opening sign-in…',
+  'settings.ai.openaiOauthCallbackHint':
+  'settings.ai.openaiOauthCallbackPlaceholder':
+  'settings.ai.openaiOauthFinish': 'Finish ChatGPT sign-in',
+  'settings.ai.openaiOauthDisconnect': 'Disconnect ChatGPT',
+  'settings.ai.openaiOauthDesktopOnly': 'ChatGPT sign-in is only available in the desktop app.',
+  'settings.ai.openaiOauthStartError':
+  'memorySources.allIn.allFailed': 'No sync could start. Check each source for the reason.',
+  'memorySources.allIn.partial': 'Syncs started: {triggered}. Could not start: {failed}.',
+  'memorySources.repair.button': 'Repair older memories',
+  'voice.mode.title': 'Voice mode',
+  'voice.mode.desc': 'Choose how the assistant talks in the Human tab.',
+  'voice.mode.realtime': 'Realtime voice (beta)',
+  'voice.mode.realtimeDesc': 'Stream a live conversation instead of taking turns.',
+  'voice.mode.start': 'Start voice chat',
+  'invites.redeemHeading': 'Have a referral code?',
+  'invites.redeemPlaceholder': 'Referral code',
+  'invites.redeemSubmit': 'Redeem',
+  'settings.gateway.nameLabel': 'Name',
+  'common.notAvailable': 'n/a',
+  'skills.category.all': 'All',
+  'skills.category.builtIn': 'Built-in',
+  'skills.category.channels': 'Channels',
+  'skills.category.productivity': 'Productivity',
+  'skills.category.chat': 'Chat',
+  'skills.category.toolsAutomation': 'Tools & Automation',
+  'skills.category.social': 'Social',
+  'skills.category.platform': 'Platform',
+  'skills.category.other': 'Other',
 };
 
 export default messages;

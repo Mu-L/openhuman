@@ -7238,7 +7238,6 @@ const messages: TranslationMap = {
   'settings.mcpServer.tools.treeReadChunk': '메모리 트리 청크를 읽습니다',
   'settings.mcpServer.tools.treeBrowse': '메모리 트리 구조를 탐색합니다',
   'settings.mcpServer.tools.treeTopEntities': '메모리 트리에서 상위 엔티티를 가져옵니다',
-  'settings.mcpServer.tools.treeListSources': '메모리 트리 소스를 나열합니다',
   'settings.notifications.category.messages.title': '메시지',
   'settings.notifications.category.messages.desc':
     '내장된 웹뷰 계정(Slack, WhatsApp 등)에서 온 새 메시지.',
@@ -7259,13 +7258,11 @@ const messages: TranslationMap = {
   'settings.notifications.categoryToggleAria': '{name} 알림 켜기 또는 끄기',
   'settings.cron.jobs.runFinishedAt': '{time}에 {status}',
   'settings.cron.jobs.scheduleAt': '{time}에',
-  'settings.gateway.binaryRequired': '그 컴퓨터의 openhuman-core 경로를 입력하세요.',
   'settings.gateway.portInvalid': 'SSH 포트는 숫자여야 합니다.',
   'devOptions.gateway': '위치',
   'devOptions.provisionedCore': '이 앱이 시작한 코어',
   'devOptions.gatewayId': '위치',
   // S9 i18n audit fixes (hardcoded English in files that already hold useT()).
-  'settings.ai.picker.title': '제공업체와 모델 선택',
   'settings.ai.picker.subtitle': '구성된 제공업체와 사용 가능한 모델을 검색하세요.',
   'settings.ai.picker.useThisModel': '이 모델 사용',
   'settings.ai.picker.searchPlaceholder': '제공업체와 모델 검색',
@@ -7279,15 +7276,7 @@ const messages: TranslationMap = {
   'settings.ai.loops.memoryTreeWorkers.risk':
     '워커 {workers}개가 {seconds}초마다 대기열을 확인합니다. 대기열에 추출/봉인/요약/주제 작업이 있을 때만 LLM이 호출됩니다.',
   'settings.ai.loops.reflectionRebuild.name': '리플렉션 재구성',
-  'settings.ai.loops.cadence.thirtyMin': '30분',
-  'settings.ai.loops.reflectionRebuild.work': '메모리 활동 후 리플렉션 상태를 새로 고칩니다.',
-  'settings.ai.loops.reflectionRebuild.risk':
     '주당 {count}회 활성화되며, 재구성에 리플렉션이 필요할 때만 LLM이 작동합니다.',
-  'settings.ai.loops.composioSync.name': 'Composio 동기화',
-  'settings.ai.loops.cadence.twentyMin': '20분',
-  'settings.ai.loops.composioSync.route': '통합 API',
-  'settings.ai.loops.composioSync.work': '제공업체 동기화 시점이 되면 연결된 도구를 확인합니다.',
-  'settings.ai.loops.composioSync.risk':
     '주당 {count}회 활성화되며, 활성 연결 {active}개를 검사합니다.',
   'settings.ai.openaiOauthCompleteError':
     'ChatGPT 로그인이 완료되지 않았습니다. 리디렉션 URL을 확인하고 다시 시도하세요.',
@@ -7304,7 +7293,6 @@ const messages: TranslationMap = {
   'memorySources.codingSessions.stillRunning': '가져오기가 아직 진행 중입니다',
   'memorySources.codingSessions.stillRunningMessage':
     '지금까지 가져온 세션: {processed}개. 제한 시간 안에 끝나지 않았지만 백그라운드에서 계속 실행 중입니다. 다시 시작하지 말고 잠시 후 확인하세요.',
-  'sync.pipeline.vectorsPending': '벡터를 기다리는 청크: {count}개. 곧 시맨틱 검색에 포함됩니다.',
   'chat.sources.usedCount': '출처 {n}개 사용',
   // Gateways: cores this app provisions and runs elsewhere.
   'settings.gateway.title': '코어를 다른 곳에서 실행',
@@ -7324,30 +7312,10 @@ const messages: TranslationMap = {
   'settings.developerMenu.eventLog.waitingHint':
     '에이전트, 도구, 시스템이 작업하면 여기에 이벤트가 나타납니다. 아직 아무 일도 없었습니다.',
   'settings.developerMenu.eventLog.notConnectedHint': '스트림을 재개하려면 코어에 다시 연결하세요.',
-  'settings.appearance.showChatMascot': '메시지 상자에 Tiny 표시',
-  'settings.appearance.showChatMascotDesc':
     '마스코트가 입력창 위에 서 있습니다. 숨기면 다시 켤 때까지 채팅은 텍스트로만 진행됩니다.',
-  'settings.mascot.customGifUpload': '이미지 업로드',
-  'settings.mascot.customGifInvalidType':
     '지원되지 않는 파일 형식입니다. PNG, GIF, JPEG, WebP 또는 BMP 이미지를 업로드하세요.',
-  'settings.mascot.customGifTooLarge': '이미지가 너무 큽니다. 최대 1.5MB 파일을 업로드하세요.',
-  'settings.mascot.customGifReadError': '이미지를 읽을 수 없습니다. 다른 파일을 시도하세요.',
-  'walletBalances.colNetwork': '네트워크',
-  'walletBalances.colAddress': '주소',
-  'walletBalances.colBalance': '잔액',
-  'walletBalances.colActions': '작업',
-  'settings.agents.editor.modelManaged': '관리형 모델',
-  'keyring.settings.mode.localEncryptedFile': '암호화된 파일',
-  'keyring.settings.mode.localPlaintextFile': '암호화되지 않은 파일',
   'memoryTree.status.statusBudgetExhausted': '일시 중지됨: 임베딩 예산 소진',
-  'composer.humanMode': '휴먼 모드',
-  'userErrors.action.openConnections': '연결 열기',
-  'userErrors.integrationDegraded.title': '연결 상태가 최신이 아닙니다',
-  'userErrors.integrationDegraded.body':
     '연결된 통합에서 오류가 발생하고 있어 앱에 표시된 연결 상태가 최신이 아닐 수 있습니다.',
-  'userErrors.action.openEmbeddingsSettings': '임베딩 설정',
-  'userErrors.localModelUnavailable.title': '로컬 모델을 사용할 수 없음',
-  'userErrors.localModelUnavailable.body':
     '구성된 엔드포인트에서 Ollama에 연결할 수 없거나 필요한 모델이 그곳에 설치되어 있지 않습니다. Ollama를 실행하고 해당 엔드포인트에 모델을 내려받거나, 이 작업을 클라우드 제공업체로 전환하세요.',
   'memorySources.repair.title': '이전 기억을 복구할까요?',
   'memorySources.repair.message':
@@ -7375,9 +7343,6 @@ const messages: TranslationMap = {
   'conversations.subagent.awaitingTitle': '답변을 기다리는 중',
   'conversations.subagent.answerPlaceholder': '답변을 입력하세요',
   'conversations.subagent.answerSend': '답변 보내기',
-  'conversations.subagent.answerSent': '답변을 보냈습니다',
-  'flows.canvas.description': '이 자동화를 단계별로 구성한 다음 저장하고 실행하세요.',
-  'settings.ai.providers.groupCloud': '클라우드',
   'brain.refreshError': '브레인을 새로고침할 수 없습니다. 마지막으로 불러온 데이터를 표시합니다.',
   'common.working': '처리 중…',
   'common.noResults': '결과 없음',
@@ -7404,6 +7369,61 @@ const messages: TranslationMap = {
     'Tavily 기반 웹, 뉴스, 금융 검색. 본인의 Tavily API 키가 필요합니다. 검색 및 페이지 콘텐츠 추출 도구를 추가합니다.',
   'settings.search.tavilyKeyLabel': 'Tavily API 키',
   'settings.search.placeholderTavily': 'tvly-...',
+  'userErrors.memoryStoreCorrupt.title': 'Memory index was corrupted',
+  'userErrors.memoryStoreCorrupt.body':
+  'userErrors.action.openMemorySync': 'Re-sync memory',
+  'userErrors.scope.workspace': 'Workspace',
+  'userErrors.scope.memory': 'Memory',
+  'memoryBudget.approachingTitle': 'Memory is approaching its embedding limit',
+  'memoryBudget.approachingMessage':
+  'memoryBudget.exhaustedTitle': 'Memory has stopped growing',
+  'memoryBudget.exhaustedMessage':
+  'memoryBudget.cta': 'Set up embeddings',
+  'settings.ai.apiReadsFormula': 'background API reads/week / remaining = {reads} / {remaining}',
+  'settings.ai.needUsageToEstimate': 'Need usage response to estimate.',
+  'settings.ai.composioSyncScansDetail':
+  'settings.ai.totalApiReadBudgetDetail':
+  'settings.ai.memoryWorkerPollsDetail': '4 workers * 5s poll; LLM calls only for queued jobs',
+  'settings.ai.managedSourceLabel': 'Managed by OpenHuman',
+  'settings.ai.managedSourceDetail': 'Automatic model selection',
+  'settings.ai.workload.columnHeader': 'Workload',
+  'settings.cron.jobs.scheduleEvery': 'every {ms}ms',
+  'settings.developerMenu.eventLog.workspaceScope': 'Workspace scope',
+  'settings.mcpServer.tools.listTools': 'List all available MCP tools',
+  'settings.mcpServer.tools.toolInstructions': 'Get usage instructions for a tool',
+  'settings.ai.openaiOauthTitle': 'Sign in with ChatGPT',
+  'settings.ai.openaiOauthDescription':
+  'settings.ai.openaiOauthConnect': 'Sign in with ChatGPT',
+  'settings.ai.openaiOauthConnected': 'Connected with ChatGPT',
+  'settings.ai.openaiOauthOpening': 'Opening sign-in…',
+  'settings.ai.openaiOauthCallbackHint':
+  'settings.ai.openaiOauthCallbackPlaceholder':
+  'settings.ai.openaiOauthFinish': 'Finish ChatGPT sign-in',
+  'settings.ai.openaiOauthDisconnect': 'Disconnect ChatGPT',
+  'settings.ai.openaiOauthDesktopOnly': 'ChatGPT sign-in is only available in the desktop app.',
+  'settings.ai.openaiOauthStartError':
+  'memorySources.allIn.allFailed': 'No sync could start. Check each source for the reason.',
+  'memorySources.allIn.partial': 'Syncs started: {triggered}. Could not start: {failed}.',
+  'memorySources.repair.button': 'Repair older memories',
+  'voice.mode.title': 'Voice mode',
+  'voice.mode.desc': 'Choose how the assistant talks in the Human tab.',
+  'voice.mode.realtime': 'Realtime voice (beta)',
+  'voice.mode.realtimeDesc': 'Stream a live conversation instead of taking turns.',
+  'voice.mode.start': 'Start voice chat',
+  'invites.redeemHeading': 'Have a referral code?',
+  'invites.redeemPlaceholder': 'Referral code',
+  'invites.redeemSubmit': 'Redeem',
+  'settings.gateway.nameLabel': 'Name',
+  'common.notAvailable': 'n/a',
+  'skills.category.all': 'All',
+  'skills.category.builtIn': 'Built-in',
+  'skills.category.channels': 'Channels',
+  'skills.category.productivity': 'Productivity',
+  'skills.category.chat': 'Chat',
+  'skills.category.toolsAutomation': 'Tools & Automation',
+  'skills.category.social': 'Social',
+  'skills.category.platform': 'Platform',
+  'skills.category.other': 'Other',
 };
 
 export default messages;

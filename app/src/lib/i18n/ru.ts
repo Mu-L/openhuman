@@ -7398,7 +7398,6 @@ const messages: TranslationMap = {
   'settings.mcpServer.tools.treeReadChunk': 'Читает фрагмент дерева памяти',
   'settings.mcpServer.tools.treeBrowse': 'Просматривает структуру дерева памяти',
   'settings.mcpServer.tools.treeTopEntities': 'Получает главные сущности из дерева памяти',
-  'settings.mcpServer.tools.treeListSources': 'Выводит список источников дерева памяти',
   'settings.notifications.category.messages.title': 'Сообщения',
   'settings.notifications.category.messages.desc':
     'Новые сообщения из встроенных webview-аккаунтов (Slack, WhatsApp, …).',
@@ -7422,13 +7421,11 @@ const messages: TranslationMap = {
   'settings.notifications.categoryToggleAria': 'Включить или выключить уведомления {name}',
   'settings.cron.jobs.runFinishedAt': '{status} в {time}',
   'settings.cron.jobs.scheduleAt': 'в {time}',
-  'settings.gateway.binaryRequired': 'Укажите путь к openhuman-core на этой машине.',
   'settings.gateway.portInvalid': 'Порт SSH должен быть числом.',
   'devOptions.gateway': 'Размещение',
   'devOptions.provisionedCore': 'Ядро, запущенное этим приложением',
   'devOptions.gatewayId': 'Размещение',
   // S9 i18n audit fixes (hardcoded English in files that already hold useT()).
-  'settings.ai.picker.title': 'Выбор провайдера и модели',
   'settings.ai.picker.subtitle': 'Поиск среди настроенных провайдеров и доступных моделей.',
   'settings.ai.picker.useThisModel': 'Использовать эту модель',
   'settings.ai.picker.searchPlaceholder': 'Поиск провайдеров и моделей',
@@ -7442,17 +7439,9 @@ const messages: TranslationMap = {
   'settings.ai.loops.memoryTreeWorkers.risk':
     '{workers} воркеров опрашивают очередь каждые {seconds}с; LLM вызывается только когда в очереди есть задачи извлечения, запечатывания, сводки или темы.',
   'settings.ai.loops.reflectionRebuild.name': 'Перестроение рефлексии',
-  'settings.ai.loops.cadence.thirtyMin': '30 мин',
-  'settings.ai.loops.reflectionRebuild.work':
     'Обновляет состояние рефлексии после активности памяти.',
-  'settings.ai.loops.reflectionRebuild.risk':
     '{count} пробуждений/неделю; LLM работает только когда перестроение требует рефлексии.',
-  'settings.ai.loops.composioSync.name': 'Синхронизация Composio',
-  'settings.ai.loops.cadence.twentyMin': '20 мин',
-  'settings.ai.loops.composioSync.route': 'API интеграций',
-  'settings.ai.loops.composioSync.work':
     'Опрашивает подключённые инструменты, когда наступает срок синхронизации с провайдером.',
-  'settings.ai.loops.composioSync.risk':
     '{count} пробуждений/неделю; сканирует {active} активных соединений.',
   'settings.ai.openaiOauthCompleteError':
     'Вход в ChatGPT не завершён. Проверьте URL перенаправления и повторите попытку.',
@@ -7471,7 +7460,6 @@ const messages: TranslationMap = {
   'memorySources.codingSessions.stillRunning': 'Импорт всё ещё выполняется',
   'memorySources.codingSessions.stillRunningMessage':
     'Импортировано сессий на данный момент: {processed}. Импорт не завершился в отведённое время, но продолжает выполняться в фоновом режиме; загляните через минуту, а не запускайте его заново.',
-  'sync.pipeline.vectorsPending':
     'Блоков в ожидании векторов: {count}. Семантический поиск скоро охватит их.',
   'chat.sources.usedCount': 'Использовано источников: {n}',
   // Gateways: cores this app provisions and runs elsewhere.
@@ -7493,30 +7481,10 @@ const messages: TranslationMap = {
     'События появляются здесь по мере работы агентов, инструментов и системы. Пока ничего не произошло.',
   'settings.developerMenu.eventLog.notConnectedHint':
     'Подключитесь к ядру снова, чтобы возобновить поток.',
-  'settings.appearance.showChatMascot': 'Показывать Tiny на поле сообщения',
-  'settings.appearance.showChatMascotDesc':
     'Маскот стоит на поле ввода. Если скрыть, чат останется только текстовым, пока вы не включите это снова.',
-  'settings.mascot.customGifUpload': 'Загрузить изображение',
-  'settings.mascot.customGifInvalidType':
     'Неподдерживаемый тип файла. Загрузите изображение PNG, GIF, JPEG, WebP или BMP.',
-  'settings.mascot.customGifTooLarge': 'Изображение слишком большое. Загрузите файл до 1,5 МБ.',
-  'settings.mascot.customGifReadError': 'Не удалось прочитать изображение. Попробуйте другой файл.',
-  'walletBalances.colNetwork': 'Сеть',
-  'walletBalances.colAddress': 'Адрес',
-  'walletBalances.colBalance': 'Баланс',
-  'walletBalances.colActions': 'Действия',
-  'settings.agents.editor.modelManaged': 'Управляемые модели',
-  'keyring.settings.mode.localEncryptedFile': 'Зашифрованный файл',
-  'keyring.settings.mode.localPlaintextFile': 'Незашифрованный файл',
   'memoryTree.status.statusBudgetExhausted': 'Приостановлено: бюджет эмбеддингов исчерпан',
-  'composer.humanMode': 'Режим человека',
-  'userErrors.action.openConnections': 'Открыть подключения',
-  'userErrors.integrationDegraded.title': 'Подключения показывают устаревший статус',
-  'userErrors.integrationDegraded.body':
     'Подключенная интеграция возвращает ошибки, поэтому отображаемый статус подключений может быть неактуальным.',
-  'userErrors.action.openEmbeddingsSettings': 'Настроить эмбеддинги',
-  'userErrors.localModelUnavailable.title': 'Локальная модель недоступна',
-  'userErrors.localModelUnavailable.body':
     'Ollama недоступен по настроенному адресу, либо нужная модель там не установлена. Запустите Ollama и загрузите модель по этому адресу или переведите эту работу на облачного провайдера.',
   'memorySources.repair.title': 'Восстановить старые воспоминания?',
   'memorySources.repair.message':
@@ -7545,10 +7513,7 @@ const messages: TranslationMap = {
   'conversations.subagent.awaitingTitle': 'Ожидание вашего ответа',
   'conversations.subagent.answerPlaceholder': 'Введите ваш ответ',
   'conversations.subagent.answerSend': 'Отправить ответ',
-  'conversations.subagent.answerSent': 'Ответ отправлен',
-  'flows.canvas.description':
     'Соберите этот сценарий шаг за шагом, затем сохраните и запустите его.',
-  'settings.ai.providers.groupCloud': 'Облако',
   'brain.refreshError': 'Не удалось обновить ваш мозг. Показаны последние загруженные данные.',
   'common.working': 'Выполняется…',
   'common.noResults': 'Нет результатов',
@@ -7575,6 +7540,61 @@ const messages: TranslationMap = {
     'Веб-, новостной и финансовый поиск на базе Tavily. Требуется ваш собственный ключ API Tavily. Добавляет инструменты поиска и извлечения страниц.',
   'settings.search.tavilyKeyLabel': 'Ключ API Tavily',
   'settings.search.placeholderTavily': 'tvly-...',
+  'userErrors.memoryStoreCorrupt.title': 'Memory index was corrupted',
+  'userErrors.memoryStoreCorrupt.body':
+  'userErrors.action.openMemorySync': 'Re-sync memory',
+  'userErrors.scope.workspace': 'Workspace',
+  'userErrors.scope.memory': 'Memory',
+  'memoryBudget.approachingTitle': 'Memory is approaching its embedding limit',
+  'memoryBudget.approachingMessage':
+  'memoryBudget.exhaustedTitle': 'Memory has stopped growing',
+  'memoryBudget.exhaustedMessage':
+  'memoryBudget.cta': 'Set up embeddings',
+  'settings.ai.apiReadsFormula': 'background API reads/week / remaining = {reads} / {remaining}',
+  'settings.ai.needUsageToEstimate': 'Need usage response to estimate.',
+  'settings.ai.composioSyncScansDetail':
+  'settings.ai.totalApiReadBudgetDetail':
+  'settings.ai.memoryWorkerPollsDetail': '4 workers * 5s poll; LLM calls only for queued jobs',
+  'settings.ai.managedSourceLabel': 'Managed by OpenHuman',
+  'settings.ai.managedSourceDetail': 'Automatic model selection',
+  'settings.ai.workload.columnHeader': 'Workload',
+  'settings.cron.jobs.scheduleEvery': 'every {ms}ms',
+  'settings.developerMenu.eventLog.workspaceScope': 'Workspace scope',
+  'settings.mcpServer.tools.listTools': 'List all available MCP tools',
+  'settings.mcpServer.tools.toolInstructions': 'Get usage instructions for a tool',
+  'settings.ai.openaiOauthTitle': 'Sign in with ChatGPT',
+  'settings.ai.openaiOauthDescription':
+  'settings.ai.openaiOauthConnect': 'Sign in with ChatGPT',
+  'settings.ai.openaiOauthConnected': 'Connected with ChatGPT',
+  'settings.ai.openaiOauthOpening': 'Opening sign-in…',
+  'settings.ai.openaiOauthCallbackHint':
+  'settings.ai.openaiOauthCallbackPlaceholder':
+  'settings.ai.openaiOauthFinish': 'Finish ChatGPT sign-in',
+  'settings.ai.openaiOauthDisconnect': 'Disconnect ChatGPT',
+  'settings.ai.openaiOauthDesktopOnly': 'ChatGPT sign-in is only available in the desktop app.',
+  'settings.ai.openaiOauthStartError':
+  'memorySources.allIn.allFailed': 'No sync could start. Check each source for the reason.',
+  'memorySources.allIn.partial': 'Syncs started: {triggered}. Could not start: {failed}.',
+  'memorySources.repair.button': 'Repair older memories',
+  'voice.mode.title': 'Voice mode',
+  'voice.mode.desc': 'Choose how the assistant talks in the Human tab.',
+  'voice.mode.realtime': 'Realtime voice (beta)',
+  'voice.mode.realtimeDesc': 'Stream a live conversation instead of taking turns.',
+  'voice.mode.start': 'Start voice chat',
+  'invites.redeemHeading': 'Have a referral code?',
+  'invites.redeemPlaceholder': 'Referral code',
+  'invites.redeemSubmit': 'Redeem',
+  'settings.gateway.nameLabel': 'Name',
+  'common.notAvailable': 'n/a',
+  'skills.category.all': 'All',
+  'skills.category.builtIn': 'Built-in',
+  'skills.category.channels': 'Channels',
+  'skills.category.productivity': 'Productivity',
+  'skills.category.chat': 'Chat',
+  'skills.category.toolsAutomation': 'Tools & Automation',
+  'skills.category.social': 'Social',
+  'skills.category.platform': 'Platform',
+  'skills.category.other': 'Other',
 };
 
 export default messages;
