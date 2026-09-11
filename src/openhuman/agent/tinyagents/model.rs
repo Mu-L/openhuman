@@ -440,6 +440,10 @@ impl ChatModel<()> for RouteRecordingModel {
         self.inner.profile()
     }
 
+    fn cache_identity(&self) -> Option<String> {
+        self.inner.cache_identity()
+    }
+
     async fn invoke(
         &self,
         state: &(),
@@ -496,6 +500,10 @@ impl ChatModel<()> for ProfileOverrideModel {
         Some(&self.profile)
     }
 
+    fn cache_identity(&self) -> Option<String> {
+        self.inner.cache_identity()
+    }
+
     async fn invoke(
         &self,
         state: &(),
@@ -536,6 +544,14 @@ impl MaxTokensModel {
 impl ChatModel<()> for MaxTokensModel {
     fn profile(&self) -> Option<&ModelProfile> {
         self.inner.profile()
+    }
+
+    // Every host wrapper forwards `cache_identity`: the trait default declines
+    // identity, and the harness response cache then keys every wrapped model
+    // under one "anonymous-model" marker, so a shared cache could serve a
+    // local model's answer to a hosted one.
+    fn cache_identity(&self) -> Option<String> {
+        self.inner.cache_identity()
     }
 
     async fn invoke(
