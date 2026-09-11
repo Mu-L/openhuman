@@ -6,7 +6,11 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
-const repoRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
+const repoRoot = path.join(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "..",
+  "..",
+);
 
 test("CLI tarballs contain the core and standalone TUI", () => {
   const work = fs.mkdtempSync(path.join(os.tmpdir(), "openhuman-cli-package-"));
@@ -39,7 +43,10 @@ test("CLI tarballs contain the core and standalone TUI", () => {
 });
 
 test("package-manager consumers install and expose the TUI", () => {
-  const formula = fs.readFileSync(path.join(repoRoot, "packages/homebrew/openhuman.rb"), "utf8");
+  const formula = fs.readFileSync(
+    path.join(repoRoot, "packages/homebrew/openhuman.rb"),
+    "utf8",
+  );
   assert.match(formula, /bin\.install "openhuman-core", "openhuman-tui"/);
   assert.match(formula, /system "#\{bin\}\/openhuman-tui", "--help"/);
 
@@ -50,7 +57,10 @@ test("package-manager consumers install and expose the TUI", () => {
   assert.match(apt, /openhuman-tui-amd64/);
   assert.match(apt, /openhuman-tui-arm64/);
 
-  const deb = fs.readFileSync(path.join(repoRoot, "packages/deb/build.sh"), "utf8");
+  const deb = fs.readFileSync(
+    path.join(repoRoot, "packages/deb/build.sh"),
+    "utf8",
+  );
   assert.match(deb, /usr\/bin\/openhuman-tui/);
 
   const npmPackage = JSON.parse(
@@ -58,10 +68,15 @@ test("package-manager consumers install and expose the TUI", () => {
   );
   assert.equal(npmPackage.bin["openhuman-tui"], "./bin/openhuman-tui.js");
 
-  const installer = fs.readFileSync(path.join(repoRoot, "packages/npm/install.js"), "utf8");
+  const installer = fs.readFileSync(
+    path.join(repoRoot, "packages/npm/install.js"),
+    "utf8",
+  );
   assert.match(installer, /openhuman-tui-bin/);
   assert.match(installer, /openhuman-tui\.exe/);
-  assert.ok(fs.existsSync(path.join(repoRoot, "packages/npm/bin/openhuman-tui.js")));
+  assert.ok(
+    fs.existsSync(path.join(repoRoot, "packages/npm/bin/openhuman-tui.js")),
+  );
 });
 
 test("Debian packages install both commands", () => {

@@ -1,22 +1,22 @@
 #!/usr/bin/env node
-'use strict';
+"use strict";
 
-const { spawnSync } = require('child_process');
-const path = require('path');
+const { spawnSync } = require("child_process");
+const path = require("path");
 
-const isWin = process.platform === 'win32';
-const binName = isWin ? 'openhuman-tui-bin.exe' : 'openhuman-tui-bin';
+const isWin = process.platform === "win32";
+const binName = isWin ? "openhuman-tui-bin.exe" : "openhuman-tui-bin";
 const binPath = path.join(__dirname, binName);
 
 const result = spawnSync(binPath, process.argv.slice(2), {
-  stdio: 'inherit',
+  stdio: "inherit",
   windowsHide: false,
 });
 
 if (result.error) {
-  if (result.error.code === 'ENOENT') {
+  if (result.error.code === "ENOENT") {
     process.stderr.write(
-      'openhuman-tui binary not found. Try reinstalling: npm install -g openhuman\n'
+      "openhuman-tui binary not found. Try reinstalling: npm install -g openhuman\n",
     );
   } else {
     process.stderr.write(`openhuman-tui: ${result.error.message}\n`);
