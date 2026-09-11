@@ -7464,6 +7464,127 @@ const messages: TranslationMap = {
   'mcp.custom.form.save': 'Guardar',
   'mcp.custom.form.add': 'Añadir servidor',
   'mcp.custom.form.saving': 'Guardando…',
+  'settings.ai.openaiOauthCompleteError':
+    'No se completó el inicio de sesión con ChatGPT. Comprueba la URL de redirección e inténtalo de nuevo.',
+  'settings.ai.openaiOauthCallbackRequired':
+    'Pega la URL de redirección de tu navegador después de iniciar sesión.',
+  'settings.ai.openaiOauthDisconnectError': 'No se pudo desconectar ChatGPT. Inténtalo de nuevo.',
+  'memorySources.codingSessions.importAll': 'Importar todas las sesiones',
+  'memorySources.codingSessions.draining': 'Importando… lote {passes}',
+  'memorySources.codingSessions.stop': 'Detener',
+  'memorySources.codingSessions.progress':
+    '{processed} sesiones importadas · {observations} observaciones',
+  'memorySources.codingSessions.remaining': 'quedan unas {remaining}',
+  'memorySources.codingSessions.stopped': 'Importación en pausa',
+  'memorySources.codingSessions.stoppedMessage':
+    'Se importaron {processed} sesiones. Ejecuta la importación de nuevo para continuar con las {remaining} restantes.',
+  'memorySources.codingSessions.stillRunning': 'La importación sigue en curso',
+  'memorySources.codingSessions.stillRunningMessage':
+    'Sesiones importadas hasta ahora: {processed}. La importación no terminó dentro de su tiempo asignado, pero sigue ejecutándose en segundo plano; vuelve a comprobarlo en un minuto en lugar de iniciarla otra vez.',
+  'sync.pipeline.vectorsPending':
+    'Fragmentos en espera de vectores: {count}. La búsqueda semántica los cubrirá en breve.',
+  'chat.sources.usedCount': 'Se usaron {n} fuentes',
+  // Gateways: cores this app provisions and runs elsewhere.
+  'settings.gateway.title': 'Ejecutar el núcleo en otro lugar',
+  'settings.gateway.description':
+    'El núcleo puede ejecutarse localmente, en un contenedor o en otra máquina mediante SSH. También puedes conectarte a un núcleo remoto mediante una URL. OpenHuman gestiona el ciclo de vida de las ubicaciones que aprovisiona; para una URL remota, solo establece la conexión.',
+  'settings.gateway.add': 'Añadir una ubicación',
+  'settings.gateway.save': 'Guardar ubicación',
+  'settings.gateway.remove': 'Quitar',
+  'settings.gateway.use': 'Usar esta',
+  'settings.gateway.inUse': 'En uso',
+  'settings.gateway.activating': 'Conectando…',
+  'settings.gateway.activatingStep': 'Conectando: {step}',
+  'settings.gateway.connected': 'Conectado en {endpoint}',
+  'settings.gateway.failed': 'No se pudo conectar: {reason}',
+  'settings.developerMenu.eventLog.workspaceScopeActive': 'Este espacio de trabajo',
+  'settings.developerMenu.eventLog.workspaceScopeAll': 'Todos los espacios de trabajo',
+  'settings.developerMenu.eventLog.waitingHint':
+    'Los eventos aparecen aquí a medida que los agentes, las herramientas y el sistema trabajan. Todavía no ha ocurrido nada.',
+  'settings.developerMenu.eventLog.notConnectedHint':
+    'Vuelve a conectar con el core para reanudar el flujo.',
+  'settings.appearance.showChatMascot': 'Mostrar a Tiny en el cuadro de mensaje',
+  'settings.appearance.showChatMascotDesc':
+    'La mascota se queda de pie sobre el campo de escritura. Si la ocultas, el chat será solo texto hasta que vuelvas a activarlo.',
+  'settings.mascot.customGifUpload': 'Subir imagen',
+  'settings.mascot.customGifInvalidType':
+    'Tipo de archivo no compatible. Sube una imagen PNG, GIF, JPEG, WebP o BMP.',
+  'settings.mascot.customGifTooLarge':
+    'La imagen es demasiado grande. Sube un archivo de hasta 1,5 MB.',
+  'settings.mascot.customGifReadError': 'No se pudo leer la imagen. Prueba con otro archivo.',
+  'walletBalances.colNetwork': 'Red',
+  'walletBalances.colAddress': 'Dirección',
+  'walletBalances.colBalance': 'Saldo',
+  'walletBalances.colActions': 'Acciones',
+  'settings.agents.editor.modelManaged': 'Modelos gestionados',
+  'keyring.settings.mode.localEncryptedFile': 'Archivo cifrado',
+  'keyring.settings.mode.localPlaintextFile': 'Archivo sin cifrar',
+  'memoryTree.status.statusBudgetExhausted': 'En pausa: se alcanzó el límite de embeddings',
+  'composer.humanMode': 'Modo humano',
+  'userErrors.action.openConnections': 'Abrir conexiones',
+  'userErrors.integrationDegraded.title': 'Las conexiones muestran un estado desactualizado',
+  'userErrors.integrationDegraded.body':
+    'Una integración conectada está devolviendo errores, por lo que el estado de conexión que ves puede estar desactualizado.',
+  'userErrors.action.openEmbeddingsSettings': 'Configurar embeddings',
+  'userErrors.localModelUnavailable.title': 'Modelo local no disponible',
+  'userErrors.localModelUnavailable.body':
+    'No se puede acceder a Ollama en el punto de conexión configurado, o el modelo necesario no está instalado allí. Inicia Ollama y descarga el modelo en ese punto de conexión, o cambia este trabajo a un proveedor en la nube.',
+  'memorySources.repair.title': '¿Reparar recuerdos antiguos?',
+  'memorySources.repair.message':
+    'Hasta {scanned} documentos sincronizados se guardaron antes de corregir el archivado en el árbol de memoria y no aparecen en el grafo de memoria. Archivarlos consume créditos de embeddings. Los documentos que ya están en el árbol se omiten.',
+  'memorySources.repair.confirm': 'Reparar',
+  'memorySources.repair.cancel': 'Ahora no',
+  'memorySources.repair.nothing':
+    'Nada que reparar. Ningún documento sincronizado está pendiente de archivar.',
+  'memorySources.repair.success':
+    '{ingested} archivados en el árbol de memoria ({already} ya estaban, {skipped} omitidos).',
+  'memorySources.repair.morePending': 'Quedan más. Pulsa Reparar recuerdos antiguos de nuevo.',
+  'memorySources.repair.failed': 'No se pudieron reparar los recuerdos antiguos.',
+  'welcome.gatewaySessionErrorFallback':
+    'No se pudo completar el inicio de sesión en este momento. El almacén de sesión no respondió a tiempo (incluso después de reintentar). Reinicia OpenHuman e inténtalo de nuevo.',
+  'composio.colApp': 'Aplicación',
+  'composio.colStatus': 'Estado',
+  'composio.colAccounts': 'Cuentas',
+  'conversations.composer.context.title': 'Ventana de contexto',
+  'conversations.composer.context.input': 'Entrada',
+  'conversations.composer.context.cached': 'Entrada en caché',
+  'conversations.composer.context.output': 'Salida',
+  'conversations.composer.context.cost': 'Coste',
+  'conversations.composer.command.clear': 'Vaciar la conversación',
+  'conversations.composer.command.goal': 'Definir o editar el objetivo del hilo',
+  'conversations.subagent.awaitingTitle': 'Esperando tu respuesta',
+  'conversations.subagent.answerPlaceholder': 'Escribe tu respuesta',
+  'conversations.subagent.answerSend': 'Enviar respuesta',
+  'conversations.subagent.answerSent': 'Respuesta enviada',
+  'flows.canvas.description': 'Crea esta automatización paso a paso y luego guárdala y ejecútala.',
+  'settings.ai.providers.groupCloud': 'Nube',
+  'brain.refreshError': 'No se pudo actualizar tu cerebro. Se muestran los últimos datos cargados.',
+  'common.working': 'Procesando…',
+  'common.noResults': 'Sin resultados',
+  'common.filter': 'Filtrar',
+  'skills.explorer.colSkill': 'Habilidad',
+  'skills.explorer.colDescription': 'Descripción',
+  'skills.explorer.colProvider': 'Proveedor',
+  'skills.explorer.colAction': 'Acción',
+  'sync.status.partial': 'Obtenido, pero no se pudo indexar en memoria',
+  'notices.title': 'Notificaciones',
+  'settings.clearAppDataIrreversible': 'Esto no se puede deshacer.',
+  'settings.clearAppDataAction': 'Borrar datos',
+  'chat.conversationsHeading': 'Conversaciones',
+  'chat.newWindowPrompt': '¿En qué puedo ayudarte hoy?',
+  'skills.explorer.sourceFilterAria': 'Filtrar por fuente',
+  'memoryTree.status.storedItemsTile': 'Elementos almacenados',
+  'memoryTree.status.retryFailed': 'Reintentar los trabajos fallidos',
+  'memoryTree.status.retryFailedBusy': 'Reintentando...',
+  'memoryTree.status.retryFailedDone': 'Trabajos fallidos añadidos de nuevo a la cola',
+  'memoryTree.status.retryFailedCount': 'Trabajos en cola para ejecutarse de nuevo: {count}.',
+  'memoryTree.status.retryFailedError':
+    'No se pudieron volver a poner en cola los trabajos fallidos',
+  'settings.search.engineTavilyLabel': 'Tavily',
+  'settings.search.engineTavilyDesc':
+    'Búsqueda web, noticias y finanzas con tecnología de Tavily. Requiere tu propia API key de Tavily. Añade herramientas de búsqueda y extracción de páginas.',
+  'settings.search.tavilyKeyLabel': 'Clave API de Tavily',
+  'settings.search.placeholderTavily': 'tvly-...',
 };
 
 export default messages;
