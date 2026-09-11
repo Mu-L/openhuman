@@ -116,5 +116,7 @@ fn openrouter_endpoints_are_recognised_for_explicit_cache_control() {
     assert!(endpoint_is_openrouter("HTTPS://OpenRouter.ai/api/v1/"));
     assert!(!endpoint_is_openrouter("https://api.openai.com/v1"));
     assert!(!endpoint_is_openrouter("https://notopenrouter.ai/api/v1"));
-    assert!(!endpoint_is_openrouter("https://example.com/openrouter.ai/"));
+    assert!(!endpoint_is_openrouter(
+        "https://example.com/openrouter.ai/"
+    ));
 }

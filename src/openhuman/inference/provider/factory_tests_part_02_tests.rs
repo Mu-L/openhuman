@@ -337,7 +337,9 @@ fn create_chat_model_routes_anthropic_auth_cloud_slug_to_crate_native() {
         identity.starts_with("anthropic:https://api.anthropic.com/v1:claude-sonnet-4-6"),
         "expected the native Messages adapter, got identity {identity}"
     );
-    assert!(model.profile().is_some_and(|p| p.tool_calling && p.streaming));
+    assert!(model
+        .profile()
+        .is_some_and(|p| p.tool_calling && p.streaming));
 }
 
 /// Text mode (prompt-guided tools) is only implemented on the Chat Completions

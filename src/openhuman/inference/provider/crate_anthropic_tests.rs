@@ -15,7 +15,9 @@ fn builds_a_native_anthropic_model_with_the_configured_profile() {
     assert!(profile.streaming, "the native adapter streams SSE");
     // The identity the response cache scopes on names the endpoint + model and
     // never the credential.
-    let identity = model.cache_identity().expect("anthropic models identify themselves");
+    let identity = model
+        .cache_identity()
+        .expect("anthropic models identify themselves");
     assert!(identity.contains("api.anthropic.com"));
     assert!(!identity.contains("sk-ant-secret"));
 }

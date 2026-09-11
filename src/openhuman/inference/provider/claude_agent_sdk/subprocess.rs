@@ -254,6 +254,15 @@ impl ChatModel<()> for ClaudeAgentSdkProvider {
         Some(&self.profile)
     }
 
+    /// Identity for harness response-cache scoping: the SDK binary and its
+    /// default model. No credential is involved on this path.
+    fn cache_identity(&self) -> Option<String> {
+        Some(format!(
+            "claude_agent_sdk:{}:{}",
+            self.config.binary, self.config.default_model
+        ))
+    }
+
     async fn invoke(
         &self,
         _state: &(),
