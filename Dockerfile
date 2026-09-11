@@ -46,6 +46,7 @@ WORKDIR /build
 # Cache dependencies — copy only manifests first
 COPY Cargo.toml Cargo.lock rust-toolchain.toml build.rs README.md ./
 COPY crates/openhuman-core/Cargo.toml crates/openhuman-core/Cargo.toml
+COPY crates/openhuman-embed/Cargo.toml crates/openhuman-embed/Cargo.toml
 COPY crates/openhuman-tui/Cargo.toml crates/openhuman-tui/Cargo.toml
 # Vendored TinyAgents SDK (git submodule; [patch.crates-io] points here, so
 # the dep-cache build below already resolves it). CI must init the submodule
@@ -53,17 +54,19 @@ COPY crates/openhuman-tui/Cargo.toml crates/openhuman-tui/Cargo.toml
 # release-production.yml / release-staging.yml.
 COPY vendor/ vendor/
 # Create a dummy src to build deps
-RUN mkdir -p crates/openhuman-core/src crates/openhuman-tui/src && \
+RUN mkdir -p crates/openhuman-core/src crates/openhuman-embed/src crates/openhuman-tui/src && \
     echo 'fn main() {}' > crates/openhuman-core/src/main.rs && \
     echo 'pub fn run_core_from_args(_: &[String]) -> anyhow::Result<()> { Ok(()) }' > crates/openhuman-core/src/lib.rs && \
+    echo '' > crates/openhuman-embed/src/lib.rs && \
     echo 'fn main() {}' > crates/openhuman-tui/src/main.rs && \
     echo 'pub fn run_from_cli(_: &[String]) -> anyhow::Result<()> { Ok(()) }' > crates/openhuman-tui/src/lib.rs && \
     cargo build --profile "${CARGO_PROFILE}" --bin openhuman-core 2>/dev/null || true && \
-    rm -rf crates/openhuman-core/src
+    rm -rf crates/openhuman-core/src crates/openhuman-embed/src
 
 # Copy actual source and build
 COPY src/ src/
 COPY crates/openhuman-core/src/ crates/openhuman-core/src/
+COPY crates/openhuman-embed/src/ crates/openhuman-embed/src/
 # Touch main.rs to force rebuild of our code (not deps)
 RUN touch crates/openhuman-core/src/main.rs crates/openhuman-core/src/lib.rs && \
     cargo build --profile "${CARGO_PROFILE}" --bin openhuman-core && \
