@@ -344,7 +344,7 @@ test('refuses to run when the feature table cannot be parsed', (t) => {
   assert.equal(result.status, 2, `an unparseable feature table must be refused; got:\n${result.stdout}`);
   assert.match(
     result.stderr,
-    /no `\[features\] default` in Cargo\.toml/,
+    /no `\[features\] default` in crates\/openhuman-core\/Cargo\.toml/,
     `the failure must name what could not be resolved; got:\n${result.stderr}`,
   );
 });
