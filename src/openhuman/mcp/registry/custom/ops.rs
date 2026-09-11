@@ -123,10 +123,8 @@ pub async fn mcp_clients_add_custom(
     // Row and env commit together: a row that lands without its env is a server
     // the caller was told did not save, holding the name and relaunched by the
     // supervisor every tick with no credentials.
-    if !crate::openhuman::mcp::registry::store::insert_custom_server_with_env(
-        config, &server, &env,
-    )
-    .map_err(|e| format!("failed to create the server record: {e}"))?
+    if !crate::openhuman::mcp::registry::store::insert_custom_server_with_env(config, &server, &env)
+        .map_err(|e| format!("failed to create the server record: {e}"))?
     {
         return Err(format!(
             "custom server name `{}` was claimed concurrently; retry the add",
