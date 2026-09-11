@@ -564,10 +564,10 @@ jobs:
         # test by scope, not by skip. Running the full suite is tracked in #5021.
         run: |
           bash scripts/ci-cancel-aware.sh cargo test --manifest-path Cargo.toml \
-            --no-default-features --lib -- \
+            -p openhuman --no-default-features --lib -- \
             core::all:: core::cli:: core::jsonrpc:: core::legacy_aliases:: core::runtime:: agent::registry::agents::loader:: memory::people::contacts_gate_tests:: openhuman::config:: openhuman::platform::socket::event_handlers:: tools::schemas:: tools::ops::tests::
           bash scripts/ci-cancel-aware.sh cargo test --manifest-path Cargo.toml \
-            --no-default-features --features mcp --lib -- \
+            -p openhuman --no-default-features --features mcp --lib -- \
             mcp::server::resources::
           # `test_support` is behind `e2e-test-support`, a gate in neither the
           # contributor nor the product set, so no other lane RUNS these — the
@@ -590,7 +590,7 @@ jobs:
           # expose, so the filter is narrowed and the gap is named instead.
           # Re-widen to `test_support::` once that is resolved.
           bash scripts/ci-cancel-aware.sh cargo test --manifest-path Cargo.toml \
-            --no-default-features --features e2e-test-support --lib -- \
+            -p openhuman --no-default-features --features e2e-test-support --lib -- \
             test_support::introspect::
 
       - name: Guard — the kernel dependency floor may not grow
