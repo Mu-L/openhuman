@@ -455,6 +455,7 @@ jobs:
         run: |
           bash scripts/ci-cancel-aware.sh cargo clippy -p openhuman-embed --all-targets -- -D warnings
           bash scripts/ci-cancel-aware.sh cargo check -p openhuman-embed --no-default-features
+          bash scripts/ci-cancel-aware.sh cargo test -p openhuman-embed
 
       - name: Cache CEF binary distribution
         if: needs.changes.outputs['rust-tauri'] == 'true'
