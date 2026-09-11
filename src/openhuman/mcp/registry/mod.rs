@@ -119,6 +119,42 @@ pub use schemas::{
 
 pub use types::{ConnStatus, InstalledServer, McpTool, ServerProvenance};
 
+/// Applies the host's prompt-injection policy to tools advertised by a remote
+/// MCP server before they cross the RPC boundary into agent-visible state.
+#[cfg(feature = "mcp")]
+pub(crate) fn tools_safe_for_agent(server: &str, tools: Vec<McpTool>) -> Vec<McpTool> {
+    use crate::core::event_bus::{publish_global, DomainEvent};
+    use crate::openhuman::security::prompt_injection::scan_tool_definition;
+
+    tools
+        .into_iter()
+        .filter(|tool| {
+            let hit = tool
+                .description
+                .as_deref()
+                .and_then(|text| scan_tool_definition("description", text));
+
+            match hit {
+                Some(hit) => {
+                    tracing::warn!(
+                        server,
+                        tool = %tool.name,
+                        reason = %hit.code,
+                        "[mcp] dropped a remote tool that tripped the input-validation scan"
+                    );
+                    publish_global(DomainEvent::McpToolRejected {
+                        server: server.to_string(),
+                        tool: tool.name.clone(),
+                        reason: hit.code.clone(),
+                    });
+                    false
+                }
+                None => true,
+            }
+        })
+        .collect()
+}
+
 // ---------------------------------------------------------------------------
 // Disabled facade — compiled only when the `mcp` feature is OFF.
 // ---------------------------------------------------------------------------

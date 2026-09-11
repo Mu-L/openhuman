@@ -20,12 +20,15 @@
  * no auth.
  */
 import debug from 'debug';
-import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { type ReactNode, useCallback, useEffect, useId, useMemo, useState } from 'react';
 
 import { useT } from '../../../lib/i18n/I18nContext';
 import { mcpClientsApi } from '../../../services/api/mcpClientsApi';
 import { openUrl } from '../../../utils/openUrl';
 import Button from '../../ui/Button';
+import { ModalShell } from '../../ui/ModalShell';
+import NativeSelect from '../../ui/NativeSelect';
+import TextField from '../../ui/TextField';
 import ConfigHelpModal from './ConfigHelpModal';
 import type { InstalledServer, McpTool, SmitheryServerDetail } from './types';
 
@@ -217,6 +220,7 @@ const FALLBACK_HEADER: CustomHeader = { id: 0, name: 'Authorization', value: '',
 
 const ConnectAuthModal = ({ server, onClose, onConnected }: ConnectAuthModalProps) => {
   const { t } = useT();
+  const titleId = useId();
   // Declared auth fields. Seeded from the install's stored keys (names only),
   // then enriched by a best-effort registry_get that carries each field's
   // description / secret / required metadata. `__`-prefixed keys are internal
@@ -245,11 +249,6 @@ const ConnectAuthModal = ({ server, onClose, onConnected }: ConnectAuthModalProp
   const [authKind, setAuthKind] = useState<'detecting' | 'none' | 'token' | 'oauth'>('detecting');
   const [oauthWaiting, setOauthWaiting] = useState(false);
   const [showConfigHelp, setShowConfigHelp] = useState(false);
-  // The OAuth wait is a recursive setTimeout poll (up to 3 min). These let the
-  // Cancel path stop it: clear the pending tick, and flag any in-flight poll to
-  // bail before it reschedules.
-  const oauthPollTimer = useRef<number | null>(null);
-  const oauthCancelled = useRef(false);
   // Host of the server's HTTP-remote endpoint (from the registry detail's
   // deployment_url). Surfaced as a "get your token from this provider" hint so
   // the user learns where the credential comes from BEFORE a 401 round-trip —
@@ -281,7 +280,6 @@ const ConnectAuthModal = ({ server, onClose, onConnected }: ConnectAuthModalProp
   // Browser-OAuth: begin (discover + DCR + PKCE), open the authorize URL, then
   // poll until the /oauth/mcp/callback route has stored the token + reconnected.
   const handleOAuth = useCallback(() => {
-    oauthCancelled.current = false;
     setBusy(true);
     setError(null);
     setOauthWaiting(true);
@@ -291,20 +289,10 @@ const ConnectAuthModal = ({ server, onClose, onConnected }: ConnectAuthModalProp
         await openUrl(url);
         const started = Date.now();
         const poll = async (): Promise<void> => {
-          // Cancelled while a tick was pending or a request in flight: stop
-          // without touching state — the Cancel handler already reset it.
-          if (oauthCancelled.current) return;
           const statuses = await mcpClientsApi.status();
-          if (oauthCancelled.current) return;
           const mine = statuses.find(s => s.server_id === server.server_id);
           if (mine?.status === 'connected') {
             const result = await mcpClientsApi.connect(server.server_id);
-            // Cancel can land during this connect round-trip, which is the one
-            // await in the loop long enough for the user to reach the button.
-            // `cancelOAuthWait` has already closed the modal by then, so
-            // completing here would reconnect the server in the parent's state
-            // behind the user's back and call `onClose` a second time.
-            if (oauthCancelled.current) return;
             onConnected(result.tools ?? []);
             onClose();
             return;
@@ -312,19 +300,17 @@ const ConnectAuthModal = ({ server, onClose, onConnected }: ConnectAuthModalProp
           if (Date.now() - started > 180000) {
             throw new Error(t('mcp.connectAuth.oauthTimeout'));
           }
-          oauthPollTimer.current = window.setTimeout(() => {
+          window.setTimeout(() => {
             void poll().catch(handlePollError);
           }, 2500);
         };
         const handlePollError = (err: unknown) => {
-          if (oauthCancelled.current) return;
           setError(err instanceof Error ? err.message : String(err));
           setOauthWaiting(false);
           setBusy(false);
         };
         await poll().catch(handlePollError);
       } catch (err) {
-        if (oauthCancelled.current) return;
         const msg = err instanceof Error ? err.message : String(err);
         log('oauth failed: %s', msg);
         setError(msg);
@@ -333,29 +319,6 @@ const ConnectAuthModal = ({ server, onClose, onConnected }: ConnectAuthModalProp
       }
     })();
   }, [server.server_id, onConnected, onClose, t]);
-
-  // Stop an in-progress OAuth wait: clear the pending poll tick and flag any
-  // in-flight request to bail. Idempotent — safe when no OAuth is running.
-  const cancelOAuthWait = useCallback(() => {
-    oauthCancelled.current = true;
-    if (oauthPollTimer.current !== null) {
-      window.clearTimeout(oauthPollTimer.current);
-      oauthPollTimer.current = null;
-    }
-    setOauthWaiting(false);
-    setBusy(false);
-  }, []);
-
-  // Closing the modal must always be possible — including mid-OAuth-wait, which
-  // is not a committed action (the browser sign-in can be abandoned). `busy`
-  // alone would trap the user here for the full 3-minute poll with no way out.
-  const handleClose = useCallback(() => {
-    cancelOAuthWait();
-    onClose();
-  }, [cancelOAuthWait, onClose]);
-
-  // Drop the poll timer if the modal unmounts for any other reason.
-  useEffect(() => () => cancelOAuthWait(), [cancelOAuthWait]);
 
   // Best-effort: pull the registry's declared fields (names + descriptions +
   // secret/required), so a server that labels its auth shows tailored inputs.
@@ -506,32 +469,39 @@ const ConnectAuthModal = ({ server, onClose, onConnected }: ConnectAuthModalProp
     []
   );
 
-  return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label={t('mcp.connectAuth.title').replace('{name}', server.display_name)}
-      onMouseDown={e => {
-        // Dismissable when idle, or while waiting on OAuth (which is abortable).
-        if (e.target === e.currentTarget && (!busy || oauthWaiting)) handleClose();
-      }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-6 overflow-y-auto">
-      <div className="w-full max-w-md rounded-xl bg-surface border border-line shadow-xl p-5 space-y-4">
-        <div>
-          <h3 className="text-base font-semibold text-content">
-            {t('mcp.connectAuth.title').replace('{name}', server.display_name)}
-          </h3>
-          <p className="text-xs text-content-muted mt-1">{t('mcp.connectAuth.hint')}</p>
-          <button
-            type="button"
+  const modal = (
+    <ModalShell
+      onClose={onClose}
+      titleId={titleId}
+      title={t('mcp.connectAuth.title').replace('{name}', server.display_name)}
+      subtitle={
+        <>
+          {t('mcp.connectAuth.hint')}{' '}
+          <Button
+            variant="tertiary"
+            size="xs"
             onClick={() => setShowConfigHelp(true)}
-            className="mt-1 text-[11px] font-medium text-primary-600 dark:text-primary-400 hover:underline">
+            className="h-auto p-0 align-baseline text-[11px] font-medium text-primary-600 hover:underline dark:text-primary-400">
             {t('mcp.connectAuth.howToGetToken')}
-          </button>
+          </Button>
+        </>
+      }
+      maxWidthClassName="max-w-md"
+      contentClassName="space-y-4 p-5"
+      closePolicy={{ backdrop: !busy, escape: !busy, button: !busy }}
+      footer={
+        <div className="flex justify-end gap-2">
+          <Button variant="secondary" size="sm" onClick={onClose} disabled={busy}>
+            {t('common.cancel')}
+          </Button>
+          <Button variant="primary" size="sm" onClick={handleConnect} disabled={busy}>
+            {busy ? t('mcp.detail.connecting') : t('mcp.detail.connect')}
+          </Button>
         </div>
-
+      }>
+      <>
         {error && (
-          <div className="rounded-lg border border-coral-200 dark:border-coral-500/30 bg-coral-50 dark:bg-coral-500/10 px-3 py-2 text-xs text-coral-700 dark:text-coral-300 break-words">
+          <div className="rounded-lg border border-coral-200 dark:border-coral-500/30 bg-coral-50 dark:bg-coral-500/10 px-3 py-2 text-xs text-coral-700 dark:text-coral-300 wrap-break-word">
             {error}
           </div>
         )}
@@ -556,23 +526,25 @@ const ConnectAuthModal = ({ server, onClose, onConnected }: ConnectAuthModalProp
             {endpointHost && (
               <p className="text-[11px] text-content-secondary">
                 {t('mcp.connectAuth.tokenProvider')}{' '}
-                <button
-                  type="button"
+                <Button
+                  variant="tertiary"
+                  size="xs"
                   onClick={() => void openUrl(providerUrlFromHost(endpointHost))}
                   title={providerUrlFromHost(endpointHost)}
-                  className="font-medium text-primary-600 dark:text-primary-400 underline underline-offset-2 hover:text-primary-700 dark:hover:text-primary-300 break-all">
+                  className="h-auto p-0 align-baseline font-medium text-primary-600 underline underline-offset-2 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 break-all">
                   {endpointHost}
                   <span aria-hidden="true"> ↗</span>
-                </button>
+                </Button>
               </p>
             )}
-            <button
-              type="button"
+            <Button
+              variant="tertiary"
+              size="xs"
               onClick={() => setShowConfigHelp(true)}
-              className="inline-flex items-center gap-1 text-[11px] font-medium text-primary-600 dark:text-primary-400 hover:underline">
+              className="h-auto gap-1 p-0 align-baseline text-[11px] font-medium text-primary-600 hover:underline dark:text-primary-400">
               {t('mcp.connectAuth.findToken')}
               <span aria-hidden="true">↗</span>
-            </button>
+            </Button>
           </div>
         )}
 
@@ -606,7 +578,8 @@ const ConnectAuthModal = ({ server, onClose, onConnected }: ConnectAuthModalProp
                 )}
                 <div className="flex gap-2">
                   {isAuthorizationField(field.name) && (
-                    <select
+                    <NativeSelect
+                      inputSize="sm"
                       value={schemeFor(field.name)}
                       onChange={e =>
                         setAuthSchemes(prev => ({
@@ -616,13 +589,14 @@ const ConnectAuthModal = ({ server, onClose, onConnected }: ConnectAuthModalProp
                       }
                       disabled={busy}
                       title={t('mcp.connectAuth.schemeLabel')}
-                      className="shrink-0 rounded-lg border border-line bg-surface px-1.5 py-1.5 text-[11px] text-content-secondary focus:outline-none focus:ring-2 focus:ring-primary-500/40 disabled:opacity-50">
+                      className="shrink-0 text-[11px]">
                       <option value="bearer">{t('mcp.connectAuth.schemeBearer')}</option>
                       <option value="raw">{t('mcp.connectAuth.schemeRaw')}</option>
-                    </select>
+                    </NativeSelect>
                   )}
-                  <input
+                  <TextField
                     id={`auth-${field.name}`}
+                    inputSize="sm"
                     type={field.secret && !reveal[field.name] ? 'password' : 'text'}
                     value={values[field.name] ?? ''}
                     onChange={e => setValues(prev => ({ ...prev, [field.name]: e.target.value }))}
@@ -634,7 +608,7 @@ const ConnectAuthModal = ({ server, onClose, onConnected }: ConnectAuthModalProp
                     data-1p-ignore
                     data-lpignore="true"
                     data-form-type="other"
-                    className="flex-1 rounded-lg border border-line bg-surface px-3 py-1.5 text-xs text-content placeholder:text-stone-400 dark:placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-primary-500/40 disabled:opacity-50"
+                    className="flex-1"
                   />
                   {field.secret && (
                     <Button
@@ -660,13 +634,14 @@ const ConnectAuthModal = ({ server, onClose, onConnected }: ConnectAuthModalProp
             <p className="text-[11px] font-medium uppercase tracking-wide text-content-faint">
               {t('mcp.connectAuth.customHeadersLabel')}
             </p>
-            <button
-              type="button"
+            <Button
+              variant="tertiary"
+              size="xs"
               onClick={addCustomHeader}
               disabled={busy}
-              className="text-[11px] font-medium text-primary-600 dark:text-primary-400 hover:underline disabled:opacity-50">
+              className="h-auto p-0 text-[11px] font-medium text-primary-600 hover:underline dark:text-primary-400">
               {t('mcp.connectAuth.addHeader')}
-            </button>
+            </Button>
           </div>
           {displayHeaders.length === 0 && (
             <p className="text-[11px] text-content-faint">
@@ -677,7 +652,9 @@ const ConnectAuthModal = ({ server, onClose, onConnected }: ConnectAuthModalProp
             <div key={h.id} className="space-y-1.5 rounded-lg border border-line p-2">
               {/* Row 1: header name + scheme + remove */}
               <div className="flex gap-2">
-                <input
+                <TextField
+                  mono
+                  inputSize="sm"
                   value={h.name}
                   onChange={e => patchHeader(h.id, { name: e.target.value })}
                   placeholder={t('mcp.connectAuth.headerName')}
@@ -686,17 +663,18 @@ const ConnectAuthModal = ({ server, onClose, onConnected }: ConnectAuthModalProp
                   data-1p-ignore
                   data-lpignore="true"
                   data-form-type="other"
-                  className="flex-1 min-w-0 rounded-lg border border-line bg-surface px-2 py-1.5 text-xs font-mono text-content placeholder:text-stone-400 dark:placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-primary-500/40 disabled:opacity-50"
+                  className="min-w-0 flex-1"
                 />
-                <select
+                <NativeSelect
+                  inputSize="sm"
                   value={h.scheme}
                   onChange={e => patchHeader(h.id, { scheme: e.target.value as 'bearer' | 'raw' })}
                   disabled={busy}
                   title={t('mcp.connectAuth.schemeLabel')}
-                  className="shrink-0 rounded-lg border border-line bg-surface px-1.5 py-1.5 text-[11px] text-content-secondary focus:outline-none focus:ring-2 focus:ring-primary-500/40 disabled:opacity-50">
+                  className="shrink-0 text-[11px]">
                   <option value="bearer">{t('mcp.connectAuth.schemeBearer')}</option>
                   <option value="raw">{t('mcp.connectAuth.schemeRaw')}</option>
-                </select>
+                </NativeSelect>
                 <Button
                   variant="secondary"
                   size="xs"
@@ -708,7 +686,8 @@ const ConnectAuthModal = ({ server, onClose, onConnected }: ConnectAuthModalProp
                 </Button>
               </div>
               {/* Row 2: full-width value (tokens are long) */}
-              <input
+              <TextField
+                inputSize="sm"
                 type="password"
                 value={h.value}
                 onChange={e => patchHeader(h.id, { value: e.target.value })}
@@ -720,40 +699,30 @@ const ConnectAuthModal = ({ server, onClose, onConnected }: ConnectAuthModalProp
                 data-1p-ignore
                 data-lpignore="true"
                 data-form-type="other"
-                className="w-full rounded-lg border border-line bg-surface px-2 py-1.5 text-xs text-content placeholder:text-stone-400 dark:placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-primary-500/40 disabled:opacity-50"
+                className="w-full"
               />
             </div>
           ))}
         </div>
 
-        {/* Actions */}
-        <div className="flex justify-end gap-2 pt-1">
-          {/* Enabled during the OAuth wait: that state is `busy` but cancellable,
-              and gating Cancel on `busy` alone is what trapped the user. */}
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={handleClose}
-            disabled={busy && !oauthWaiting}>
-            {t('common.cancel')}
-          </Button>
-          <Button variant="primary" size="sm" onClick={handleConnect} disabled={busy}>
-            {busy ? t('mcp.detail.connecting') : t('mcp.detail.connect')}
-          </Button>
-        </div>
-      </div>
-
-      {/* Stacked configuration-help chat modal (above this one). */}
-      {showConfigHelp && (
-        <ConfigHelpModal
-          qualifiedName={server.qualified_name}
-          displayName={server.display_name}
-          description={server.description}
-          onClose={() => setShowConfigHelp(false)}
-        />
-      )}
-    </div>
+        {/* Stacked configuration-help chat modal (above this one). Rendered
+            inside this Dialog's own tree — not as a separate top-level
+            sibling — so Radix's aria-hidden-others bookkeeping recognizes it
+            as part of the same branch instead of hiding this dialog behind
+            it. */}
+        {showConfigHelp && (
+          <ConfigHelpModal
+            qualifiedName={server.qualified_name}
+            displayName={server.display_name}
+            description={server.description}
+            onClose={() => setShowConfigHelp(false)}
+          />
+        )}
+      </>
+    </ModalShell>
   );
+
+  return modal;
 };
 
 export default ConnectAuthModal;

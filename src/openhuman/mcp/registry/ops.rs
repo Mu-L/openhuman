@@ -431,6 +431,7 @@ pub async fn mcp_clients_connect(
     let tools = connections::connect(config, &server)
         .await
         .map_err(|e| e.to_string())?;
+    let tools = super::tools_safe_for_agent(server_id.trim(), tools);
 
     let tool_count = tools.len() as u32;
 
@@ -606,6 +607,7 @@ pub async fn mcp_clients_update_env(
 
     match connections::connect(config, &server).await {
         Ok(tools) => {
+            let tools = super::tools_safe_for_agent(server_id, tools);
             let tool_count = tools.len() as u32;
             publish_global(DomainEvent::McpServerConnected {
                 server_id: server_id.to_string(),
@@ -760,6 +762,7 @@ pub async fn mcp_clients_list_tools(server_id: String) -> Result<RpcOutcome<Valu
 
     match connections::tools_for(server_id.trim()).await {
         Some(tools) => {
+            let tools = super::tools_safe_for_agent(server_id.trim(), tools);
             let count = tools.len();
             Ok(RpcOutcome::new(
                 json!({ "server_id": server_id.trim(), "tools": tools }),
