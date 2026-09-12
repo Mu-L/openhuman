@@ -33,9 +33,9 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tempfile::TempDir;
 use tinymemory_api::chunks::{Chunk, Metadata, SourceKind, SourceRef};
-use tinymemory_api::chunks::{ChunkDetail, ChunkEmbedding};
 use tinymemory_api::error::MemoryError;
 use tinymemory_api::null::NullMemoryProvider;
+use tinymemory_api::provider::{ChunkDetail, ChunkEmbedding};
 
 use super::super::types::{ChunkFilter, ChunkRow, PREVIEW_MAX_CHARS};
 
@@ -302,7 +302,7 @@ async fn token_and_intersects_complete_sets_in_first_token_order() {
     assert_eq!(seen.len(), 2);
     assert!(seen
         .iter()
-        .all(|query| query.limit.is_none() && query.offset.is_none()));
+        .all(|query| query.limit == Some(usize::MAX) && query.offset.is_none()));
 }
 
 // ── the wire shape ───────────────────────────────────────────────────────

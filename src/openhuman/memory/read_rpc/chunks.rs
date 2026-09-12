@@ -214,7 +214,11 @@ async fn token_and_details(
         }
         let mut token_query = query.clone();
         token_query.content_contains = Some(token.clone());
-        token_query.limit = None;
+        // `None` means the driver's default, which may be a page-sized cap.
+        // Ask for the largest contract-supported window so the intersection
+        // is computed from the complete per-token result set. Drivers clamp
+        // this to their own ceiling.
+        token_query.limit = Some(usize::MAX);
         token_query.offset = None;
         let rows = chunks
             .list_chunk_details(&token_query, None)
