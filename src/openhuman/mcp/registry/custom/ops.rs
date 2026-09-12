@@ -185,53 +185,54 @@ pub async fn mcp_clients_update_custom(
     let store = reg.store();
     let updated = store
         .update_server_rmw(&server_id, |current, stored_env| {
-        if current.provenance != ServerProvenance::Custom {
-            return Err(tinymcp::Error::other(format!(
-                "server `{server_id}` was installed from a registry; its command and endpoint \
+            if current.provenance != ServerProvenance::Custom {
+                return Err(tinymcp::Error::other(format!(
+                    "server `{server_id}` was installed from a registry; its command and endpoint \
                      come from the catalog listing and cannot be edited here"
-            )));
-        }
-        let scope_changed = credential_scope(&current.transport) != credential_scope(&transport);
-        let env = resolve_env_for_transport(
-            &input.env,
-            &stored_env.into_iter().collect::<HashMap<String, String>>(),
-            &current.transport,
-            &transport,
-        );
-        tracing::debug!(
-            "[mcp-custom] update server_id={} transport={}{} env_keys={:?}",
-            server_id,
-            transport.dispatch_kind(),
-            if scope_changed {
-                " (re-scoped — stored env dropped)"
-            } else {
-                ""
-            },
-            env.keys().collect::<Vec<_>>()
-        );
-        let record = InstalledServer {
-            // Identity and provenance survive an edit untouched — re-deriving
-            // `qualified_name` from the new display name would orphan this row's
-            // env values.
-            server_id: current.server_id.clone(),
-            qualified_name: current.qualified_name.clone(),
-            installed_at: current.installed_at,
-            provenance: current.provenance,
-            icon_url: current.icon_url.clone(),
-            config: current.config.clone(),
-            enabled: current.enabled,
-            last_connected_at: current.last_connected_at,
+                )));
+            }
+            let scope_changed =
+                credential_scope(&current.transport) != credential_scope(&transport);
+            let env = resolve_env_for_transport(
+                &input.env,
+                &stored_env.into_iter().collect::<HashMap<String, String>>(),
+                &current.transport,
+                &transport,
+            );
+            tracing::debug!(
+                "[mcp-custom] update server_id={} transport={}{} env_keys={:?}",
+                server_id,
+                transport.dispatch_kind(),
+                if scope_changed {
+                    " (re-scoped — stored env dropped)"
+                } else {
+                    ""
+                },
+                env.keys().collect::<Vec<_>>()
+            );
+            let record = InstalledServer {
+                // Identity and provenance survive an edit untouched — re-deriving
+                // `qualified_name` from the new display name would orphan this row's
+                // env values.
+                server_id: current.server_id.clone(),
+                qualified_name: current.qualified_name.clone(),
+                installed_at: current.installed_at,
+                provenance: current.provenance,
+                icon_url: current.icon_url.clone(),
+                config: current.config.clone(),
+                enabled: current.enabled,
+                last_connected_at: current.last_connected_at,
 
-            display_name: display_name.clone(),
-            description: clean_description(input.description.clone()),
-            command_kind,
-            command: command.clone(),
-            args: args.clone(),
-            env_keys: env_key_list(&env),
-            transport: transport.clone(),
-        };
-        let env_btree: std::collections::BTreeMap<String, String> = env.into_iter().collect();
-        Ok((record, env_btree))
+                display_name: display_name.clone(),
+                description: clean_description(input.description.clone()),
+                command_kind,
+                command: command.clone(),
+                args: args.clone(),
+                env_keys: env_key_list(&env),
+                transport: transport.clone(),
+            };
+            let env_btree: std::collections::BTreeMap<String, String> = env.into_iter().collect();
+            Ok((record, env_btree))
         })
         .map_err(|e| e.to_string())?;
 

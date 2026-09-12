@@ -35,6 +35,8 @@
 #[cfg(feature = "mcp")]
 pub mod bus;
 #[cfg(feature = "mcp")]
+pub mod custom;
+#[cfg(feature = "mcp")]
 pub(crate) mod helpers;
 #[cfg(feature = "mcp")]
 pub mod ops;
@@ -62,7 +64,7 @@ pub mod types {
     pub use tinymcp_bus::{
         ChatTurn, CommandKind, ConnStatus, ConnectedServerOverview, InstalledServer, McpTool,
         RegistryConnection as SmitheryConnection, RegistryServerDetail as SmitheryServerDetail,
-        RegistryServerSummary as SmitheryServerSummary, ServerStatus, Transport,
+        RegistryServerSummary as SmitheryServerSummary, ServerProvenance, ServerStatus, Transport,
     };
 }
 
