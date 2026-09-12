@@ -13,11 +13,14 @@
 
 use base64::Engine as _;
 use serde_json::{json, Value};
+use std::io::Read;
 
 use crate::openhuman::agent::messages::ChatMessage;
 use crate::openhuman::agent::multimodal::{
     is_managed_attachment_path, parse_image_markers, rehydrate_image_placeholders,
 };
+
+const MAX_IMAGE_BYTES: usize = 5 * 1024 * 1024;
 
 /// Build the bytes to write to claude's stdin. Returns an empty `Vec`
 /// when there is nothing to send (caller should abort).
@@ -236,8 +239,8 @@ fn image_block(reference: &str, native_marker: bool) -> Option<Value> {
             .and_then(|name| name.split('.').next())
             .filter(|id| !id.is_empty())
             .unwrap_or("unknown");
-        let bytes = match std::fs::read(reference) {
-            Ok(bytes) => bytes,
+        let mut file = match std::fs::File::open(reference) {
+            Ok(file) => file,
             Err(error) => {
                 tracing::warn!(
                     target: "claude_code",
@@ -248,6 +251,29 @@ fn image_block(reference: &str, native_marker: bool) -> Option<Value> {
                 return None;
             }
         };
+        let mut bytes = Vec::new();
+        if let Err(error) = file
+            .by_ref()
+            .take((MAX_IMAGE_BYTES + 1) as u64)
+            .read_to_end(&mut bytes)
+        {
+            tracing::warn!(
+                target: "claude_code",
+                attachment_id,
+                error_kind = ?error.kind(),
+                "[claude-code][input] managed attachment read failed"
+            );
+            return None;
+        }
+        if bytes.len() > MAX_IMAGE_BYTES {
+            tracing::warn!(
+                target: "claude_code",
+                attachment_id,
+                max_bytes = MAX_IMAGE_BYTES,
+                "[claude-code][input] managed attachment exceeds size cap"
+            );
+            return None;
+        }
         (
             media_type_from_path(reference),
             base64::engine::general_purpose::STANDARD.encode(bytes),
