@@ -365,6 +365,7 @@ fn display_message_from_line(ml: MessageLine) -> DisplayMessage {
             role: ml.role,
             content: ml.content,
             extra_metadata: ml.extra_metadata,
+            cache_breakpoints: Vec::new(),
         },
     }
 }
