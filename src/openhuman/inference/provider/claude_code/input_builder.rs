@@ -45,7 +45,14 @@ pub fn build_stdin(messages: &[ChatMessage], is_new_session: bool) -> Vec<u8> {
     if is_new_session {
         let context_end = active_user_pos.unwrap_or(non_system.len());
         if let Some(preamble) = prior_conversation_preamble(&non_system, context_end) {
-            content.extend(content_blocks(&preamble));
+            let preamble_blocks = content_blocks(&preamble);
+            if preamble_blocks.iter().any(|block| block["type"] == "image") {
+                content.extend(preamble_blocks);
+            } else {
+                // Preserve the historical single-block preamble shape when
+                // there are no images to rehydrate.
+                content.push(json!({"type": "text", "text": preamble}));
+            }
         }
     }
     let Some(last_user_pos) = active_user_pos else {
