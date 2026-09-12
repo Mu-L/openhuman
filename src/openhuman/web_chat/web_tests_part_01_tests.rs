@@ -237,11 +237,20 @@ fn extract_provider_error_detail_decodes_standard_json_escapes() {
         detail.contains("https://api.example.com/v1/models"),
         "escaped solidus must decode, got: {detail:?}"
     );
-    assert!(detail.contains('\r'), "carriage return must decode: {detail:?}");
+    assert!(
+        detail.contains('\r'),
+        "carriage return must decode: {detail:?}"
+    );
     assert!(detail.contains('\n'), "newline must decode: {detail:?}");
     assert!(detail.contains('\t'), "tab must decode: {detail:?}");
-    assert!(detail.contains('\u{8}'), "backspace must decode: {detail:?}");
-    assert!(detail.contains('\u{c}'), "form feed must decode: {detail:?}");
+    assert!(
+        detail.contains('\u{8}'),
+        "backspace must decode: {detail:?}"
+    );
+    assert!(
+        detail.contains('\u{c}'),
+        "form feed must decode: {detail:?}"
+    );
 }
 
 #[test]
