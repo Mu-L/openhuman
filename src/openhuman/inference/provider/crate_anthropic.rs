@@ -123,16 +123,12 @@ pub(crate) fn build_crate_anthropic_model(
         config.model,
         config.temperature_override
     );
-    let model_matches_unsupported_pattern = config
-        .temperature_unsupported_models
-        .iter()
-        .any(|pattern| crate::openhuman::inference::temperature::glob_match(pattern, config.model));
     // If there are unsupported-model patterns, defer the override to the
     // wrapper below. AnthropicModel applies its fixed override after the
     // request is prepared and therefore cannot honour a per-request model's
     // suppression decision.
     let adapter_temperature_override =
-        if config.temperature_unsupported_models.is_empty() || model_matches_unsupported_pattern {
+        if config.temperature_unsupported_models.is_empty() {
             config.temperature_override
         } else {
             None
