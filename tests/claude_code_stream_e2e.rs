@@ -3,8 +3,8 @@
 //! Feeds a captured representative CC 2.x stream-json transcript through
 //! `StreamJsonParser` → `EventMapper` and asserts that:
 //! - text deltas arrive in order and aggregate into the final response
-//! - tool-use blocks emit ToolCallStart + ToolCallArgsDelta + a final
-//!   ToolCall with parsed JSON arguments
+//! - tool-use blocks already executed by the CLI are suppressed rather than
+//!   handed back to OpenHuman's harness for duplicate execution
 //! - the `result` event finalizes usage tokens (incl. cache_read)
 //! - session_id is captured from the first `system` event
 //!
@@ -69,30 +69,18 @@ fn captures_text_tool_call_and_usage() {
         .collect();
     assert_eq!(text_chunks, vec!["Hello", " world"]);
 
-    // Tool call lifecycle.
-    assert!(deltas.iter().any(|d| matches!(
+    // Claude Code executes its own tool-use blocks. They must not escape as
+    // provider deltas or aggregated calls for OpenHuman to dispatch again.
+    assert!(!deltas.iter().any(|d| matches!(
         d,
-        ProviderDelta::ToolCallStart { tool_name, call_id }
-            if tool_name == "memory_search" && call_id == "call_42"
+        ProviderDelta::ToolCallStart { .. }
+            | ProviderDelta::ToolCallArgsDelta { .. }
+            | ProviderDelta::ToolCall { .. }
     )));
-    let args_concat: String = deltas
-        .iter()
-        .filter_map(|d| match d {
-            ProviderDelta::ToolCallArgsDelta { call_id, delta } if call_id == "call_42" => {
-                Some(delta.as_str())
-            }
-            _ => None,
-        })
-        .collect::<Vec<_>>()
-        .join("");
-    assert_eq!(args_concat, r#"{"query":"foo"}"#);
 
     // Aggregated response.
     assert_eq!(mapper.final_text, "Hello world");
-    assert_eq!(mapper.tool_calls.len(), 1);
-    assert_eq!(mapper.tool_calls[0].name, "memory_search");
-    assert_eq!(mapper.tool_calls[0].id, "call_42");
-    assert_eq!(mapper.tool_calls[0].arguments, r#"{"query":"foo"}"#);
+    assert!(mapper.tool_calls.is_empty());
 
     // Usage from the `result` event.
     assert!(mapper.finished);
