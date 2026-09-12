@@ -16,12 +16,64 @@ use tokio::sync::mpsc;
 
 /// Hard timeout per turn (PLAN §8). If the CLI hangs (network stall,
 /// infinite loop, MCP deadlock) we kill the child and surface a timeout.
-const TURN_TIMEOUT: Duration = Duration::from_secs(300);
+const DEFAULT_TURN_TIMEOUT_SECS: u64 = 900;
+
+fn turn_timeout() -> Duration {
+    let secs = std::env::var("OPENHUMAN_CLAUDE_CODE_TURN_TIMEOUT_SECS")
+        .ok()
+        .and_then(|raw| raw.trim().parse::<u64>().ok())
+        .filter(|secs| *secs > 0)
+        .unwrap_or(DEFAULT_TURN_TIMEOUT_SECS);
+    Duration::from_secs(secs)
+}
+
+fn parse_error_line_shape(line: &str) -> &'static str {
+    match line.trim_start().chars().next() {
+        Some('{') => "json object",
+        Some('[') => "json array",
+        Some('"') => "json string",
+        Some(_) => "non-json",
+        None => "blank",
+    }
+}
+
+fn parse_error_log_line(ev: &ClaudeCodeEvent) -> Option<String> {
+    let ClaudeCodeEvent::ParseError { line, reason } = ev else {
+        return None;
+    };
+    Some(format!(
+        "[claude-code][driver] dropping unparsable stream line ({reason}): {} of {} bytes",
+        parse_error_line_shape(line),
+        line.len()
+    ))
+}
+
+/// How much of the child's stderr we keep for diagnostics.
+const STDERR_DIAGNOSTIC_CAP: usize = 16_384;
+
+/// Append `chunk` to `acc`, keeping at most `max_bytes` and never splitting a
+/// character.
+///
+/// `String::truncate` takes a *byte* index and panics when it is not a character
+/// boundary, so bounding this accumulator with `acc.truncate(16_384)` aborted the
+/// task the moment a multi-byte character straddled the cap. The panic happened
+/// inside `tokio::spawn`, and the join is `unwrap_or_default()`, so it surfaced as
+/// an empty stderr string: the operator lost the whole error output for that turn
+/// and saw `exit Some(1) stderr=`.
+fn push_bounded(acc: &mut String, chunk: &str, max_bytes: usize) {
+    acc.push_str(chunk);
+    if acc.len() > max_bytes {
+        let keep = utf8_safe_prefix_at_byte_boundary(acc, max_bytes).len();
+        acc.truncate(keep);
+    }
+}
+
+use crate::openhuman::util::text::utf8_safe_prefix_at_byte_boundary;
 
 use super::event_mapper::EventMapper;
 use super::input_builder::build_stdin;
 use super::session_store::{generate_uuid_v4, is_uuid_v4, SessionStore};
-use super::stream_parser::StreamJsonParser;
+use super::stream_parser::{ClaudeCodeEvent, StreamJsonParser};
 use crate::openhuman::agent::messages::ChatMessage;
 use crate::openhuman::inference::provider::types::{ChatResponse, ProviderDelta};
 
@@ -185,6 +237,38 @@ fn write_mcp_http_config(
         serde_json::to_string_pretty(&cfg).unwrap_or_default(),
     )?;
     Ok(path)
+}
+
+/// Build the child's `PATH` so `claude` — and any tool it shells out to (git,
+/// ripgrep, node, …) — resolves even when OpenHuman was launched from
+/// Finder/Dock and inherited only the stripped launchd `PATH`
+/// (`/usr/bin:/bin:/usr/sbin:/sbin`, no `~/.local/bin`). Prepends the resolved
+/// CLI's own directory plus the common user/Homebrew bin dirs to whatever
+/// `PATH` we inherited; the inherited system entries are kept after them.
+/// Prepend-only — duplicate `PATH` entries are harmless, so this stays safe if
+/// a dir is already present (e.g. a terminal launch).
+pub(crate) fn child_path_with_user_bins(claude_bin: &std::path::Path) -> std::ffi::OsString {
+    let mut prefix: Vec<PathBuf> = Vec::new();
+    if let Some(parent) = claude_bin.parent() {
+        if !parent.as_os_str().is_empty() {
+            prefix.push(parent.to_path_buf());
+        }
+    }
+    if let Some(home) = dirs::home_dir() {
+        prefix.push(home.join(".local/bin"));
+        prefix.push(home.join("bin"));
+    }
+    #[cfg(target_os = "macos")]
+    prefix.push(PathBuf::from("/opt/homebrew/bin"));
+    prefix.push(PathBuf::from("/usr/local/bin"));
+
+    let existing = std::env::var_os("PATH").unwrap_or_default();
+    std::env::join_paths(
+        prefix
+            .into_iter()
+            .chain(std::env::split_paths(&existing).filter(|path| !path.as_os_str().is_empty())),
+    )
+    .unwrap_or(existing)
 }
 
 /// Keep the potentially large harness prompt out of argv. Windows flattens
@@ -385,6 +469,9 @@ pub async fn run_turn(ctx: TurnContext<'_>) -> anyhow::Result<ChatResponse> {
     if let Some(key) = &ctx.anthropic_api_key {
         cmd.env("ANTHROPIC_API_KEY", key);
     }
+    // A Finder/Dock launch inherits a stripped launchd PATH; make sure the CLI
+    // and anything it invokes resolve by prepending the user's bin dirs.
+    cmd.env("PATH", child_path_with_user_bins(&ctx.bin_path));
 
     let mut child = cmd
         .spawn()
@@ -421,17 +508,19 @@ pub async fn run_turn(ctx: TurnContext<'_>) -> anyhow::Result<ChatResponse> {
             if n == 0 {
                 break;
             }
-            acc.push_str(&String::from_utf8_lossy(&tmp[..n]));
-            if acc.len() > 16_384 {
-                acc.truncate(16_384);
-            }
+            push_bounded(
+                &mut acc,
+                &String::from_utf8_lossy(&tmp[..n]),
+                STDERR_DIAGNOSTIC_CAP,
+            );
         }
         acc
     });
 
     // Wrap the streaming + wait in a timeout so a stuck CLI doesn't
     // block this task forever (PLAN §8).
-    let timed = tokio::time::timeout(TURN_TIMEOUT, async {
+    let timeout = turn_timeout();
+    let timed = tokio::time::timeout(timeout, async {
         loop {
             let n = stdout
                 .read(&mut buf)
@@ -441,6 +530,9 @@ pub async fn run_turn(ctx: TurnContext<'_>) -> anyhow::Result<ChatResponse> {
                 break;
             }
             for ev in parser.feed_bytes(&buf[..n]) {
+                if let Some(msg) = parse_error_log_line(&ev) {
+                    log::warn!("{msg}");
+                }
                 for delta in mapper.handle(ev) {
                     if let Some(tx) = ctx.stream {
                         let _ = tx.send(delta).await;
@@ -449,6 +541,9 @@ pub async fn run_turn(ctx: TurnContext<'_>) -> anyhow::Result<ChatResponse> {
             }
         }
         for ev in parser.end() {
+            if let Some(msg) = parse_error_log_line(&ev) {
+                log::warn!("{msg}");
+            }
             for delta in mapper.handle(ev) {
                 if let Some(tx) = ctx.stream {
                     let _ = tx.send(delta).await;
@@ -467,16 +562,11 @@ pub async fn run_turn(ctx: TurnContext<'_>) -> anyhow::Result<ChatResponse> {
     let status = match timed {
         Ok(inner) => inner?,
         Err(_elapsed) => {
-            log::error!(
-                "[claude-code][driver] turn timeout ({TURN_TIMEOUT:?}) exceeded; killing child"
-            );
+            log::error!("[claude-code][driver] turn timeout ({timeout:?}) exceeded; killing child");
             // kill_on_drop handles cleanup, but explicit kill gives us
             // a chance to collect stderr.
             let _ = child.kill().await;
-            anyhow::bail!(
-                "[claude-code][driver] turn timed out after {:?}",
-                TURN_TIMEOUT
-            );
+            anyhow::bail!("[claude-code][driver] turn timed out after {:?}", timeout);
         }
     };
 
@@ -497,185 +587,5 @@ pub async fn run_turn(ctx: TurnContext<'_>) -> anyhow::Result<ChatResponse> {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn write_mcp_http_config_emits_http_url_with_bearer_header() {
-        let dir = tempfile::tempdir().expect("tempdir");
-        let addr: std::net::SocketAddr = "127.0.0.1:54321".parse().unwrap();
-        let path = write_mcp_http_config(dir.path(), addr, "tok-abc123").expect("write config");
-        let raw = std::fs::read_to_string(&path).expect("read config");
-        let v: serde_json::Value = serde_json::from_str(&raw).expect("valid json");
-        let server = &v["mcpServers"]["openhuman"];
-        assert_eq!(
-            server["type"], "http",
-            "MCP transport must be http (out-of-jail)"
-        );
-        assert_eq!(server["url"], "http://127.0.0.1:54321/");
-        // The loopback server is authenticated — the config must carry the bearer.
-        assert_eq!(server["headers"]["Authorization"], "Bearer tok-abc123");
-        // It must NOT spawn a stdio child (the old jailed path).
-        assert!(server.get("command").is_none());
-    }
-
-    #[test]
-    fn large_system_prompt_is_written_to_file_instead_of_argv() {
-        let dir = tempfile::tempdir().expect("tempdir");
-        let prompt = "system instruction\n".repeat(2_500);
-        assert!(prompt.len() > 32_767);
-
-        let args = append_system_prompt_args(dir.path(), Some(&prompt)).expect("prompt args");
-
-        assert_eq!(args[0], "--append-system-prompt-file");
-        assert_eq!(args.len(), 2);
-        assert!(!args.iter().any(|arg| arg.contains(&prompt)));
-        assert_eq!(
-            std::fs::read_to_string(&args[1]).expect("read prompt file"),
-            prompt
-        );
-    }
-
-    #[test]
-    fn empty_system_prompt_does_not_add_an_argument() {
-        let dir = tempfile::tempdir().expect("tempdir");
-        let args = append_system_prompt_args(dir.path(), Some("  \n ")).expect("prompt args");
-
-        assert!(args.is_empty());
-        assert!(!dir.path().join("append-system-prompt.txt").exists());
-    }
-
-    #[test]
-    fn system_prompt_write_error_is_propagated() {
-        let dir = tempfile::tempdir().expect("tempdir");
-        let not_a_directory = dir.path().join("file");
-        std::fs::write(&not_a_directory, "occupied").expect("write blocking file");
-
-        let error = append_system_prompt_args(&not_a_directory, Some("system prompt"))
-            .expect_err("non-directory parent must fail");
-
-        assert!(!error.to_string().is_empty());
-    }
-
-    #[cfg(target_os = "macos")]
-    #[test]
-    fn seatbelt_profile_denies_whole_openhuman_root_not_just_subdir() {
-        // Driver passes the per-user subdir; the jail must deny the WHOLE
-        // `.openhuman-staging` tree (so root-level core.token/credentials are
-        // protected), not just the subdir.
-        let ws = std::path::Path::new("/Users/test/.openhuman-staging/users/abc/workspace");
-        let p = seatbelt_profile(ws);
-        assert!(
-            p.contains("(allow default)"),
-            "CC does everything by default"
-        );
-        assert!(p.contains("(deny file-write*"), "must deny writes");
-        assert!(
-            p.contains("(deny file-read*"),
-            "must deny reads (no token exfil)"
-        );
-        // Denied path is the ROOT, not the per-user subdir.
-        assert!(
-            p.contains("/Users/test/.openhuman-staging\""),
-            "deny subpath must be the .openhuman root: {p}"
-        );
-        assert!(
-            !p.contains("users/abc"),
-            "deny must NOT be scoped to the narrow subdir: {p}"
-        );
-    }
-
-    #[cfg(target_os = "macos")]
-    #[test]
-    fn openhuman_internal_root_walks_up_to_dotopenhuman() {
-        let r = openhuman_internal_root(std::path::Path::new(
-            "/Users/x/.openhuman/users/id/workspace/memory",
-        ));
-        assert_eq!(r, std::path::Path::new("/Users/x/.openhuman"));
-        // Fallback: no `.openhuman*` ancestor → returns the input.
-        let r2 = openhuman_internal_root(std::path::Path::new("/tmp/custom/ws"));
-        assert_eq!(r2, std::path::Path::new("/tmp/custom/ws"));
-    }
-
-    #[cfg(target_os = "macos")]
-    #[test]
-    fn seatbelt_available_honors_opt_out() {
-        let _env = super::super::ENV_TEST_LOCK
-            .lock()
-            .unwrap_or_else(|e| e.into_inner());
-        let prev = std::env::var("OPENHUMAN_CLAUDE_CODE_SANDBOX").ok();
-        std::env::set_var("OPENHUMAN_CLAUDE_CODE_SANDBOX", "0");
-        assert!(
-            !seatbelt_available(),
-            "explicit opt-out must disable the jail"
-        );
-        match prev {
-            Some(v) => std::env::set_var("OPENHUMAN_CLAUDE_CODE_SANDBOX", v),
-            None => std::env::remove_var("OPENHUMAN_CLAUDE_CODE_SANDBOX"),
-        }
-    }
-
-    #[test]
-    fn full_access_defaults_off_and_opts_in_via_env() {
-        let _env = super::super::ENV_TEST_LOCK
-            .lock()
-            .unwrap_or_else(|e| e.into_inner());
-        // Empty workspace (no persisted toggle) → file layer resolves to OFF.
-        let ws = std::env::temp_dir().join("oh_cc_fullaccess_env_test");
-        let _ = std::fs::remove_dir_all(&ws);
-        let key = "OPENHUMAN_CLAUDE_CODE_PERMISSION_MODE";
-        let prev = std::env::var(key).ok();
-        std::env::remove_var(key);
-        assert!(
-            !claude_code_full_access(&ws),
-            "default posture must be acceptEdits (full access OFF)"
-        );
-        std::env::set_var(key, "bypass");
-        assert!(
-            claude_code_full_access(&ws),
-            "explicit opt-in (`bypass`) enables full access"
-        );
-        std::env::set_var(key, "acceptEdits");
-        assert!(
-            !claude_code_full_access(&ws),
-            "acceptEdits env override keeps the default (limited) posture"
-        );
-        match prev {
-            Some(v) => std::env::set_var(key, v),
-            None => std::env::remove_var(key),
-        }
-    }
-
-    #[test]
-    fn full_access_reads_persisted_toggle_when_env_unset() {
-        use super::super::settings::{self, ClaudeCodeSettings};
-        let _env = super::super::ENV_TEST_LOCK
-            .lock()
-            .unwrap_or_else(|e| e.into_inner());
-        let ws = std::env::temp_dir().join("oh_cc_fullaccess_file_test");
-        let _ = std::fs::remove_dir_all(&ws);
-        std::fs::create_dir_all(&ws).unwrap();
-        let key = "OPENHUMAN_CLAUDE_CODE_PERMISSION_MODE";
-        let prev = std::env::var(key).ok();
-        std::env::remove_var(key);
-
-        settings::save(&ws, &ClaudeCodeSettings { full_access: true }).unwrap();
-        assert!(
-            claude_code_full_access(&ws),
-            "persisted toggle ON must enable full access when env is unset"
-        );
-
-        // Env override beats the persisted toggle.
-        std::env::set_var(key, "acceptEdits");
-        assert!(
-            !claude_code_full_access(&ws),
-            "env override OFF must beat a persisted ON toggle"
-        );
-
-        match prev {
-            Some(v) => std::env::set_var(key, v),
-            None => std::env::remove_var(key),
-        }
-        let _ = std::fs::remove_dir_all(&ws);
-    }
-}
+#[path = "driver_tests.rs"]
+mod tests;

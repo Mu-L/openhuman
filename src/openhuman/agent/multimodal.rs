@@ -2,7 +2,7 @@
 //!
 //! The pipeline itself — marker parsing, `data:` URI decoding, MIME detection,
 //! size and count limits, the rendered payload — lives in
-//! [`tinyagents::harness::multimodal`]. What is left here is everything that
+//! [`tinyagents_harness::multimodal`]. What is left here is everything that
 //! depends on *this* host rather than on any host:
 //!
 //! | Kept here | Why it cannot be generic |
@@ -40,7 +40,7 @@ use crate::openhuman::config::{
     build_runtime_proxy_client_with_timeouts, MultimodalConfig, MultimodalFileConfig,
 };
 
-use tinyagents::harness::multimodal::{
+use tinyagents_harness::multimodal::{
     self as mm,
     config::{FileLimits, ImageLimits},
     markers, mime as mm_mime,
@@ -48,7 +48,7 @@ use tinyagents::harness::multimodal::{
     resolve::{resolve_file, resolve_image, TextExtractor},
 };
 
-pub use tinyagents::harness::multimodal::{FilePayload, MultimodalError};
+pub use tinyagents_harness::multimodal::{FilePayload, MultimodalError};
 
 /// Hard upper bound on how long the `tinydocs` module may spend extracting a
 /// PDF's text layer before the attempt is abandoned and the file degrades to a
@@ -584,6 +584,27 @@ fn attachments_dir() -> PathBuf {
         .get()
         .cloned()
         .unwrap_or_else(fallback_attachments_dir)
+}
+
+/// Whether a provider image reference points inside this process' managed
+/// attachment stash. Raw channel-supplied filesystem paths are never trusted.
+pub fn is_managed_attachment_path(path: &str) -> bool {
+    managed_attachment_path(path).is_some()
+}
+
+/// Return the canonical path when `path` resolves inside the managed stash.
+/// Callers should use this returned path for subsequent reads so the checked
+/// path, rather than an attacker-controlled spelling, is what gets opened.
+pub fn managed_attachment_path(path: &str) -> Option<PathBuf> {
+    let candidate = Path::new(path);
+    let candidate = candidate.canonicalize().ok()?;
+    let root = attachments_dir().canonicalize().ok()?;
+    candidate.starts_with(root).then_some(candidate)
+}
+
+#[cfg(test)]
+pub(crate) fn managed_attachments_dir_for_tests() -> PathBuf {
+    attachments_dir()
 }
 
 /// Per-user fallback attachments dir used only when [`init_attachments_dir`]
