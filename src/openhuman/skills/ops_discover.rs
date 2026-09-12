@@ -182,10 +182,8 @@ pub(crate) fn discover_workflows_inner(
 }
 
 /// Discover only automation bundles under the `workflows/` roots.
-/// Capability skills (under the `skills/` / `.agents/skills/` / legacy
-/// `<workspace>/skills/` roots) are deliberately excluded so they don't show up
-/// as task templates. They remain fully available to the agent harness and the
-/// run/describe paths via [`discover_workflows`] / [`load_workflow_metadata`].
+/// Capability skills are deliberately excluded; they remain available to the
+/// agent harness and run/describe paths.
 ///
 /// Note: bundles authored *before* the skills→workflows rename live under the
 /// `skills/` roots and will therefore not appear in this automations-only view;

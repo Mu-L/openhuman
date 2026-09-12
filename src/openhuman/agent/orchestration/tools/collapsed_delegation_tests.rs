@@ -106,9 +106,10 @@ fn adding_a_target_costs_only_its_name_and_description() {
     // growth must be linear in the *description*, not in the envelope.
     let one = CollapsedDelegationTool::for_targets(vec![DelegateTarget {
         tool_name: "research".to_string(),
-        agent_id: openhuman::agent::orchestration::tools::archetype_delegation::DelegationTarget(
-            "researcher".to_string(),
-        ),
+        agent_id:
+            crate::openhuman::agent::orchestration::tools::archetype_delegation::DelegationTarget(
+                "researcher".to_string(),
+            ),
         description: String::new(),
     }])
     .expect("non-empty");
@@ -218,9 +219,10 @@ fn every_member_is_hidden_so_the_collapse_actually_saves_something() {
     // save nothing, and nothing else in the build would notice.
     let member = ArchetypeDelegationTool {
         tool_name: "research".to_string(),
-        agent_id: openhuman::agent::orchestration::tools::archetype_delegation::DelegationTarget(
-            "researcher".to_string(),
-        ),
+        agent_id:
+            crate::openhuman::agent::orchestration::tools::archetype_delegation::DelegationTarget(
+                "researcher".to_string(),
+            ),
         tool_description: "Web research.".to_string(),
     };
     assert_eq!(member.exposure(), ToolExposure::Hidden);
