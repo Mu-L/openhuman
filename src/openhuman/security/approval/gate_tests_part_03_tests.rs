@@ -470,15 +470,15 @@ async fn decide_approve_always_for_flow_then_insert_flow_trust_composes_to_auto_
         .await
     });
 
-    let pending = loop {
-        if let Some(p) = gate.list_pending().unwrap().into_iter().next() {
-            break p;
+    let request_id = loop {
+        if let Some(request_id) = parked_request_id(&gate) {
+            break request_id;
         }
         tokio::time::sleep(Duration::from_millis(10)).await;
     };
 
     let decided = gate
-        .decide(&pending.request_id, ApprovalDecision::ApproveAlwaysForFlow)
+        .decide(&request_id, ApprovalDecision::ApproveAlwaysForFlow)
         .unwrap()
         .expect("decided row");
 

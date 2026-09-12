@@ -613,14 +613,11 @@ async fn intercept_with_workflow_require_approval_persists_and_ttl_denies() {
     });
 
     let mut tries = 0;
-    loop {
-        if !gate.list_pending().unwrap().is_empty() {
-            break;
-        }
+    while parked_request_id(&gate).is_none() {
         tries += 1;
         assert!(
             tries < 50,
-            "audit row never appeared for require_approval workflow origin"
+            "approval waiter never appeared for require_approval workflow origin"
         );
         tokio::time::sleep(Duration::from_millis(10)).await;
     }

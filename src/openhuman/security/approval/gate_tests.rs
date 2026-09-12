@@ -53,6 +53,13 @@ fn test_gate_with_ttl(ttl: Duration) -> (ApprovalGate, TempDir) {
     (gate, dir)
 }
 
+/// Return a request id after the approval row has been persisted and its
+/// waiter has been registered. Unlike `list_pending`, this observation does
+/// not lazily expire the row while a short-TTL test is waiting for insertion.
+fn parked_request_id(gate: &ApprovalGate) -> Option<String> {
+    gate.waiters.lock().keys().next().cloned()
+}
+
 /// A gate for the tests that let a park expire, plus the env lock they
 /// hold until the pending row captures its effective TTL.
 ///
