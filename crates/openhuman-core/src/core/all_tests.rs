@@ -1245,7 +1245,7 @@ fn medulla_controllers_absent_when_feature_off() {
 }
 
 // ---- DomainGroup ↔ family-directory realignment ----------------------------
-// The reorg (#5328) made `src/openhuman/` one directory per family, so the
+// The reorg (#5328) made `crates/openhuman-core/src/openhuman/` one directory per family, so the
 // runtime axis can finally name each one instead of sweeping half the surface
 // into `Platform`. These pin that alignment in both directions.
 
@@ -2191,7 +2191,7 @@ async fn rpc_method_from_parts_stays_unfiltered_by_capability() {
 //
 // The agent-tool half of the DoD is pinned next to the tool machinery that owns
 // the full tool list, by `optional_family_memory_tools_absent_under_the_null_driver`
-// in `src/openhuman/tools/ops_tests.rs` (`memory_tree` is in its absent list).
+// in `crates/openhuman-core/src/openhuman/tools/ops_tests.rs` (`memory_tree` is in its absent list).
 // Same split the channels gate uses; not duplicated here.
 
 /// `memory_tree*` is unknown-method under a driver that never advertised

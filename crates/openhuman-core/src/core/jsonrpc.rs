@@ -290,7 +290,7 @@ pub async fn invoke_method(state: AppState, method: &str, params: Value) -> Resu
             // `scrub_secret_patterns` and truncates.
             //
             // Local-session protection is handled by `SessionExpiredSubscriber`
-            // in `src/openhuman/security/credentials/bus.rs` — it checks `is_local_session_token`
+            // in `crates/openhuman-core/src/openhuman/security/credentials/bus.rs` — it checks `is_local_session_token`
             // after config load and short-circuits teardown with
             // `scheduler_gate::set_signed_out(false)`. Duplicating that check
             // here would pull a domain concern into the transport layer and would
@@ -326,7 +326,7 @@ pub async fn invoke_method(state: AppState, method: &str, params: Value) -> Resu
 ///   `"GET /teams failed (401 Unauthorized): {"success":false}"`. These always
 ///   start with an HTTP method verb followed by a space and a forward slash.
 /// - **Provider / downstream 401s** (`api_error` in
-///   `src/openhuman/inference/provider/ops.rs`): formatted as
+///   `crates/openhuman-core/src/openhuman/inference/provider/ops.rs`): formatted as
 ///   `"{ProviderName} API error (401 Unauthorized): {body}"` or
 ///   `"Discord API error: ... (401): Unauthorized"`. These start with a
 ///   provider name, NOT an HTTP method verb.

@@ -145,18 +145,18 @@ describe('rpcMethods catalog', () => {
     };
 
     const schemaSources = [
-      readWithParts('../../../../src/openhuman/config/schemas/schema_defs.rs'),
-      readWithParts('../../../../src/openhuman/inference/provider/schemas.rs'),
-      readWithParts('../../../../src/openhuman/inference/schemas.rs'),
-      readWithParts('../../../../src/openhuman/inference/local/schemas.rs'),
-      readWithParts('../../../../src/openhuman/inference/embeddings/schemas.rs'),
-      readWithParts('../../../../src/openhuman/mcp/registry/schemas.rs'),
-      readWithParts('../../../../src/openhuman/tools/registry/schemas.rs'),
-      readWithParts('../../../../src/openhuman/platform/health/schemas.rs'),
-      readWithParts('../../../../src/openhuman/channels/controllers/schemas.rs'),
+      readWithParts('../../../../crates/openhuman-core/src/openhuman/config/schemas/schema_defs.rs'),
+      readWithParts('../../../../crates/openhuman-core/src/openhuman/inference/provider/schemas.rs'),
+      readWithParts('../../../../crates/openhuman-core/src/openhuman/inference/schemas.rs'),
+      readWithParts('../../../../crates/openhuman-core/src/openhuman/inference/local/schemas.rs'),
+      readWithParts('../../../../crates/openhuman-core/src/openhuman/inference/embeddings/schemas.rs'),
+      readWithParts('../../../../crates/openhuman-core/src/openhuman/mcp/registry/schemas.rs'),
+      readWithParts('../../../../crates/openhuman-core/src/openhuman/tools/registry/schemas.rs'),
+      readWithParts('../../../../crates/openhuman-core/src/openhuman/platform/health/schemas.rs'),
+      readWithParts('../../../../crates/openhuman-core/src/openhuman/channels/controllers/schemas.rs'),
       // The channels_* namespace/function literals now live in the vendored
       // tinychannels workspace (`ChannelControllerSchema`), not in the thin
-      // `src/openhuman/channels/controllers/schemas.rs` adapter above, which
+      // `crates/openhuman-core/src/openhuman/channels/controllers/schemas.rs` adapter above, which
       // only converts from it (#4557 "Use tinychannels provider
       // implementations") — read both so this drift guard still sees them.
       //

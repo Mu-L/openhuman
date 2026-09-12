@@ -1,7 +1,7 @@
-# The host package manifest lives under `crates/`, while its implementation
-# intentionally remains at the repository root: `src/openhuman/` is the core
-# domain tree. The host-facing wrappers live beside this manifest under
-# `src/{api,core,embed,rpc}`. Auto-discovery is disabled because
+# The core package and its implementation live together under `crates/`:
+# `src/openhuman/` is the domain tree, while API, runtime composition, and RPC
+# live beside it. The typed embedding facade belongs to `openhuman-embed`.
+# Auto-discovery is disabled because
 # Cargo only scans beside this manifest; the repository layout gate requires
 # every root `tests/*.rs` and `examples/*.rs` file to have an explicit target.
 [package]
@@ -210,10 +210,6 @@ name = "embeddings_rpc_e2e"
 path = "../../tests/embeddings_rpc_e2e.rs"
 
 [[test]]
-name = "harness_embed"
-path = "../../tests/harness_embed.rs"
-
-[[test]]
 name = "inference_provider_e2e"
 path = "../../tests/inference_provider_e2e.rs"
 
@@ -321,11 +317,6 @@ path = "../../examples/run_memory_doctor.rs"
 name = "run_memory_reconcile"
 path = "../../examples/run_memory_reconcile.rs"
 
-[[example]]
-name = "run_turn"
-path = "../../examples/run_turn.rs"
-
-
 [lib]
 name = "openhuman_core"
 path = "src/lib.rs"
@@ -344,7 +335,7 @@ crate-type = ["rlib"]
 tinyhumans-sdk = { path = "../../vendor/tinyhumans-sdk", default-features = false }
 # tinyflows — host-agnostic workflow engine (typed node graph → validate → compile →
 # run on tinyagents). Powers the "Workflows" feature via the seam in
-# `src/openhuman/tinyflows/` + the `flows::` domain. Pulls tinyagents 2.1 transitively
+# `crates/openhuman-core/src/openhuman/tinyflows/` + the `flows::` domain. Pulls tinyagents 2.1 transitively
 # (same version OpenHuman uses directly, preserving one trait identity). Published
 # on crates.io and patched below to the vendored submodule.
 #
@@ -377,7 +368,7 @@ tinyflows-copilot = { path = "../../vendor/tinyflows/crates/tinyflows-copilot", 
 # TinyAgents — Rust LLM orchestration framework (LangGraph/LangChain-style):
 # durable state graphs, agent-loop harness, model/tool registries, REPL +
 # `.rag` workflow language. openhuman's agent engine + orchestration run on this
-# crate's primitives via the adapter seam in `src/openhuman/agent/tinyagents/` (issue
+# crate's primitives via the adapter seam in `crates/openhuman-core/src/openhuman/agent/tinyagents/` (issue
 # #4249): every turn drives through the harness; the workflow phase DAG, team
 # member runtime, parallel fan-out, and multi-stage delegation run on graphs.
 # We wire openhuman's own Provider/Tool, not the removed bundled openai client.
@@ -540,7 +531,7 @@ tinymemory-sources = { path = "../../vendor/tinymemory/crates/tinymemory-sources
 # rather than from a hand-kept copy.
 #
 # The path dependency on `tinymcp` itself is still the step-one arrangement. The
-# registry entry step two calls for now exists — `src/openhuman/modules/registry.rs`
+# registry entry step two calls for now exists — `crates/openhuman-core/src/openhuman/modules/registry.rs`
 # pins the v0.3.2 release — but the host still calls the library directly, because
 # `tinymcp-bus` v0.3.2 does not yet publish everything this host reaches for:
 # `OAuthComplete`, a member returning the already-exported `ConnectedServerOverview`,
@@ -623,7 +614,7 @@ dhat = { version = "0.3", optional = true }
 # headless embedding target (#5046) — link a single TLS stack + cert set
 # (Mozilla webpki-roots). Windows re-adds `native-tls` via the
 # `[target.'cfg(windows)'.dependencies]` block below (Cargo unions features
-# per target), because `src/openhuman/tls/mod.rs` deliberately routes the
+# per target), because `crates/openhuman-core/src/openhuman/tls/mod.rs` deliberately routes the
 # Windows client through the SChannel/OS cert store for corporate MITM +
 # AV root CAs. So the two TLS backends coexist only on Windows, never on
 # the RAM-sensitive platforms.
@@ -762,7 +753,7 @@ fantoccini = { version = "0.22.0", optional = true, default-features = false, fe
 # the validation rules, the PNG/JPEG header reader, the error vocabulary and
 # the member names. It is `serde` + `thiserror` and nothing else — no writer,
 # no `tinybus`, no runtime. Synthesis happens in the `tinydocs` TinyBus module
-# (`src/openhuman/modules/`), so this build carries the shape of a document
+# (`crates/openhuman-core/src/openhuman/modules/`), so this build carries the shape of a document
 # without carrying the code that produces one, which is why `docx-rs`,
 # `ppt-rs` and `pdf-extract` are absent from the graph entirely rather than
 # merely gated.
@@ -772,7 +763,7 @@ fantoccini = { version = "0.22.0", optional = true, default-features = false, fe
 # against; two definitions of that would drift, and the drift would be a tool
 # description promising limits the module does not enforce. This crate carried
 # a verbatim copy of the contract for exactly that reason and paid exactly that
-# risk — `src/openhuman/tools/impl/document/format/` was 1,873 lines that
+# risk — `crates/openhuman-core/src/openhuman/tools/impl/document/format/` was 1,873 lines that
 # differed from `crates/tinydocs-bus/src/` only in doc-link paths.
 #
 # Vendored as a path dependency like `tinyhumans-sdk`: the crate is not
@@ -791,7 +782,7 @@ tinydocs-bus = { path = "../../vendor/tinydocs/crates/tinydocs-bus", optional = 
 # Same arrangement as `tinydocs-bus`: member names, the payload types the
 # module answers with, and the contract version, at a cost of `serde`. The
 # processing lives in the `tinyvoice` TinyBus module, so nothing here decodes
-# audio. `src/openhuman/modules/voice.rs` used to redeclare these types with a
+# audio. `crates/openhuman-core/src/openhuman/modules/voice.rs` used to redeclare these types with a
 # comment saying it did so because this crate did not depend on TinyVoice;
 # it does now.
 #
@@ -808,7 +799,7 @@ tinyvoice-bus = { path = "../../vendor/tinyvoice/crates/tinyvoice-bus", optional
 # a cost of `serde`. The router, the compressors, the CCR cache and the rule
 # engine all live in the `tinyjuice` module and are not in this build.
 #
-# `src/openhuman/inference/tokenjuice/types.rs` was a 259-line hand-copy of
+# `crates/openhuman-core/src/openhuman/inference/tokenjuice/types.rs` was a 259-line hand-copy of
 # these types headed "Stable wire types shared with the separately compiled
 # TinyJuice module" — shared by convention and checked by nobody. It is a
 # re-export now.
@@ -841,7 +832,7 @@ tinyhosts = { path = "../../vendor/tinyhosts", default-features = false, feature
 # formats themselves: parsing, validation, and the conversions between their
 # encodings for Bitcoin, EVM chains, Solana and Tron. Nothing about "is this a
 # well-formed Solana address" is OpenHuman-specific, so the rules live where
-# any host can reach them. What stays in `src/openhuman/web3/` is everything
+# any host can reach them. What stays in `crates/openhuman-core/src/openhuman/web3/` is everything
 # the crate deliberately refuses to own: RPC endpoint resolution, transaction
 # assembly and broadcast, and key custody.
 #
@@ -1089,7 +1080,7 @@ inference = ["dep:cpal"]
 # Default-ON.
 #
 # The synthesis is NOT in this build. All three run in the `tinydocs` TinyBus
-# module, downloaded and verified at first use (`src/openhuman/modules/`), so
+# module, downloaded and verified at first use (`crates/openhuman-core/src/openhuman/modules/`), so
 # this gate turns on the tools and the host policy around them — the artifact
 # pipeline, the deadlines, image resolution under the security policy — and
 # `tinydocs` is here for the wire contract only. `docx-rs`, `ppt-rs` and
@@ -1127,7 +1118,7 @@ hosting = ["dep:tinyhosts"]
 # should not carry `ureq` and an archive stack to support a loader it cannot use.
 #
 # A loaded module is trusted in-process code with this process's privileges, and
-# tinybus never unloads one. See `src/openhuman/modules/` before adding an entry
+# tinybus never unloads one. See `crates/openhuman-core/src/openhuman/modules/` before adding an entry
 # to the registry.
 modules = ["tinybus/modules"]
 # Voice + audio_toolkit domains: STT/TTS providers, the standalone dictation
@@ -1307,7 +1298,7 @@ flows = ["dep:tinyflows", "dep:tinyflows-catalog", "dep:tinyflows-copilot", "dep
 # this feature is OFF — `tools::traits` re-exports `ToolResult`/`ToolContent`
 # out of `skills::types` and ~236 files consume them, so those inert serde
 # types are a type carve-out, not part of the gated behaviour. See
-# `src/openhuman/skills/stub.rs`.
+# `crates/openhuman-core/src/openhuman/skills/stub.rs`.
 skills = []
 # MCP domains, all under the `mcp/` family: `mcp::server` (the `openhuman mcp`
 # stdio/HTTP server exposing our tool surface), `mcp::registry` (dynamic
@@ -1370,7 +1361,7 @@ crash-reporting = ["dep:sentry"]
 #
 # Facade + type carve-out, NOT a leaf gate: `pub mod medulla;` is always
 # compiled, and `medulla::contract` + `medulla::events` stay compiled in BOTH
-# builds because `crates/openhuman-core/src/embed/` names those types in public signatures. Only
+# builds because `crates/openhuman-embed/src/` names those types in public signatures. Only
 # `medulla::client` — everything that touches reqwest — is gated. This follows
 # the rule the `skills` / `mcp` gates established: carve inert types
 # out and gate behaviour, so the two builds share one type definition and

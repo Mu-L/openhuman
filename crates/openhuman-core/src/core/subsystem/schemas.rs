@@ -6,7 +6,7 @@
 //! `AGENTS.md` says `crates/openhuman-core/src/core/` is transport only. This is the one deliberate
 //! exception, and it is narrow: the subsystem registry *is* a kernel binding
 //! table — the same category as `core::all`'s controller registry — and there
-//! is no `src/openhuman/` family that owns it. Giving it one would mean a new
+//! is no `crates/openhuman-core/src/openhuman/` family that owns it. Giving it one would mean a new
 //! `DomainGroup` variant plus the four compiler-enforced edits and three
 //! drift-guard lists that come with it, for a single read-only function. So it
 //! is registered from here, tagged `DomainGroup::Platform`.

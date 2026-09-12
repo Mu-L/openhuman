@@ -1,5 +1,5 @@
-# Virtual workspace root. OpenHuman's implementation remains in `src/` while
-# the Cargo package manifest lives under `crates/openhuman-core`. Vendored
+# Virtual workspace root. OpenHuman's implementation and package manifest live
+# under `crates/openhuman-core`. Vendored
 # module workspaces are excluded so their workspace-inherited keys continue to
 # resolve against their own roots.
 [workspace]

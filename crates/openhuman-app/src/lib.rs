@@ -2345,7 +2345,7 @@ pub fn run() {
     // `SIGBUS / KERN_PROTECTION_FAILURE`.
     //
     // The structural fix (`spawn_blocking` for the TOML parse + cache in
-    // `src/openhuman/config/{schema/load.rs, ops.rs}`) moves the largest
+    // `crates/openhuman-core/src/openhuman/config/{schema/load.rs, ops.rs}`) moves the largest
     // contributor off the worker. An initial 8 MiB bump shipped here was
     // enough for that single tower, but sub-agent delegation (issue #3159
     // / PR #3155) re-tipped the scale: the standalone `openhuman-core`
@@ -3118,7 +3118,7 @@ pub fn run() {
                             // after the <key>ProgramArguments</key> marker. The
                             // service installer always writes it as an absolute
                             // path to the openhuman-core binary (see
-                            // src/openhuman/platform/service/macos.rs).
+                            // crates/openhuman-core/src/openhuman/platform/service/macos.rs).
                             let after_key = contents.split("<key>ProgramArguments</key>").nth(1)?;
                             let start = after_key.find("<string>")? + "<string>".len();
                             let rest = &after_key[start..];

@@ -4216,7 +4216,18 @@ dependencies = [
 name = "openhuman-embed"
 version = "0.63.25"
 dependencies = [
+ "anyhow",
+ "env_logger",
+ "log",
  "openhuman",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror 2.0.20",
+ "tokio",
+ "url",
+ "uuid",
+ "wiremock",
 ]
 
 [[package]]

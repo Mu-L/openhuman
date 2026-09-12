@@ -322,7 +322,7 @@ pub enum ExpectedErrorKind {
     /// openhuman@0.57.53, `Cohere embed API error (403 Forbidden):
     /// <!doctype html>…<title>403</title>…`).
     UpstreamEdgeBlock,
-    /// `approval_decide` (`src/openhuman/security/approval/rpc.rs`) resolved a request_id
+    /// `approval_decide` (`crates/openhuman-core/src/openhuman/security/approval/rpc.rs`) resolved a request_id
     /// whose pending row was **already decided, lazily expired, or superseded**
     /// — `store::decide` updated 0 rows because `decided_at` was already set,
     /// and `store::get_decision` confirms a persisted decision exists. The
@@ -341,7 +341,7 @@ pub enum ExpectedErrorKind {
     ApprovalNoPendingRace,
     /// A remote MCP server answered the connect handshake with HTTP 401 — it
     /// needs OAuth sign-in, not a code fix. `McpHttpClient::read_response`
-    /// (`src/openhuman/mcp/http_client/client.rs`) raises the typed
+    /// (`crates/openhuman-core/src/openhuman/mcp/http_client/client.rs`) raises the typed
     /// `tinymcp::Error::Unauthorized`, and
     /// `mcp::registry::connections::connect` already classifies it and stores a
     /// `needs_auth` flag so the UI prompts the user to authenticate (the
@@ -919,7 +919,7 @@ fn is_embedding_backend_auth_failure(lower: &str) -> bool {
 /// Detect a custom embeddings endpoint that exposes **no embeddings API** —
 /// the `OpenAiEmbedding` client POSTed `/embeddings` and the host answered
 /// `404 Not Found` (route absent) or `405 Method Not Allowed`. Canonical wire
-/// shape from `src/openhuman/inference/embeddings/openai.rs`:
+/// shape from `crates/openhuman-core/src/openhuman/inference/embeddings/openai.rs`:
 ///
 /// ```text
 /// Embedding API error (404 Not Found): <body>
@@ -947,7 +947,7 @@ pub(crate) fn is_embedding_endpoint_absent(lower: &str) -> bool {
 /// Detect a custom/cloud embeddings endpoint that IS an embeddings API but
 /// **rejected the configured model id** — the user pasted a non-embedding
 /// (chat/reasoning) model into the embeddings model field. Canonical wire shape
-/// from `src/openhuman/inference/embeddings/openai.rs` (TAURI-RUST-9SK, ~2205 events):
+/// from `crates/openhuman-core/src/openhuman/inference/embeddings/openai.rs` (TAURI-RUST-9SK, ~2205 events):
 ///
 /// ```text
 /// Embedding API error (400 Bad Request): {"error":{"message":"Model nvidia/nemotron-3-super-120b-a12b does not exist","code":400}}
@@ -1033,7 +1033,7 @@ fn is_memory_store_breaker_open(lower: &str) -> bool {
 /// - `"Embedding API error (401 Unauthorized): {…\"error\":\"Invalid token\"…}"`
 ///   — TAURI-RUST-4K5 (~118 events, escalating on 0.56.0). Same OpenHuman
 ///   backend session-expired envelope as 4P0, but the embedding client at
-///   `src/openhuman/inference/embeddings/openai.rs:139` wraps it with the
+///   `crates/openhuman-core/src/openhuman/inference/embeddings/openai.rs:139` wraps it with the
 ///   `"Embedding API error"` prefix instead of `"OpenHuman API error"`.
 ///   Uses the same conjunctive-anchor pattern so BYO-key embedding 401s
 ///   from third-party providers (OpenAI / Voyage / Cohere) still escalate
@@ -1076,7 +1076,7 @@ pub fn is_session_expired_message(msg: &str) -> bool {
         || (msg.contains("OpenHuman API error (401")
             && msg.contains("\"error\":\"Invalid token\""))
         // TAURI-RUST-4K5 — same OpenHuman backend "Invalid token" envelope
-        // wrapped by `src/openhuman/inference/embeddings/openai.rs:139` with the
+        // wrapped by `crates/openhuman-core/src/openhuman/inference/embeddings/openai.rs:139` with the
         // `"Embedding API error"` prefix instead of `"OpenHuman API error"`.
         // Same conjunctive-anchor pattern as 4P0: the embedding-scoped
         // prefix gates the match so a third-party BYO-key embedding 401
@@ -1770,7 +1770,7 @@ fn is_provider_user_state_message(lower: &str) -> bool {
     // personal Composio v3 tenant rejected with a 401 because the stored
     // API key is invalid / revoked / has the wrong prefix. The canonical
     // wire shape rendered by
-    // `src/openhuman/integrations/composio/tools/impl/network/composio.rs::response_error`
+    // `crates/openhuman-core/src/openhuman/integrations/composio/tools/impl/network/composio.rs::response_error`
     // and the various direct-mode op wrappers is:
     //
     //   `[composio-direct] list_connections failed: Composio v3
@@ -1922,7 +1922,7 @@ fn is_local_ai_capability_unavailable_message(lower: &str) -> bool {
 /// (score ≥ 0.70) and `ReviewBlocked` (score ≥ 0.55) — share a unique
 /// prefix that cannot appear in any other error path. Anchored to the exact
 /// strings emitted by `prompt_guard_user_message` in
-/// `src/openhuman/inference/local/ops.rs`.
+/// `crates/openhuman-core/src/openhuman/inference/local/ops.rs`.
 fn is_prompt_injection_blocked_message(lower: &str) -> bool {
     lower.contains("prompt flagged for security review")
         || lower.contains("prompt blocked by security policy")
@@ -4944,7 +4944,7 @@ mod tests {
     fn classifies_config_load_timed_out() {
         // Canonical wire string emitted by `load_config_with_timeout` and
         // `reload_config_snapshot_with_timeout` in
-        // `src/openhuman/config/ops.rs`. Drops TAURI-RUST-5X.
+        // `crates/openhuman-core/src/openhuman/config/ops.rs`. Drops TAURI-RUST-5X.
         assert_eq!(
             expected_error_kind("Config loading timed out"),
             Some(ExpectedErrorKind::ConfigLoadTimedOut),
@@ -6049,7 +6049,7 @@ mod tests {
     fn classifies_embedding_endpoint_absent_as_config_rejection() {
         // TAURI-RUST-5JR — custom embeddings provider pointed at a chat-only
         // base URL (DeepSeek) that has no `/embeddings` route. Verbatim shape
-        // produced by `src/openhuman/inference/embeddings/openai.rs` (prefix preserved
+        // produced by `crates/openhuman-core/src/openhuman/inference/embeddings/openai.rs` (prefix preserved
         // even after the actionable-hint suffix is appended).
         assert_eq!(
             expected_error_kind(
@@ -6636,11 +6636,11 @@ mod tests {
     /// matcher is caught for the whole family, not just the SG instance.
     #[test]
     fn session_expired_sibling_family_factory_strings_match() {
-        // src/openhuman/inference/provider/factory.rs:247
+        // crates/openhuman-core/src/openhuman/inference/provider/factory.rs:247
         // (verify_session_active — scheduler_gate signed-out path)
         let custom_providers_variant =
             "SESSION_EXPIRED: backend session not active — sign in to use custom providers";
-        // src/openhuman/inference/provider/factory.rs:266
+        // crates/openhuman-core/src/openhuman/inference/provider/factory.rs:266
         // (verify_session_active — empty auth-profile JWT path)
         let no_backend_session_variant =
             "SESSION_EXPIRED: no backend session — sign in to use OpenHuman";
@@ -6689,7 +6689,7 @@ mod tests {
     }
 
     /// TAURI-RUST-4K5 (118 events, escalating on 0.56.0): the embedding
-    /// client at `src/openhuman/inference/embeddings/openai.rs:139` wraps the same
+    /// client at `crates/openhuman-core/src/openhuman/inference/embeddings/openai.rs:139` wraps the same
     /// OpenHuman backend `{"success":false,"error":"Invalid token"}` 401
     /// envelope as 4P0, but with the `"Embedding API error"` prefix
     /// instead of `"OpenHuman API error"` (different emit-site format
@@ -7390,7 +7390,7 @@ mod tests {
     fn updater_real_panic_still_reported() {
         let event = event_with_tags_and_message(
             &[("domain", "update"), ("operation", "check_releases")],
-            "thread 'main' panicked at src/openhuman/platform/update/core.rs: index out of bounds",
+            "thread 'main' panicked at crates/openhuman-core/src/openhuman/platform/update/core.rs: index out of bounds",
         );
         assert!(
             !is_updater_transient_event(&event),

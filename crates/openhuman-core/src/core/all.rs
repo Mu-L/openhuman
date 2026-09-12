@@ -67,7 +67,7 @@ impl RegisteredController {
 /// compile time. `Platform` is the catch-all for everything not in a named
 /// family — always on in `full()`, off in `harness()`/`none()`.
 ///
-/// **Groups track `src/openhuman/` family directories 1:1.** Before the domain
+/// **Groups track `crates/openhuman-core/src/openhuman/` family directories 1:1.** Before the domain
 /// reorg (#5328) they could not: a capability lived across up to 13 sibling
 /// top-level dirs, so half the controller surface was tagged `Platform` for want
 /// of a family to name. That made two things wrong which are now fixed:
@@ -483,7 +483,7 @@ fn build_registered_controllers() -> Vec<GroupedController> {
     // Kernel subsystem/driver bindings: slot, bound driver, class, health,
     // contract version, capabilities (docs/specs/kernel.md §6 item 6). The one
     // controller registered from `crates/openhuman-core/src/core/` — it is a kernel binding table
-    // with no `src/openhuman/` family of its own, so it is tagged `Platform`
+    // with no `crates/openhuman-core/src/openhuman/` family of its own, so it is tagged `Platform`
     // rather than earning a `DomainGroup` variant for a single read-only
     // function. Consequence: like `health`, it is absent under
     // `DomainSet::harness()`, while `memory.provider_status` (a `Memory`

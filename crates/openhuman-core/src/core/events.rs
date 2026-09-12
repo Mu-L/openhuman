@@ -283,7 +283,7 @@ pub enum DomainEvent {
     /// Published by `openhuman.memory_sync_channel` (channel_id = Some(...)) and
     /// `openhuman.memory_sync_all` (channel_id = None). No consumers exist yet —
     /// this variant is a hook for future ingestion subscribers to react to pull
-    /// requests. See `src/openhuman/memory/ops.rs` for the RPC handlers.
+    /// requests. See `crates/openhuman-core/src/openhuman/memory/ops.rs` for the RPC handlers.
     MemorySyncRequested { channel_id: Option<String> },
     /// A high-level memory sync orchestration stage changed.
     ///
@@ -665,7 +665,7 @@ pub enum DomainEvent {
     ///
     /// Bridged to the `external_transfer_pending` web-channel socket event by
     /// `EgressSurfaceSubscriber` (defined in
-    /// `src/openhuman/web_chat/event_bus.rs`) when the emitting
+    /// `crates/openhuman-core/src/openhuman/web_chat/event_bus.rs`) when the emitting
     /// turn carries chat routing. `thread_id` / `client_id` come from the
     /// ambient `APPROVAL_CHAT_CONTEXT` and are `None` for CLI / cron /
     /// background transfers (no chat surface to route to).

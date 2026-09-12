@@ -91,7 +91,7 @@ interface RawWorkflowsReadResourceResult {
 /**
  * Parameters accepted by `openhuman.skills_create`.
  *
- * Matches the wire shape defined in `src/openhuman/skills/schemas.rs`
+ * Matches the wire shape defined in `crates/openhuman-core/src/openhuman/skills/schemas.rs`
  * (`SkillsCreateParams`) — `allowedTools` is rekeyed to `allowed-tools` on
  * the JSON-RPC envelope per SKILL.md frontmatter convention (with
  * `allowed_tools` accepted as an alias by the Rust deserializer).
