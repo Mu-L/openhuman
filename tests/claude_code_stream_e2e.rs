@@ -3,8 +3,10 @@
 //! Feeds a captured representative CC 2.x stream-json transcript through
 //! `StreamJsonParser` → `EventMapper` and asserts that:
 //! - text deltas arrive in order and aggregate into the final response
-//! - tool-use blocks emit ToolCallStart + ToolCallArgsDelta + a final
-//!   ToolCall with parsed JSON arguments
+//! - a `tool_use` block is the CLI's **own, already-executed** call: its
+//!   `input_json_delta`s are kept out of the visible text and nothing is
+//!   surfaced to the harness — no `ToolCallStart`, no `ToolCallArgsDelta`,
+//!   no aggregated `ToolCall` (see the `event_mapper` module docs; #5739)
 //! - the `result` event finalizes usage tokens (incl. cache_read)
 //! - session_id is captured from the first `system` event
 //!
@@ -69,30 +71,29 @@ fn captures_text_tool_call_and_usage() {
         .collect();
     assert_eq!(text_chunks, vec!["Hello", " world"]);
 
-    // Tool call lifecycle.
-    assert!(deltas.iter().any(|d| matches!(
-        d,
-        ProviderDelta::ToolCallStart { tool_name, call_id }
-            if tool_name == "memory_search" && call_id == "call_42"
-    )));
-    let args_concat: String = deltas
-        .iter()
-        .filter_map(|d| match d {
-            ProviderDelta::ToolCallArgsDelta { call_id, delta } if call_id == "call_42" => {
-                Some(delta.as_str())
-            }
-            _ => None,
-        })
-        .collect::<Vec<_>>()
-        .join("");
-    assert_eq!(args_concat, r#"{"query":"foo"}"#);
+    // The CLI's own tool call is suppressed end to end: nothing about
+    // `call_42` reaches the harness, and its argument JSON never leaks into
+    // the text stream.
+    assert!(
+        !deltas.iter().any(|d| matches!(
+            d,
+            ProviderDelta::ToolCallStart { .. } | ProviderDelta::ToolCallArgsDelta { .. }
+        )),
+        "a self-executed CLI tool_use block must not surface as a harness tool call: {deltas:?}"
+    );
+    assert!(
+        !text_chunks
+            .iter()
+            .any(|t| t.contains("que") || t.contains("ry\"")),
+        "input_json_delta text must stay out of the visible text: {text_chunks:?}"
+    );
 
     // Aggregated response.
     assert_eq!(mapper.final_text, "Hello world");
-    assert_eq!(mapper.tool_calls.len(), 1);
-    assert_eq!(mapper.tool_calls[0].name, "memory_search");
-    assert_eq!(mapper.tool_calls[0].id, "call_42");
-    assert_eq!(mapper.tool_calls[0].arguments, r#"{"query":"foo"}"#);
+    assert!(
+        mapper.tool_calls.is_empty(),
+        "no ToolCall is aggregated for a CLI-internal tool_use block"
+    );
 
     // Usage from the `result` event.
     assert!(mapper.finished);
