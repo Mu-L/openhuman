@@ -127,12 +127,11 @@ pub(crate) fn build_crate_anthropic_model(
     // wrapper below. AnthropicModel applies its fixed override after the
     // request is prepared and therefore cannot honour a per-request model's
     // suppression decision.
-    let adapter_temperature_override =
-        if config.temperature_unsupported_models.is_empty() {
-            config.temperature_override
-        } else {
-            None
-        };
+    let adapter_temperature_override = if config.temperature_unsupported_models.is_empty() {
+        config.temperature_override
+    } else {
+        None
+    };
     let model = AnthropicModel::with_base_url(config.api_key, config.endpoint)
         .with_model(config.model)
         .with_temperature_override(adapter_temperature_override);
