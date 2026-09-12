@@ -110,7 +110,7 @@ const CustomServerFormModal = ({ mode, server, onClose, onSubmit }: CustomServer
   const initialHttpOrigin = useRef(
     mode === 'edit' && seedTransport(server) === 'http_remote' ? originOf(seedUrl(server)) : null
   );
-  const httpOriginChanged = useRef(false);
+  const displayedHttpOrigin = useRef(initialHttpOrigin.current);
 
   const isEdit = mode === 'edit';
 
@@ -171,20 +171,19 @@ const CustomServerFormModal = ({ mode, server, onClose, onSubmit }: CustomServer
     setUrl(next);
     const initialOrigin = initialHttpOrigin.current;
     const nextOrigin = originOf(next);
-    if (nextOrigin === initialOrigin) {
-      httpOriginChanged.current = false;
-    } else if (
+    if (
       isEdit &&
       transport === 'http_remote' &&
       initialOrigin &&
-      !httpOriginChanged.current
+      nextOrigin &&
+      nextOrigin !== displayedHttpOrigin.current
     ) {
       // The core drops credentials when the HTTP origin changes. Clear the
       // write-only rows too, so the form cannot imply that blank means keep.
       setEnvRows([newRow()]);
       setError(null);
-      httpOriginChanged.current = true;
     }
+    if (nextOrigin) displayedHttpOrigin.current = nextOrigin;
   };
 
   /**
