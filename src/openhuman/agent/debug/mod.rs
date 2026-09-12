@@ -25,7 +25,10 @@ use std::path::PathBuf;
 use anyhow::{anyhow, Context, Result};
 
 pub mod dump_writer;
+pub mod prompt_size;
+pub mod wire;
 pub use dump_writer::{write_prompt_dumps, DumpWriteSummary};
+pub use wire::render as render_wire_dump;
 
 use crate::openhuman::agent::context::prompt::{
     LearnedContextData, PromptContext, PromptTool, ToolCallFormat,

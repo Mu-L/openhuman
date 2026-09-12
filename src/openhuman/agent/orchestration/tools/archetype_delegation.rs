@@ -200,7 +200,7 @@ impl Tool for ArchetypeDelegationTool {
     }
 }
 
-fn render_structured_handoff(prompt: &str, args: &Value) -> String {
+pub(super) fn render_structured_handoff(prompt: &str, args: &Value) -> String {
     let mut out = String::new();
     out.push_str("Task:\n");
     out.push_str(prompt.trim());
@@ -217,6 +217,20 @@ fn render_structured_handoff(prompt: &str, args: &Value) -> String {
     );
 
     out
+}
+
+pub(super) fn delegation_envelope_properties() -> Value {
+    serde_json::json!({
+        "prompt": {"type": "string"},
+        "objective": {"type": "string"},
+        "evidence": {"type": "array", "items": {"type": "string"}},
+        "constraints": {"type": "array", "items": {"type": "string"}},
+        "must_not_assume": {"type": "array", "items": {"type": "string"}},
+        "expected_output": {"type": "string"},
+        "citation_requirement": {"type": "string"},
+        "model": {"type": "string"},
+        "blocking": {"type": "boolean"}
+    })
 }
 
 fn push_optional_string(out: &mut String, label: &str, value: Option<&Value>) {
