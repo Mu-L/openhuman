@@ -249,7 +249,6 @@ fn from_dialect_message(message: DialectMessage) -> ChatMessage {
         role: message.role.as_str().to_string(),
         content: message.content,
         extra_metadata: message.extra_metadata,
-        cache_breakpoints: Vec::new(),
     }
 }
 
@@ -293,12 +292,18 @@ fn dispatch_format_results(
     dialect: &dyn ToolDialect,
     results: &[ToolExecutionResult],
 ) -> ConversationMessage {
-    dialect
-        .format_results(&to_outcomes(results))
-        .into_iter()
-        .map(from_transcript_entry)
-        .next()
-        .unwrap_or_else(|| ConversationMessage::ToolResults(Vec::new()))
+    let entries = dialect.format_results(&to_outcomes(results));
+    debug_assert_eq!(
+        entries.len(),
+        1,
+        "OpenHuman tool results must remain a single conversation message"
+    );
+    from_transcript_entry(
+        entries
+            .into_iter()
+            .next()
+            .expect("tool result formatting must produce a message"),
+    )
 }
 
 fn dispatch_provider_messages(
