@@ -276,29 +276,6 @@ pub fn all_tools_with_runtime(
         Box::new(ResolveTimeTool::new()),
         Box::new(DetectToolsTool::new()),
         Box::new(InstallToolTool::new(security.clone())),
-        // Orchestration session-history read tools — browse persisted
-        // OpenHuman↔agent transcripts. Read-only; workspace-internal store access.
-        Box::new(
-            crate::openhuman::hosted::orchestration::tools::ListSessionsTool::new(config.clone()),
-        ),
-        Box::new(
-            crate::openhuman::hosted::orchestration::tools::ReadSessionTool::new(config.clone()),
-        ),
-        // List the agent's tiny.place contacts (browse-loop entry point).
-        Box::new(crate::openhuman::hosted::orchestration::tools::ListContactsTool),
-        // Send-on-behalf: DM another agent for the user. Linked-peers-only,
-        // reuse-or-mint per-peer session id; Write-class external effect.
-        Box::new(
-            crate::openhuman::hosted::orchestration::tools::SendToAgentTool::new(config.clone()),
-        ),
-        // The scheduler surface the model sees. The six per-operation tools
-        // below are its implementation and stay registered as
-        // `ToolExposure::Hidden` so a replayed transcript or a saved skill
-        // naming `cron_add` still dispatches — see `cron::tools::collapsed`.
-        Box::new(crate::openhuman::cron::tools::CronTool::new(
-            config.clone(),
-            security.clone(),
-        )),
         Box::new(CronAddTool::new(config.clone(), security.clone())),
         Box::new(CronListTool::new(config.clone())),
         Box::new(CronRemoveTool::new(config.clone())),
@@ -445,14 +422,6 @@ pub fn all_tools_with_runtime(
         Box::new(WalletTxReceiptTool::new()),
         #[cfg(feature = "web3")]
         Box::new(WalletLookupTxTool::new()),
-        // The memory surface the model sees. The eleven per-operation tools it
-        // dispatches to stay registered as `ToolExposure::Hidden` so a
-        // replayed transcript or a saved skill naming `memory_*` still works —
-        // see `memory::tools::collapsed`.
-        Box::new(crate::openhuman::memory::tools::MemoryTool::new(
-            config.clone(),
-            security.clone(),
-        )),
         Box::new(MemoryStoreTool::new(security.clone())),
         Box::new(MemoryRecallTool::new()),
         Box::new(MemoryForgetTool::new(security.clone())),
@@ -537,17 +506,6 @@ pub fn all_tools_with_runtime(
         #[cfg(feature = "skills")]
         Box::new(
             WorkflowDescribeTool::new(config.clone())
-                .with_skill_allowlist(skill_allowlist.cloned())
-                .with_profile_skills_root(profile_skills_root.map(|p| p.to_path_buf())),
-        ),
-        // Ranked lookup over the same corpus `list_workflows` lists, with the
-        // same profile scoping. It exists because that list grows — bundled
-        // skills ship in the binary and a catalogue install is one call away —
-        // and neither the prompt catalogue nor a full `list_workflows` dump
-        // scales with it. See `skills::search`.
-        #[cfg(feature = "skills")]
-        Box::new(
-            crate::openhuman::skills::search::SkillSearchTool::new(config.clone())
                 .with_skill_allowlist(skill_allowlist.cloned())
                 .with_profile_skills_root(profile_skills_root.map(|p| p.to_path_buf())),
         ),
@@ -738,24 +696,13 @@ pub fn all_tools_with_runtime(
         security.clone(),
     )));
 
-    // Long-term goals list tools. Used primarily by the background
-    // `goals_agent` (which filters to these via its `[tools] named`
-    // allowlist); also available to the main agent for explicit edits.
-    {
-        let goals_dir = root_config.workspace_dir.clone();
-        tools.push(Box::new(
-            crate::openhuman::memory::tools::goals::GoalsListTool::new(goals_dir.clone()),
-        ));
-        tools.push(Box::new(
-            crate::openhuman::memory::tools::goals::GoalsAddTool::new(goals_dir.clone()),
-        ));
-        tools.push(Box::new(
-            crate::openhuman::memory::tools::goals::GoalsEditTool::new(goals_dir.clone()),
-        ));
-        tools.push(Box::new(
-            crate::openhuman::memory::tools::goals::GoalsDeleteTool::new(goals_dir),
-        ));
-    }
+    // Long-term goals list tool. Used primarily by the background
+    // `goals_agent` (which filters to it via its `[tools] named` allowlist);
+    // also available to the main agent for explicit edits. One `op`-dispatched
+    // tool, not four — see the module docs on `memory::tools::goals`.
+    tools.push(Box::new(
+        crate::openhuman::memory::tools::goals::GoalsTool::new(root_config.workspace_dir.clone()),
+    ));
 
     // Thread-level goal tools (Codex-style per-thread completion contract).
     // Visible only to agents that allowlist them (orchestrator). The target
@@ -1209,17 +1156,6 @@ pub fn all_tools_with_runtime(
     // `orchestrator_tools::collect_orchestrator_tools` — which never pass
     // through this function.
     crate::openhuman::tools::toolpacks::append_pack_tools(&mut tools);
-
-    // The lookup half of `ToolExposure::Deferred`. Always registered, for the
-    // same reason `load_skill` / `use_skill` are: whether anything is actually
-    // deferred depends on the agent's belt, which is resolved later in the
-    // session builder, and a search tool that arrived *after* the tools it
-    // searches were hidden would be one release of silently unreachable
-    // capabilities. Its index starts empty and costs one small schema; the
-    // builder fills it via `bind_tool_search_index`.
-    tools.push(Box::new(
-        crate::openhuman::tools::implementations::meta::ToolSearchTool::new(),
-    ));
     tools
 }
 
@@ -1317,12 +1253,15 @@ fn tool_group(name: &str) -> crate::core::all::DomainGroup {
         "notify_user",
     ];
     const THREADS_EXTRA: &[&str] = &["goal_get", "goal_set", "goal_complete"];
-    // Memory extras not covered by the `memory_`/`goals_` prefixes.
+    // Memory extras not covered by the `memory_`/`goals_` prefixes. `goals`
+    // has no trailing underscore since the four `goals_*` tools collapsed into
+    // one `op`-dispatched tool, so it needs an entry here rather than a prefix.
     const MEMORY_EXTRA: &[&str] = &[
         "remember_preference",
         "save_preference",
         "update_memory_md",
         "tool_stats",
+        "goals",
     ];
 
     // MCP: every MCP tool name is `mcp_` prefixed (mcp_registry_*, mcp_setup_*,
@@ -1354,16 +1293,7 @@ fn tool_group(name: &str) -> crate::core::all::DomainGroup {
         return DomainGroup::Voice;
     }
     // Memory family (harness-kept): memory_* store/search/etc + goals_* + extras.
-    //
-    // The bare `memory` name is matched explicitly: the collapsed tool drops
-    // the `memory_` prefix its members carry, so prefix matching alone would
-    // land it in `Platform` and leave the whole memory surface callable under
-    // a `DomainSet { platform: true, memory: false }`.
-    if name == crate::openhuman::memory::tools::MEMORY_TOOL_NAME
-        || name.starts_with("memory_")
-        || name.starts_with("goals_")
-        || MEMORY_EXTRA.contains(&name)
-    {
+    if name.starts_with("memory_") || name.starts_with("goals_") || MEMORY_EXTRA.contains(&name) {
         return DomainGroup::Memory;
     }
     // Threads family (harness-kept): thread_* + todo_* + per-thread goal + search.
@@ -1412,20 +1342,9 @@ fn tool_group(name: &str) -> crate::core::all::DomainGroup {
     // leak the #4808 review flagged. Keep these in
     // lockstep with the `push(...)` tags in `core::all`.
     //
-    // Automation: scheduled jobs plus the subconscious monitor +
+    // Automation: scheduled jobs (`cron_*`) plus the subconscious monitor +
     // proactive-notify surface.
-    //
-    // The bare `cron` name is matched explicitly. The collapsed tool does not
-    // carry the `cron_` prefix its members do, so prefix matching alone would
-    // drop it into `Platform` below and leave the whole scheduler callable
-    // under a `DomainSet { platform: true, automation: false }` — exactly the
-    // leak #4808 added prefix matching to prevent, reintroduced by the
-    // collapse rather than by a new tool.
-    if name == crate::openhuman::cron::tools::CRON_TOOL_NAME
-        || name.starts_with("cron_")
-        || name == "schedule"
-        || MONITORS.contains(&name)
-    {
+    if name.starts_with("cron_") || name == "schedule" || MONITORS.contains(&name) {
         return DomainGroup::Automation;
     }
     // Integrations: every external connector reached on the user's behalf.
@@ -1435,7 +1354,7 @@ fn tool_group(name: &str) -> crate::core::all::DomainGroup {
         || name.starts_with("exa_")
         || name.starts_with("brave_")
         || name.starts_with("parallel_")
-        || name.starts_with("querit_")
+        || name.starts_with("querit_") || name.starts_with("tavily_")
         || name.starts_with("google_places_")
         || name.starts_with("stock_")
         || name.starts_with("storage_")
@@ -1457,8 +1376,6 @@ fn tool_group(name: &str) -> crate::core::all::DomainGroup {
     if name.starts_with("orchestration_") {
         return DomainGroup::Hosted;
     }
-    // Relay owns no agent tools since the `tinyplace_*` family was removed —
-    // see `TOOL_LESS` in `ops_tests.rs`, which is what keeps that honest.
     // Desktop: shell-facing surfaces.
     if name.starts_with("dashboard_") {
         return DomainGroup::Desktop;
@@ -1510,17 +1427,17 @@ fn tool_group(name: &str) -> crate::core::all::DomainGroup {
 /// wrong default is worse than no rule. Hence enumeration plus two narrow
 /// prefix rules, backed by the drift guard.
 ///
-/// ## Honesty clause — three assignments run ahead of the plumbing
-///
-/// `goals_*` is filesystem-backed today (`tinycortex::memory::goals::store`), not
-/// `MemoryGoals`; `tool_stats` reads the legacy `Arc<dyn Memory>` plus
-/// `agent::learning::tool_tracker`, not `MemoryToolMemory`; `memory_diff` reads
-/// `memory::diff::ops`, not `MemoryDiff`. Filtering them on the driver's
-/// advertised set is nevertheless the correct M5 behaviour: §3.3 is a contract
-/// about what the *model is told exists*, and the later re-point onto
-/// `MemoryGuard` must not change the advertised surface. Assigning them `None`
-/// to dodge the mismatch would bake the wrong contract in.
-pub(crate) fn tool_capability(name: &str) -> Option<tinymemory_api::capabilities::Capability> {
+/// ## Honesty clause — two assignments still run ahead of the plumbing:
+/// `tool_stats` reads the legacy `Arc<dyn Memory>` + `tool_tracker`, not
+/// `MemoryToolMemory`; `memory_diff` reads `memory::diff::ops`, not
+/// `MemoryDiff`. Filtering both on the driver's advertised set is still the
+/// correct M5 behaviour: §3.3 contracts what the *model is told exists*, so
+/// the later re-point onto `MemoryGuard` must not change the advertised
+/// surface, and `None` to dodge the mismatch would bake the wrong contract in.
+/// `goals_*` was the third until #5560 routed it onto the guarded
+/// `MemoryGoals` family — the advertised capability did not change when
+/// the plumbing caught up: the exact property this clause protects.
+fn tool_capability(name: &str) -> Option<tinymemory_api::capabilities::Capability> {
     use tinymemory_api::capabilities::Capability;
 
     // Not driver-backed. Each entry is an argued exception, not a fallthrough.
@@ -1534,11 +1451,7 @@ pub(crate) fn tool_capability(name: &str) -> Option<tinymemory_api::capabilities
 
     let capability = match name {
         // ── Mandatory families: always advertised, listed for the record ──
-        // The collapsed `memory` tool is `Core` because `store` and `forget`
-        // are: it must stay registered whenever the mandatory family is, and
-        // it filters its own action list by capability so an unavailable
-        // action is never advertised. See `memory::tools::collapsed`.
-        "memory" | "memory_store" | "memory_forget" | "remember_preference" | "save_preference" => {
+        "memory_store" | "memory_forget" | "remember_preference" | "save_preference" => {
             Capability::Core
         }
         // Chunk/recall retrieval surface. NOT `Tree` — these read chunk
@@ -1560,6 +1473,13 @@ pub(crate) fn tool_capability(name: &str) -> Option<tinymemory_api::capabilities
         "memory_diff" => Capability::Diff,
         "memory_doctor" => Capability::Maintenance,
         "tool_stats" => Capability::ToolMemory,
+
+        // The long-term goals tool. It was four `goals_*` tools and is now one
+        // `op`-dispatched `goals`; the exact arm is what the prefix rule below
+        // no longer covers. The per-thread `goal_get`/`goal_set`/
+        // `goal_complete` tools are `DomainGroup::Threads` and a different
+        // concept, and neither `goals` nor `goals_` catches them.
+        "goals" => Capability::Goals,
 
         // Prefix rules, so a NEW tool in one of these families auto-gates
         // instead of silently landing in the un-filtered bucket — the same
