@@ -187,7 +187,7 @@ run_build_only_reaper_test() {
   # Keep this real build-path regression in a fresh process so it cannot narrow
   # the DomainSet observed by later registry and domain tests.
   cargo_test --lib \
-    "openhuman::agent::tinyagents::reaper_tests::a_build_only_runtime_is_swept_before_it_can_be_invoked" \
+    "openhuman::agent::tinyagents::reaper::tests::a_build_only_runtime_is_swept_before_it_can_be_invoked" \
     -- --exact --test-threads=1 "$@"
 }
 

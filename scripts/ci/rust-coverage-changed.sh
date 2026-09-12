@@ -279,7 +279,7 @@ run_full() {
   # narrow every later registry lookup in the aggregate unit-test process.
   log "running isolated build-only reaper test"
   llvm_cov --no-report --no-fail-fast -p openhuman --lib \
-    "openhuman::agent::tinyagents::reaper_tests::a_build_only_runtime_is_swept_before_it_can_be_invoked" \
+    "openhuman::agent::tinyagents::reaper::tests::a_build_only_runtime_is_swept_before_it_can_be_invoked" \
     -- --exact --test-threads=1
   llvm_cov_package --no-report --no-fail-fast -p openhuman-embed --all-targets
   llvm_cov_package --no-report --no-fail-fast -p openhuman-tui --all-targets
