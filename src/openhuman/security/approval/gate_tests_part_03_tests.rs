@@ -136,7 +136,7 @@ async fn intercept_with_external_channel_origin_persists_and_ttl_denies() {
     // Non-web channel inbound (Telegram / Discord / Slack / etc.):
     // persist an audit row but TTL-deny — there is no channel-routed
     // approval surface yet, and the input is remote-attacker text.
-    let (gate, _dir, _env) = expiry_gate();
+    let (gate, _dir, env) = expiry_gate();
     let gate = Arc::new(gate);
     let origin = AgentTurnOrigin::ExternalChannel {
         channel: "telegram".into(),
@@ -407,17 +407,28 @@ async fn flow_tool_trust_auto_allows_before_parking() {
     // A different tool on the same trusted flow is unaffected — it still
     // parks, and nothing decides it, so it TTL-denies after
     // `EXPIRY_TEST_TTL`.
-    let untrusted_outcome = turn_origin::with_origin(
-        flow_origin("flow-trusted", true),
-        APPROVAL_FLOW_RUN_CONTEXT.scope(
-            FlowRunContext {
-                flow_id: "flow-trusted".to_string(),
-                run_id: "run-1".to_string(),
-            },
-            gate.intercept("pushover", "send push", serde_json::json!({})),
-        ),
-    )
-    .await;
+    let g = gate.clone();
+    let handle = tokio::spawn(async move {
+        turn_origin::with_origin(
+            flow_origin("flow-trusted", true),
+            APPROVAL_FLOW_RUN_CONTEXT.scope(
+                FlowRunContext {
+                    flow_id: "flow-trusted".to_string(),
+                    run_id: "run-1".to_string(),
+                },
+                g.intercept("pushover", "send push", serde_json::json!({})),
+            ),
+        )
+        .await
+    });
+    let mut tries = 0;
+    while gate.list_pending().unwrap().is_empty() {
+        tries += 1;
+        assert!(tries < 50, "audit row never appeared for untrusted flow tool");
+        tokio::time::sleep(Duration::from_millis(10)).await;
+    }
+    drop(env);
+    let untrusted_outcome = handle.await.unwrap();
     assert!(
         matches!(untrusted_outcome, GateOutcome::Deny { .. }),
         "trust must be scoped to the exact tool granted, not the whole flow"

@@ -594,7 +594,7 @@ async fn intercept_with_workflow_require_approval_persists_and_ttl_denies() {
     // trust root — same conservative park-and-audit shape as
     // `GoalContinuation` / `ExternalChannel`, since there is no flow
     // review surface to route the prompt to yet (B3).
-    let (gate, _dir, _env) = expiry_gate();
+    let (gate, _dir, env) = expiry_gate();
     let gate = Arc::new(gate);
     let origin = AgentTurnOrigin::TrustedAutomation {
         job_id: "flow-2".into(),
@@ -625,6 +625,7 @@ async fn intercept_with_workflow_require_approval_persists_and_ttl_denies() {
         tokio::time::sleep(Duration::from_millis(10)).await;
     }
 
+    drop(env);
     let outcome = handle.await.unwrap();
     match outcome {
         GateOutcome::Deny { reason } => assert!(reason.contains("timed out")),
