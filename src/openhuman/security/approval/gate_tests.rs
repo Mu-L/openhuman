@@ -76,9 +76,7 @@ struct ExpiryEnvGuard {
 impl Drop for ExpiryEnvGuard {
     fn drop(&mut self) {
         match self.previous_ttl.take() {
-            Some(value) => unsafe {
-                std::env::set_var("OPENHUMAN_APPROVAL_TTL_SECS", value)
-            },
+            Some(value) => unsafe { std::env::set_var("OPENHUMAN_APPROVAL_TTL_SECS", value) },
             None => unsafe { std::env::remove_var("OPENHUMAN_APPROVAL_TTL_SECS") },
         }
     }
