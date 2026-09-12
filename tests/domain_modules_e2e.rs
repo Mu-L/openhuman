@@ -143,7 +143,16 @@ async fn setup() -> TestHarness {
     // The HTTP router is intentionally transport-only and does not construct a
     // Core runtime context. Memory-backed RPC reads still need the explicit
     // tinymemory host seams before they can load their configured provider.
-    openhuman_core::openhuman::memory::host_impls::install_memory_host_seams(std::sync::Arc::new(
+    // Same rule for the modules policy, which became load-bearing when the
+    // status RPCs started reading diagnostics through the bound driver
+    // (#5560): resolving a driver refuses outright until boot publishes the
+    // config to load against — "call modules::memory::set_modules_policy
+    // during boot" — and this harness is the boot. With the policy published,
+    // the provider loads the artifact CI installs (TINYMEMORY_TEST_MODULE);
+    // where none is present the binding degrades to its null placeholder and
+    // the diagnostics answer empty, which is a round-trippable result rather
+    // than a JSON-RPC error.
+    openhuman_core::openhuman::modules::memory::set_modules_policy(std::sync::Arc::new(
         openhuman_core::openhuman::config::Config::default(),
     ));
 

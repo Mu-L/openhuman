@@ -115,7 +115,9 @@ pub fn base_tool_specs() -> Vec<McpToolSpec> {
             title: "Browse Memory",
             description: "Paginated listing of memory-tree chunks in reverse-chronological order, \
                           with optional filters by source kind, source id, entity id, time window, \
-                          and substring keyword. Use this when the user wants to enumerate (\"what's \
+                          and token-AND keyword. Every whitespace-separated token must appear in the \
+                          chunk (case-insensitive, any order; punctuation does not matter). Use this \
+                          when the user wants to enumerate (\"what's \
                           recent in my Gmail\", \"show me everything from last week about Alice\") \
                           rather than search by query. Returns chunks plus a total match count for \
                           pagination.",
@@ -317,7 +319,7 @@ fn tree_browse_schema() -> Value {
             "query": {
                 "type": "string",
                 "minLength": 1,
-                "description": "Substring keyword filter over the chunk preview text."
+                "description": "Space-separated keywords; every token must appear in the chunk (case-insensitive, any order; punctuation does not matter)."
             },
             "k": {
                 "type": "integer",
