@@ -1412,10 +1412,10 @@ fn round14_profiles_cover_oauth_token_selection_schema_and_quarantine_edges() {
 
     let migrated = store.load().expect("schema 0 should migrate in memory");
     assert_eq!(migrated.schema_version, 1);
-    assert!(migrated.profiles.contains_key("legacy-empty"));
+    assert!(migrated.profiles.contains_key("legacy:empty"));
     assert!(migrated
         .profiles
-        .get("legacy-empty")
+        .get("legacy:empty")
         .expect("legacy")
         .token
         .as_deref()
