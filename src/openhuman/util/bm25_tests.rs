@@ -107,4 +107,3 @@ use super::*;
         assert_eq!(corpus().search("read email stock", 1).len(), 1);
     }
 
-}
