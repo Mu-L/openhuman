@@ -2,8 +2,8 @@ use std::sync::Arc;
 
 use openhuman_embed::{
     set_product_identity, Access, AgentTurnOrigin, Core, CoreBuilder, CoreRuntime, DomainSet,
-    GroupMode, Harness, HostKind, ProductIdentity, Provider, ServiceSet, ToolGroups,
-    TrustedAccess, TrustedAutomationSource, Workspace,
+    GroupMode, Harness, HostKind, ProductIdentity, Provider, ServiceSet, ToolGroups, TrustedAccess,
+    TrustedAutomationSource, Workspace,
 };
 
 #[test]

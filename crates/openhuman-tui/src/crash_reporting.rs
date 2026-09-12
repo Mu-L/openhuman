@@ -19,15 +19,12 @@ pub fn init_crash_reporting() -> sentry::ClientInitGuard {
             event.server_name = None;
             for exception in &mut event.exception.values {
                 if let Some(value) = exception.value.take() {
-                    exception.value = Some(
-                        openhuman_core::core::log_redaction::scrub_secrets(&value),
-                    );
+                    exception.value =
+                        Some(openhuman_core::core::log_redaction::scrub_secrets(&value));
                 }
             }
             if let Some(message) = event.message.take() {
-                event.message = Some(
-                    openhuman_core::core::log_redaction::scrub_secrets(&message),
-                );
+                event.message = Some(openhuman_core::core::log_redaction::scrub_secrets(&message));
             }
             Some(event)
         })),
@@ -98,7 +95,10 @@ mod tests {
             .trim()
             .is_empty()
         {
-            assert_eq!(build_release_tag(), format!("openhuman@{}", env!("CARGO_PKG_VERSION")));
+            assert_eq!(
+                build_release_tag(),
+                format!("openhuman@{}", env!("CARGO_PKG_VERSION"))
+            );
         }
     }
 }
