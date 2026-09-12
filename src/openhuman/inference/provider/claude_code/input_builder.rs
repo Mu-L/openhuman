@@ -146,6 +146,9 @@ fn content_blocks(raw: &str) -> Vec<Value> {
     {
         let start = cursor + relative;
         let Some(end_relative) = raw[start..].find(']') else {
+            if start > cursor {
+                blocks.push(json!({"type": "text", "text": &raw[cursor..start]}));
+            }
             blocks.push(json!({"type": "text", "text": &raw[start..]}));
             cursor = raw.len();
             break;

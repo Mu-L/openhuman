@@ -58,14 +58,9 @@ fn new_session_carries_prior_turns_as_one_labelled_transcript() {
     let s = String::from_utf8(build_stdin(&history, true)).unwrap();
     let lines: Vec<_> = s.lines().collect();
 
-    // One transcript row + the latest user turn. The system row is still
-    // filtered out — it rides `--append-system-prompt`.
-    assert_eq!(
-        lines.len(),
-        2,
-        "got:
-{s}"
-    );
+    // The transcript and latest prompt are content blocks in one user row.
+    assert_eq!(lines.len(), 1, "got:
+{s}");
     assert!(lines[0].contains("User: hi"));
     assert!(lines[0].contains("Assistant: hello"));
     assert!(
@@ -74,8 +69,8 @@ fn new_session_carries_prior_turns_as_one_labelled_transcript() {
     );
 
     // The prompt itself is passed through untouched, not folded in.
-    let latest: Value = serde_json::from_str(lines[1]).unwrap();
-    assert_eq!(latest["message"]["content"][0]["text"], "how are you?");
+    let latest: Value = serde_json::from_str(lines[0]).unwrap();
+    assert_eq!(latest["message"]["content"][1]["text"], "how are you?");
 }
 
 #[test]
