@@ -182,6 +182,15 @@ run_archivist_tree_tests() {
   done
 }
 
+run_build_only_reaper_test() {
+  # Building the runtime installs process-global context that cannot be reset.
+  # Keep this real build-path regression in a fresh process so it cannot narrow
+  # the DomainSet observed by later registry and domain tests.
+  cargo_test --lib \
+    "openhuman::agent::tinyagents::reaper_tests::a_build_only_runtime_is_swept_before_it_can_be_invoked" \
+    -- --exact --test-threads=1 "$@"
+}
+
 run_full_suite() {
   # Several unit fixtures mutate process-wide state (provider overrides and
   # temporary executable paths). Keep this aggregate invocation deterministic;
@@ -192,8 +201,10 @@ run_full_suite() {
     --skip phase2_exactly_one_tree_ingest_per_segment_close \
     --skip phase2_provenance_stamped_on_leaf_and_source_id_is_constant \
     --skip phase2_ingested_content_is_raw_prose_not_recap \
-    --skip phase2_flush_also_triggers_tree_ingest "$@"
+    --skip phase2_flush_also_triggers_tree_ingest \
+    --skip a_build_only_runtime_is_swept_before_it_can_be_invoked "$@"
   run_archivist_tree_tests "$@"
+  run_build_only_reaper_test "$@"
   cargo_test --doc -- "$@"
 
   while IFS= read -r target; do
