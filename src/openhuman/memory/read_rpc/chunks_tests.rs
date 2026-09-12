@@ -183,6 +183,16 @@ fn query_tokens_ignore_punctuation() {
     assert!(super::query_tokens(Some("   ")).is_empty());
 }
 
+#[test]
+fn single_token_filter_uses_normalized_token() {
+    let filter = ChunkFilter {
+        query: Some(" phoenix: ".into()),
+        ..ChunkFilter::default()
+    };
+    let query = chunk_query_from_filter(&filter, 10, 0).expect("a query");
+    assert_eq!(query.content_contains.as_deref(), Some("phoenix"));
+}
+
 // ── the wire shape ───────────────────────────────────────────────────────
 
 /// `ChunkListRow` carries no body, and nothing is lost: the preview has always

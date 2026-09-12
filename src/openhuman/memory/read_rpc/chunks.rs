@@ -387,8 +387,7 @@ pub async fn search_rpc(
     let content_contains = if tokens.len() > 1 {
         None
     } else {
-        let trimmed = query.trim();
-        (!trimmed.is_empty()).then(|| trimmed.to_string())
+        tokens.first().cloned()
     };
     // Captured before `query` is shadowed by the `ChunkQuery` below. The log
     // line reports the length of the search TEXT, never of the built query, and
