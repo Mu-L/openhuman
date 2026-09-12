@@ -35,16 +35,32 @@ pub fn build_stdin(messages: &[ChatMessage], is_new_session: bool) -> Vec<u8> {
     // path) any prior turns are folded into a text preamble so the session keeps
     // its context instead of erroring; on resume the CLI already holds them.
     let non_system: Vec<&ChatMessage> = messages.iter().filter(|m| m.role != "system").collect();
-    let Some(last_user_pos) = non_system.iter().rposition(|m| m.role == "user") else {
-        return Vec::new();
-    };
+    // A prompt is active only when the final non-system turn is from the
+    // user. If history ends on an assistant/tool turn, replay all of it as
+    // context on a new session; never resubmit an earlier answered prompt.
+    let last_user_pos = non_system.iter().rposition(|m| m.role == "user");
+    let active_user_pos = last_user_pos.filter(|&pos| pos == non_system.len() - 1);
 
     let mut content: Vec<Value> = Vec::new();
     if is_new_session {
-        if let Some(preamble) = prior_conversation_preamble(&non_system, last_user_pos) {
+        let context_end = active_user_pos.unwrap_or(non_system.len());
+        if let Some(preamble) = prior_conversation_preamble(&non_system, context_end) {
             content.push(json!({"type": "text", "text": preamble}));
         }
     }
+    let Some(last_user_pos) = active_user_pos else {
+        return if is_new_session && !content.is_empty() {
+            let line = json!({
+                "type": "user",
+                "message": { "role": "user", "content": content },
+            });
+            let mut out = String::new();
+            push_json_line(&mut out, &line);
+            out.into_bytes()
+        } else {
+            Vec::new()
+        };
+    };
     // Pasted images arrive as inline `[IMAGE:data:…]` markers in the user turn's
     // content (the multimodal pipeline rehydrates them, and the native-provider
     // message bridge re-emits them from its typed image blocks — see

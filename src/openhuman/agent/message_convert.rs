@@ -343,9 +343,6 @@ fn native_user_content(msg: &Message) -> String {
         if piece.is_empty() {
             continue;
         }
-        if !out.is_empty() {
-            out.push('\n');
-        }
         out.push_str(&piece);
     }
     out
