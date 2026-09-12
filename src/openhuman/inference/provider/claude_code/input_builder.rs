@@ -123,6 +123,7 @@ fn prior_conversation_preamble(non_system: &[&ChatMessage], end: usize) -> Optio
                     .is_some_and(|message| message.role == "assistant");
                 if answered && !m.content.is_empty() {
                     let (text, _images) = parse_image_markers(&m.content);
+                    let text = strip_native_image_markers(&text);
                     if !text.is_empty() {
                         turns.push(format!("User: {text}"));
                     }
@@ -138,6 +139,21 @@ fn prior_conversation_preamble(non_system: &[&ChatMessage], end: usize) -> Optio
         "[Earlier in this conversation]\n{}\n[End of earlier conversation]\n",
         turns.join("\n")
     ))
+}
+
+fn strip_native_image_markers(mut text: &str) -> String {
+    const PREFIX: &str = "[OH_IMAGE:";
+    let mut cleaned = String::with_capacity(text.len());
+    while let Some(start) = text.find(PREFIX) {
+        cleaned.push_str(&text[..start]);
+        let rest = &text[start + PREFIX.len()..];
+        let Some(end) = rest.find(']') else {
+            return cleaned;
+        };
+        text = &rest[end + 1..];
+    }
+    cleaned.push_str(text);
+    cleaned
 }
 
 /// Split a message's text into stream-json content blocks: the prose as a
@@ -161,10 +177,7 @@ fn content_blocks(raw: &str) -> Vec<Value> {
     {
         let start = cursor + relative;
         let Some(end_relative) = raw[start..].find(']') else {
-            if start > cursor {
-                blocks.push(json!({"type": "text", "text": &raw[cursor..start]}));
-            }
-            blocks.push(json!({"type": "text", "text": &raw[start..]}));
+            blocks.push(json!({"type": "text", "text": &raw[cursor..]}));
             cursor = raw.len();
             break;
         };
