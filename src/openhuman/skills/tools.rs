@@ -88,8 +88,8 @@ pub(super) fn is_builtin_skill(skill_id: &str) -> bool {
 fn skill_allowed_including_profile(
     allowlist: &SkillAllowlist,
     profile_local_ids: &std::collections::HashSet<String>,
-    workspace_dir: &Path,
-    profile_skills_root: Option<&Path>,
+    _workspace_dir: &Path,
+    _profile_skills_root: Option<&Path>,
     skill_id: &str,
 ) -> bool {
     is_builtin_skill(skill_id)
