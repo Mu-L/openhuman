@@ -66,16 +66,18 @@ const CustomServersPanel = ({
   // already committed by the time we refresh, so a reload failure must not
   // reject back into the form and report the add/edit as failed (letting the
   // user "retry" an operation that already succeeded). A failed reload — signaled
-  // by a `false` result or, defensively, a rejection — is logged; the next 5s
-  // status poll reconciles the view. It is not surfaced as a mutation failure.
+  // by a `false` result or, defensively, a rejection — is retried once. It is
+  // not surfaced as a mutation failure.
   const safeRefresh = async (stage: string, serverId: string) => {
-    try {
-      const ok = await onChanged();
-      if (!ok)
-        log('%s refresh incomplete for %s — rows may be stale until next poll', stage, serverId);
-    } catch (err) {
-      log('%s refresh threw for %s: %o', stage, serverId, err);
+    for (let attempt = 1; attempt <= 2; attempt += 1) {
+      try {
+        if (await onChanged()) return;
+        log('%s refresh incomplete for %s (attempt %d)', stage, serverId, attempt);
+      } catch (err) {
+        log('%s refresh threw for %s (attempt %d): %o', stage, serverId, attempt, err);
+      }
     }
+    log('%s refresh still incomplete for %s — rows may remain stale', stage, serverId);
   };
 
   const handleAdd = async (params: CustomServerParams) => {
