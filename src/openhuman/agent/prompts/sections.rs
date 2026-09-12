@@ -66,6 +66,10 @@ impl PromptSection for DynamicPromptSection {
         "dynamic_prompt"
     }
 
+    fn tier(&self) -> PromptTier {
+        PromptTier::Volatile
+    }
+
     fn build(&self, ctx: &PromptContext<'_>) -> Result<String> {
         (self.builder)(ctx)
     }

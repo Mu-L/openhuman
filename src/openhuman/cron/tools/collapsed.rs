@@ -147,6 +147,15 @@ impl Tool for CronTool {
         any_external_effect(&self.actions())
     }
 
+    fn external_effect_with_args(&self, args: &Value) -> bool {
+        let actions = self.actions();
+        args.get("action")
+            .and_then(Value::as_str)
+            .and_then(|action| resolve(&actions, action))
+            .map(|entry| entry.tool.external_effect_with_args(args))
+            .unwrap_or(true)
+    }
+
     fn supports_markdown(&self) -> bool {
         true
     }
