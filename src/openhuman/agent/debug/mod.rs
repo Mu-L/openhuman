@@ -25,7 +25,10 @@ use std::path::PathBuf;
 use anyhow::{anyhow, Context, Result};
 
 pub mod dump_writer;
+pub mod prompt_size;
+pub mod wire;
 pub use dump_writer::{write_prompt_dumps, DumpWriteSummary};
+pub use wire::render as render_wire_dump;
 
 use crate::openhuman::agent::context::prompt::{
     LearnedContextData, PromptContext, PromptTool, ToolCallFormat,
@@ -57,6 +60,7 @@ pub struct DumpPromptOptions {
     pub toolkit: Option<String>,
     /// Optional override for the workspace directory.
     pub workspace_dir_override: Option<PathBuf>,
+    pub config_path_override: Option<PathBuf>,
     /// Optional override for the resolved model name.
     pub model_override: Option<String>,
 }
@@ -67,6 +71,7 @@ impl DumpPromptOptions {
             agent_id: agent_id.into(),
             toolkit: None,
             workspace_dir_override: None,
+            config_path_override: None,
             model_override: None,
         }
     }
@@ -127,6 +132,7 @@ fn tool_specs_of<'a, T: std::ops::Deref<Target = dyn crate::openhuman::tools::To
 pub async fn dump_agent_prompt(options: DumpPromptOptions) -> Result<DumpedPrompt> {
     let config = load_dump_config(
         options.workspace_dir_override.clone(),
+        options.config_path_override.clone(),
         options.model_override.clone(),
     )
     .await?;
@@ -165,9 +171,11 @@ pub async fn dump_agent_prompt(options: DumpPromptOptions) -> Result<DumpedPromp
 /// `integrations_agent` replaced in place by its per-toolkit expansion.
 pub async fn dump_all_agent_prompts(
     workspace_dir_override: Option<PathBuf>,
+    config_path_override: Option<PathBuf>,
     model_override: Option<String>,
 ) -> Result<Vec<DumpedPrompt>> {
-    let config = load_dump_config(workspace_dir_override, model_override).await?;
+    let config =
+        load_dump_config(workspace_dir_override, config_path_override, model_override).await?;
 
     AgentDefinitionRegistry::init_global(&config.workspace_dir)
         .context("initialising AgentDefinitionRegistry for prompt dump")?;
@@ -215,11 +223,21 @@ pub async fn dump_all_agent_prompts(
 
 async fn load_dump_config(
     workspace_dir_override: Option<PathBuf>,
+    config_path_override: Option<PathBuf>,
     model_override: Option<String>,
 ) -> Result<Config> {
-    let mut config = Config::load_or_init()
-        .await
-        .context("loading Config for prompt dump")?;
+    let mut config = if let Some(path) = config_path_override {
+        let workspace = workspace_dir_override
+            .as_deref()
+            .ok_or_else(|| anyhow!("config path override requires workspace override"))?;
+        Config::load_from_config_path(&path, workspace)
+            .await
+            .context("loading hermetic Config for prompt dump")?
+    } else {
+        Config::load_or_init()
+            .await
+            .context("loading Config for prompt dump")?
+    };
     config.apply_env_overrides();
     if let Some(override_dir) = workspace_dir_override {
         config.workspace_dir = override_dir;

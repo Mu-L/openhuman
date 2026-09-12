@@ -73,7 +73,6 @@ pub struct PreparedMessages {
 }
 
 // ── Config mapping ───────────────────────────────────────────────────────
-//
 // Follows the `session_config_from` precedent in `openhuman::tinyagents::config`:
 // the crate owns the struct, the host maps its schema into it. The clamping
 // stays crate-side, so these are plain field copies — if they ever grow a rule,
@@ -113,7 +112,6 @@ fn remote_client() -> Client {
 }
 
 // ── Text extraction ──────────────────────────────────────────────────────
-
 /// The host's [`TextExtractor`]: PDF text through the `tinydocs` module,
 #[cfg_attr(feature = "documents", doc = "bounded by [`PDF_EXTRACTION_TIMEOUT`].")]
 #[cfg_attr(
@@ -347,6 +345,7 @@ pub async fn prepare_messages_for_provider(
             role: message.role.clone(),
             content,
             extra_metadata: message.extra_metadata.clone(),
+            cache_breakpoints: Vec::new(),
         });
     }
 
@@ -543,6 +542,7 @@ pub fn rehydrate_image_placeholders(messages: &[ChatMessage]) -> Vec<ChatMessage
                 role: m.role.clone(),
                 content: markers::rehydrate_placeholders_in_text(&m.content, &index),
                 extra_metadata: m.extra_metadata.clone(),
+                cache_breakpoints: Vec::new(),
             }
         })
         .collect()

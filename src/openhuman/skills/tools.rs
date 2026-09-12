@@ -55,14 +55,31 @@ fn read_workflow_id(args: &serde_json::Value) -> anyhow::Result<String> {
 
 /// Skill/workflow allowlist applied per agent profile. `None` = all skills are
 /// visible (the default). `Some(set)` restricts to the named `dir_name` slugs.
-type SkillAllowlist = Option<std::collections::HashSet<String>>;
+pub(super) type SkillAllowlist = Option<std::collections::HashSet<String>>;
 
 /// Whether `dir_name` passes the optional per-profile skill allowlist.
-fn skill_allowed(allowlist: &SkillAllowlist, dir_name: &str) -> bool {
+pub(super) fn skill_allowed(allowlist: &SkillAllowlist, dir_name: &str) -> bool {
     match allowlist {
         None => true,
         Some(set) => set.contains(dir_name),
     }
+}
+
+/// Whether `skill_id` names a skill compiled into this binary.
+///
+/// Builtin bundles are exempt from the per-profile allowlist for the same
+/// reason profile-local ones are: the allowlist scopes **user content**, and
+/// these are neither the user's nor scoped — they come from a `const` table in
+/// this build and one of them (`flow-authoring`) is the reference manual an
+/// agent's own system prompt points it at. A profile that narrowed its skills
+/// would otherwise leave that agent pointing at a page it is refused.
+///
+/// This widens nothing a user chose: no RPC and no config can add a row to that
+/// table (see `skills::bundled`), so the exempt set is fixed at compile time.
+pub(super) fn is_builtin_skill(skill_id: &str) -> bool {
+    super::bundled::BUNDLED
+        .iter()
+        .any(|s| s.dir_name == skill_id)
 }
 
 /// Whether `skill_id` is usable given the profile's allowlist AND its private
@@ -73,9 +90,15 @@ fn skill_allowed(allowlist: &SkillAllowlist, dir_name: &str) -> bool {
 fn skill_allowed_including_profile(
     allowlist: &SkillAllowlist,
     profile_local_ids: &std::collections::HashSet<String>,
+    workspace_dir: &Path,
+    profile_skills_root: Option<&Path>,
     skill_id: &str,
 ) -> bool {
-    profile_local_ids.contains(skill_id) || skill_allowed(allowlist, skill_id)
+    let resolved_scope = get_workflow_with_profile(workspace_dir, skill_id, profile_skills_root)
+        .map(|workflow| workflow.scope);
+    matches!(resolved_scope, Some(WorkflowScope::Builtin))
+        || profile_local_ids.contains(skill_id)
+        || skill_allowed(allowlist, skill_id)
 }
 
 /// List installed skills.
@@ -175,7 +198,8 @@ impl Tool for WorkflowListTool {
             // bypass the `allowed_skills` allowlist (which scopes only global
             // skills). Keep any skill whose scope is `Profile`.
             workflows.retain(|w| {
-                w.scope == WorkflowScope::Profile
+                w.scope == WorkflowScope::Builtin
+                    || w.scope == WorkflowScope::Profile
                     || skill_allowed(&self.skill_allowlist, &w.dir_name)
             });
             log::debug!(
@@ -250,7 +274,13 @@ impl Tool for WorkflowDescribeTool {
         log::debug!("[tool][workflows] describe invoked");
         let skill_id = read_workflow_id(&args)?;
         let profile_local = profile_local_skill_ids(self.profile_skills_root.as_deref());
-        if !skill_allowed_including_profile(&self.skill_allowlist, &profile_local, &skill_id) {
+        if !skill_allowed_including_profile(
+            &self.skill_allowlist,
+            &profile_local,
+            &self.workspace_dir,
+            self.profile_skills_root.as_deref(),
+            &skill_id,
+        ) {
             log::debug!("[profiles] describe_workflow blocked by profile allowlist: {skill_id}");
             return Ok(ToolResult::error(format!(
                 "describe_workflow: workflow `{skill_id}` is not available to the active agent profile"
@@ -335,7 +365,13 @@ impl Tool for WorkflowReadResourceTool {
         log::debug!("[tool][workflows] read_resource invoked");
         let skill_id = read_workflow_id(&args)?;
         let profile_local = profile_local_skill_ids(self.profile_skills_root.as_deref());
-        if !skill_allowed_including_profile(&self.skill_allowlist, &profile_local, &skill_id) {
+        if !skill_allowed_including_profile(
+            &self.skill_allowlist,
+            &profile_local,
+            &self.workspace_dir,
+            self.profile_skills_root.as_deref(),
+            &skill_id,
+        ) {
             log::debug!(
                 "[profiles] read_workflow_resource blocked by profile allowlist: {skill_id}"
             );
@@ -444,6 +480,8 @@ impl Tool for WorkflowRecentRunsTool {
                     && skill_allowed_including_profile(
                         &self.skill_allowlist,
                         &profile_local,
+                        &self.workspace_dir,
+                        self.profile_skills_root.as_deref(),
                         &run.workflow_id,
                     )
             })
@@ -543,6 +581,8 @@ impl Tool for WorkflowReadRunLogTool {
                     && skill_allowed_including_profile(
                         &self.skill_allowlist,
                         &profile_local,
+                        &self.workspace_dir,
+                        self.profile_skills_root.as_deref(),
                         &run.workflow_id,
                     )
             })

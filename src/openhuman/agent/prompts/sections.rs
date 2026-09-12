@@ -66,6 +66,10 @@ impl PromptSection for DynamicPromptSection {
         "dynamic_prompt"
     }
 
+    fn tier(&self) -> PromptTier {
+        PromptTier::Volatile
+    }
+
     fn build(&self, ctx: &PromptContext<'_>) -> Result<String> {
         (self.builder)(ctx)
     }
@@ -175,6 +179,11 @@ pub struct PersonalityRosterSection;
 // ─────────────────────────────────────────────────────────────────────────────
 
 impl PromptSection for PersonalityRosterSection {
+    fn tier(&self) -> PromptTier {
+        // Carries each personality's recent context, which the session rewrites.
+        PromptTier::Volatile
+    }
+
     fn name(&self) -> &str {
         "personality_roster"
     }
@@ -266,6 +275,11 @@ impl PromptSection for IdentitySection {
 }
 
 impl PromptSection for UserFilesSection {
+    fn tier(&self) -> PromptTier {
+        // PROFILE.md / MEMORY.md — rewritten by the archivist and by onboarding.
+        PromptTier::Volatile
+    }
+
     fn name(&self) -> &str {
         "user_files"
     }
@@ -327,6 +341,11 @@ impl PromptSection for UserFilesSection {
 }
 
 impl PromptSection for AgentsInstructionsSection {
+    fn tier(&self) -> PromptTier {
+        // AGENTS.md layers: per project and per install, stable within a session.
+        PromptTier::Context
+    }
+
     fn name(&self) -> &str {
         "agents_md"
     }
@@ -458,6 +477,11 @@ impl PromptSection for GroundingSection {
 }
 
 impl PromptSection for WorkspaceSection {
+    fn tier(&self) -> PromptTier {
+        // Names the resolved workspace; per install, not per build.
+        PromptTier::Context
+    }
+
     fn name(&self) -> &str {
         "workspace"
     }
@@ -507,6 +531,11 @@ impl PromptSection for WorkspaceSection {
 }
 
 impl PromptSection for RuntimeSection {
+    fn tier(&self) -> PromptTier {
+        // Host runtime facts; per install, not per build.
+        PromptTier::Context
+    }
+
     fn name(&self) -> &str {
         "runtime"
     }
@@ -523,6 +552,11 @@ impl PromptSection for RuntimeSection {
 }
 
 impl PromptSection for UserReflectionsSection {
+    fn tier(&self) -> PromptTier {
+        // Learned reflections, refreshed by the learning subsystem.
+        PromptTier::Volatile
+    }
+
     fn name(&self) -> &str {
         "user_reflections"
     }
@@ -556,6 +590,11 @@ impl PromptSection for UserReflectionsSection {
 }
 
 impl PromptSection for UserMemorySection {
+    fn tier(&self) -> PromptTier {
+        // The memory-tree summary, which moves on every memory write.
+        PromptTier::Volatile
+    }
+
     fn name(&self) -> &str {
         "user_memory"
     }
@@ -607,6 +646,11 @@ impl PromptSection for UserMemorySection {
 }
 
 impl PromptSection for DateTimeSection {
+    fn tier(&self) -> PromptTier {
+        // The live clock is carried in the user message. This section is static.
+        PromptTier::Stable
+    }
+
     fn name(&self) -> &str {
         "datetime"
     }
@@ -655,6 +699,11 @@ impl PromptSection for DateTimeSection {
 }
 
 impl PromptSection for UserIdentitySection {
+    fn tier(&self) -> PromptTier {
+        // The signed-in user, which changes on login and on logout.
+        PromptTier::Volatile
+    }
+
     fn name(&self) -> &str {
         "user_identity"
     }
@@ -665,12 +714,6 @@ impl PromptSection for UserIdentitySection {
             _ => return Ok(String::new()),
         };
 
-        // Render the field list FIRST, then decide whether to ship the
-        // heading. `UserIdentity::is_empty()` only checks `None`-ness —
-        // a struct whose fields are all `Some("")` / whitespace would
-        // otherwise leave the prompt with a `## User` heading + intro
-        // pointing at zero fields, which is exactly the empty-prompt
-        // failure mode we're trying to suppress (#926).
         let mut fields = String::new();
         if let Some(name) = identity.name.as_deref().filter(|s| !s.trim().is_empty()) {
             let _ = writeln!(fields, "- name: {}", sanitize_identity_field(name));
@@ -695,15 +738,7 @@ impl PromptSection for UserIdentitySection {
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Private helpers
-// ─────────────────────────────────────────────────────────────────────────────
-
-/// Collapse newlines and runs of whitespace in a user-identity field so
-/// it fits on a single markdown bullet without breaking the prompt
-/// structure. Values come from `auth_get_me` (server-controlled), but
-/// defence-in-depth: a name with embedded newlines could split the
-/// `- name:` bullet and reshape the `## User` block.
+/// Collapse whitespace in a user-identity field for a single markdown bullet.
 fn sanitize_identity_field(s: &str) -> String {
     s.chars()
         .map(|c| if c == '\n' || c == '\r' { ' ' } else { c })

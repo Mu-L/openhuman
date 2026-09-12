@@ -61,6 +61,7 @@ fn flow(id: &str, name: &str, graph: WorkflowGraph) -> Flow {
         last_run_at: None,
         last_status: None,
         require_approval: false,
+        description: String::new(),
     }
 }
 
@@ -250,6 +251,7 @@ async fn list_and_get_answer_out_of_the_real_store() {
     let created = ops::flows_create(
         &config,
         "Deploy".to_string(),
+        String::new(),
         serde_json::to_value(graph_with_step("Ship it")).unwrap(),
         false,
     )
@@ -295,6 +297,7 @@ async fn runs_answers_with_an_empty_window_for_a_flow_that_never_ran() {
     let created = ops::flows_create(
         &config,
         "Deploy".to_string(),
+        String::new(),
         serde_json::to_value(graph_with_step("Ship it")).unwrap(),
         false,
     )
@@ -341,6 +344,7 @@ async fn an_update_cannot_lower_the_approval_requirement() {
     let created = ops::flows_create(
         &config,
         "Deploy".to_string(),
+        String::new(),
         serde_json::to_value(graph_with_step("Ship it")).unwrap(),
         true,
     )
@@ -392,6 +396,7 @@ async fn a_remote_automatic_revision_requires_explicit_rearming() {
     let created = ops::flows_create(
         &config,
         "Scheduled".to_string(),
+        String::new(),
         schedule_graph("0 9 * * *"),
         true,
     )
@@ -436,6 +441,7 @@ async fn an_update_refuses_to_overwrite_a_concurrent_edit() {
     let created = ops::flows_create(
         &config,
         "Deploy".to_string(),
+        String::new(),
         serde_json::to_value(graph_with_step("Ship it")).unwrap(),
         true,
     )
@@ -447,6 +453,7 @@ async fn an_update_refuses_to_overwrite_a_concurrent_edit() {
         &config,
         &created.id,
         Some("User edit".to_string()),
+        None,
         None,
         None,
         Some(created.updated_at.clone()),

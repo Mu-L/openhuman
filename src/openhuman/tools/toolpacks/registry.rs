@@ -122,8 +122,18 @@ pub const PACKS: &[ToolPack] = &[
     },
     ToolPack {
         id: "skills",
-        summary: "Find, install and run agent skills from the community registries.",
+        summary: "Search installed skills; install and run more from community \
+                  registries.",
         tools: &[
+            // In the pack, not outside it. A search tool advertised while every
+            // tool it hands off to (`describe_workflow`, `run_skill`) stays
+            // withheld would cost 748 B on every wildcard agent to produce an id
+            // the agent then cannot act on without a `load_skill` anyway. One
+            // recovery step for the whole family beats a doorway to a locked
+            // room. The orchestrator prompt names it for the same reason it
+            // already names `describe_workflow` and `skill_registry_browse` —
+            // those are packed too.
+            "skill_search",
             "run_skill",
             "setup_skills",
             "skill_registry_browse",
@@ -143,6 +153,17 @@ pub const PACKS: &[ToolPack] = &[
             "skill_executor",
             "skill_creator",
             "context_scout",
+            // `workflow_builder` owns exactly ONE tool from this pack —
+            // `read_workflow_resource`, which fetches a page of the
+            // `flow-authoring` builtin skill, the reference manual its own
+            // system prompt points it at. Ownership here advertises nothing
+            // else: its belt is `ToolScope::Named`, so `visible` holds only the
+            // 30 tools its `agent.toml` lists, and the other ten members of
+            // this pack are not among them. Without it the manual costs a
+            // `load_skill` round trip before every read, and the recovery pair
+            // (`load_skill` + `use_skill`, 3,137 B) lands on the belt in place
+            // of the tool's own ~500 B — measured, not estimated.
+            "workflow_builder",
         ],
     },
     ToolPack {

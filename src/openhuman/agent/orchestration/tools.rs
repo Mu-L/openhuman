@@ -6,6 +6,8 @@ mod archetype_delegation;
 mod awaiting_user;
 #[path = "tools/close_subagent.rs"]
 mod close_subagent;
+#[path = "tools/collapsed_delegation.rs"]
+mod collapsed_delegation;
 #[path = "tools/continue_subagent.rs"]
 mod continue_subagent;
 #[path = "tools/delegate_graph.rs"]
@@ -43,6 +45,7 @@ pub use agent_prepare_context::{
 };
 pub use archetype_delegation::{ArchetypeDelegationTool, DelegationTarget};
 pub use close_subagent::CloseSubagentTool;
+pub use collapsed_delegation::{CollapsedDelegationTool, DelegateTarget, DELEGATE_TO_TOOL_NAME};
 pub use continue_subagent::ContinueSubagentTool;
 pub use delegate_graph::DelegateGraphTool;
 pub use list_subagents::ListSubagentsTool;

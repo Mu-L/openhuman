@@ -48,6 +48,8 @@ pub mod runtime;
 pub mod webhooks;
 
 #[cfg(feature = "skills")]
+pub mod bundled;
+#[cfg(feature = "skills")]
 pub mod bus;
 #[cfg(feature = "skills")]
 pub mod ops;
@@ -67,6 +69,8 @@ pub mod registry;
 pub mod run_log;
 #[cfg(feature = "skills")]
 pub mod schemas;
+#[cfg(feature = "skills")]
+pub mod search;
 #[cfg(feature = "skills")]
 pub mod tools;
 

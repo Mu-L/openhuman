@@ -43,6 +43,12 @@ pub const MAX_WORKFLOW_RESOURCE_BYTES: u64 = 128 * 1024;
 #[serde(rename_all = "lowercase")]
 #[derive(Default)]
 pub enum WorkflowScope {
+    /// A skill compiled into the binary and materialised under
+    /// `<workspace>/.openhuman/builtin-skills/` at boot. LOWEST precedence:
+    /// a user or project skill of the same name shadows it, so shipping a
+    /// bundle can never take a name away from someone already using it.
+    /// See `skills::bundled`.
+    Builtin,
     /// Workflow shipped with the user's global config (`~/.openhuman/skills/...`).
     #[default]
     User,
@@ -57,6 +63,22 @@ pub enum WorkflowScope {
     /// profile-local skill shadows a same-named global one for its owner. See
     /// `ops_discover::discover_workflows_with_profile`.
     Profile,
+    /// A saved **Flows automation** (a tinyflows graph), surfaced in the same
+    /// catalogue as SKILL.md bundles.
+    ///
+    /// **Not discovered from disk.** Every other scope is a directory the
+    /// skill scanner walked; this one is a row in `flows.db`, mapped into a
+    /// catalogue entry by `flows::catalogue`. It is a listing, not a bundle:
+    /// there is no `SKILL.md`, so `describe_workflow` and
+    /// `read_workflow_resource` have nothing to read and say so by name rather
+    /// than failing generically.
+    ///
+    /// It exists because a user asking "what can this thing already do for me"
+    /// does not distinguish the two, and neither should the catalogue. Before
+    /// this, the prompt carried ~200 bytes of caveat teaching the model that
+    /// the list it was reading deliberately omitted half the answer, and that
+    /// calling the obvious tool on the missing half "will error".
+    Flow,
 }
 
 /// Parsed frontmatter of a `SKILL.md` file.

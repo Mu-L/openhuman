@@ -1437,7 +1437,7 @@ fn tool_group(name: &str) -> crate::core::all::DomainGroup {
 /// `goals_*` was the third until #5560 routed it onto the guarded
 /// `MemoryGoals` family — the advertised capability did not change when
 /// the plumbing caught up: the exact property this clause protects.
-fn tool_capability(name: &str) -> Option<tinymemory_api::capabilities::Capability> {
+pub(crate) fn tool_capability(name: &str) -> Option<tinymemory_api::capabilities::Capability> {
     use tinymemory_api::capabilities::Capability;
 
     // Not driver-backed. Each entry is an argued exception, not a fallthrough.
