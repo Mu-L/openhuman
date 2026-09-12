@@ -73,8 +73,8 @@ const CustomServersPanel = ({
       try {
         if (await onChanged()) return;
         log('%s refresh incomplete for %s (attempt %d)', stage, serverId, attempt);
-      } catch (err) {
-        log('%s refresh threw for %s (attempt %d): %o', stage, serverId, attempt, err);
+    } catch {
+      log('%s refresh threw for server_id=%s (attempt %d)', stage, serverId, attempt);
       }
     }
     log('%s refresh still incomplete for %s — rows may remain stale', stage, serverId);
@@ -93,8 +93,8 @@ const CustomServersPanel = ({
     try {
       await mcpClientsApi.connect(server.server_id);
       log('add: connected server_id=%s', server.server_id);
-    } catch (err) {
-      log('add: post-add connect failed for %s: %o', server.server_id, err);
+    } catch {
+      log('add: post-add connect failed server_id=%s', server.server_id);
     }
     await safeRefresh('post-add-connect', server.server_id);
     log('add: done server_id=%s', server.server_id);
@@ -110,8 +110,8 @@ const CustomServersPanel = ({
     try {
       await mcpClientsApi.connect(server.server_id);
       log('edit: reconnected server_id=%s', server.server_id);
-    } catch (err) {
-      log('edit: post-edit connect failed for %s: %o', server.server_id, err);
+    } catch {
+      log('edit: post-edit connect failed server_id=%s', server.server_id);
     }
     await safeRefresh('post-edit-connect', server.server_id);
     log('edit: done server_id=%s', server.server_id);

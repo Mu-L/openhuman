@@ -197,9 +197,17 @@ impl PartialEq for CredentialScope {
     }
 }
 
-pub(super) fn credential_scope(transport: &Transport, command: Option<&str>) -> CredentialScope {
+pub(super) fn credential_scope(
+    transport: &Transport,
+    command: Option<&str>,
+    args: Option<&[String]>,
+) -> CredentialScope {
     match transport {
-        Transport::Stdio => CredentialScope::Stdio(command.unwrap_or_default().to_string()),
+        Transport::Stdio => {
+            let command = command.unwrap_or_default();
+            let args = args.unwrap_or_default();
+            CredentialScope::Stdio(format!("{command}\0{}", args.join("\0")))
+        }
         Transport::HttpRemote { url } => match url::Url::parse(url) {
             Ok(u) => CredentialScope::HttpOrigin(u.origin().ascii_serialization()),
             Err(_) => CredentialScope::Unparseable,
@@ -236,10 +244,14 @@ pub(super) fn resolve_env_for_transport(
     next: &Transport,
     previous_command: Option<&str>,
     next_command: Option<&str>,
+    previous_args: Option<&[String]>,
+    next_args: Option<&[String]>,
 ) -> HashMap<String, String> {
     // The submitted keys are interpreted under the *new* transport.
     let is_http_remote = next.is_http_remote();
-    if credential_scope(previous, previous_command) != credential_scope(next, next_command) {
+    if credential_scope(previous, previous_command, previous_args)
+        != credential_scope(next, next_command, next_args)
+    {
         return resolve_env(submitted, &HashMap::new(), is_http_remote);
     }
     resolve_env(submitted, stored, is_http_remote)

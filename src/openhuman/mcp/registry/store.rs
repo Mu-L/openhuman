@@ -548,7 +548,7 @@ pub fn insert_custom_server_with_env(
     env: &HashMap<String, String>,
 ) -> Result<bool> {
     with_connection(config, |conn| {
-        let tx = conn.unchecked_transaction()?;
+        let tx = conn.transaction_with_behavior(rusqlite::TransactionBehavior::Immediate)?;
         if !insert_server_if_absent_conn(&tx, server)? {
             return Ok(false);
         }
