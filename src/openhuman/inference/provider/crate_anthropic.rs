@@ -61,13 +61,12 @@ struct TemperatureUnsupportedAnthropicModel {
 impl TemperatureUnsupportedAnthropicModel {
     fn suppress_temperature(&self, request: &mut ModelRequest) {
         let model = request.model.as_deref().unwrap_or(&self.default_model);
-        request.temperature =
-            temperature_for_model(
-                model,
-                request.temperature,
-                &self.patterns,
-                self.temperature_override,
-            );
+        request.temperature = temperature_for_model(
+            model,
+            request.temperature,
+            &self.patterns,
+            self.temperature_override,
+        );
     }
 }
 
