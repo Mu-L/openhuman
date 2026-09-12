@@ -219,7 +219,9 @@ fn image_block(reference: &str, native_marker: bool) -> Option<Value> {
         ) {
             return None;
         }
-        let bytes = base64::engine::general_purpose::STANDARD.decode(data).ok()?;
+        let bytes = base64::engine::general_purpose::STANDARD
+            .decode(data)
+            .ok()?;
         if bytes.len() > MAX_IMAGE_BYTES {
             return None;
         }
