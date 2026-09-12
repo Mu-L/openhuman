@@ -45,7 +45,7 @@ pub fn build_stdin(messages: &[ChatMessage], is_new_session: bool) -> Vec<u8> {
     if is_new_session {
         let context_end = active_user_pos.unwrap_or(non_system.len());
         if let Some(preamble) = prior_conversation_preamble(&non_system, context_end) {
-            content.push(json!({"type": "text", "text": preamble}));
+            content.extend(content_blocks(&preamble));
         }
     }
     let Some(last_user_pos) = active_user_pos else {
@@ -106,9 +106,8 @@ fn prior_conversation_preamble(non_system: &[&ChatMessage], end: usize) -> Optio
                     .get(i + 1)
                     .is_some_and(|next| next.role == "assistant");
                 if answered {
-                    let (text, _images) = parse_image_markers(&m.content);
-                    if !text.is_empty() {
-                        turns.push(format!("User: {text}"));
+                    if !m.content.is_empty() {
+                        turns.push(format!("User: {}", m.content));
                     }
                 }
             }
@@ -129,9 +128,15 @@ fn prior_conversation_preamble(non_system: &[&ChatMessage], end: usize) -> Optio
 /// `claude` CLI + Opus are vision-capable). An image that cannot be read
 /// degrades to a short text note rather than being silently dropped.
 fn content_blocks(raw: &str) -> Vec<Value> {
+    const IMAGE_PREFIX: &str = "[IMAGE:";
+    const NATIVE_IMAGE_PREFIX: &str = "[OH_IMAGE:";
     let mut blocks: Vec<Value> = Vec::new();
     let mut cursor = 0;
-    while let Some(relative) = raw[cursor..].find("[IMAGE:") {
+    while let Some((relative, prefix)) = [IMAGE_PREFIX, NATIVE_IMAGE_PREFIX]
+        .iter()
+        .filter_map(|prefix| raw[cursor..].find(prefix).map(|offset| (offset, *prefix)))
+        .min_by_key(|(offset, _)| *offset)
+    {
         let start = cursor + relative;
         let Some(end_relative) = raw[start..].find(']') else {
             blocks.push(json!({"type": "text", "text": &raw[start..]}));
@@ -142,8 +147,8 @@ fn content_blocks(raw: &str) -> Vec<Value> {
         if start > cursor {
             blocks.push(json!({"type": "text", "text": &raw[cursor..start]}));
         }
-        let reference = &raw[start + "[IMAGE:".len()..end - 1];
-        match image_block(reference) {
+        let reference = &raw[start + prefix.len()..end - 1];
+        match image_block(reference, prefix == NATIVE_IMAGE_PREFIX) {
             Some(block) => blocks.push(block),
             None => blocks
                 .push(json!({"type": "text", "text": "[an attached image could not be read]"})),
@@ -163,8 +168,9 @@ fn content_blocks(raw: &str) -> Vec<Value> {
 /// Build an Anthropic `image` content block from an `[IMAGE:<ref>]` reference.
 /// `<ref>` is either a `data:` URI (inline base64) or an on-disk file path (a
 /// rehydrated attachment). Returns `None` when the ref cannot be resolved.
-fn image_block(reference: &str) -> Option<Value> {
-    let (media_type, data_b64) = if let Some(rest) = reference.strip_prefix("data:") {
+fn image_block(reference: &str, native_marker: bool) -> Option<Value> {
+    let (media_type, data_b64) = if native_marker {
+        let rest = reference.strip_prefix("data:")?;
         let (mime, data) = rest.split_once(";base64,")?;
         (mime.to_string(), data.to_string())
     } else {
