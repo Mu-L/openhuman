@@ -61,11 +61,8 @@ struct TemperatureUnsupportedAnthropicModel {
 impl TemperatureUnsupportedAnthropicModel {
     fn suppress_temperature(&self, request: &mut ModelRequest) {
         let model = request.model.as_deref().unwrap_or(&self.default_model);
-        request.temperature = temperature_for_model(
-            model,
-            &self.patterns,
-            self.temperature_override,
-        );
+        request.temperature =
+            temperature_for_model(model, &self.patterns, self.temperature_override);
     }
 }
 
@@ -134,13 +131,12 @@ pub(crate) fn build_crate_anthropic_model(
     // wrapper below. AnthropicModel applies its fixed override after the
     // request is prepared and therefore cannot honour a per-request model's
     // suppression decision.
-    let adapter_temperature_override = if config.temperature_unsupported_models.is_empty()
-        || model_matches_unsupported_pattern
-    {
-        config.temperature_override
-    } else {
-        None
-    };
+    let adapter_temperature_override =
+        if config.temperature_unsupported_models.is_empty() || model_matches_unsupported_pattern {
+            config.temperature_override
+        } else {
+            None
+        };
     let model = AnthropicModel::with_base_url(config.api_key, config.endpoint)
         .with_model(config.model)
         .with_temperature_override(adapter_temperature_override);

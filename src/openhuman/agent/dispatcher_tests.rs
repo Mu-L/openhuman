@@ -129,7 +129,8 @@ fn pformat_dispatcher_parses_tool_call_tag() {
     let dispatcher = PFormatToolDispatcher::new(registry);
     let response = ChatResponse {
         text: Some(
-            "Let me check the weather.\n<tool_call>get_weather[0|London|1|metric]</tool_call>".into(),
+            "Let me check the weather.\n<tool_call>get_weather[0|London|1|metric]</tool_call>"
+                .into(),
         ),
         tool_calls: vec![],
         usage: None,
