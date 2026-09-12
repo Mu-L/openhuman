@@ -181,9 +181,7 @@ pub(crate) fn discover_workflows_inner(
     )
 }
 
-/// Discover only *automation* bundles — those under the `workflows/` roots —
-/// for the Automations UI list (`openhuman.skills_list`).
-///
+/// Discover only automation bundles under the `workflows/` roots.
 /// Capability skills (under the `skills/` / `.agents/skills/` / legacy
 /// `<workspace>/skills/` roots) are deliberately excluded so they don't show up
 /// as task templates. They remain fully available to the agent harness and the
