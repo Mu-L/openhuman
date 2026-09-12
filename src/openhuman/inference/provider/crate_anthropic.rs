@@ -55,18 +55,35 @@ struct TemperatureUnsupportedAnthropicModel {
     inner: Arc<dyn ChatModel<()>>,
     default_model: String,
     patterns: Vec<String>,
+    temperature_override: Option<f64>,
 }
 
 impl TemperatureUnsupportedAnthropicModel {
     fn suppress_temperature(&self, request: &mut ModelRequest) {
         let model = request.model.as_deref().unwrap_or(&self.default_model);
-        if self
-            .patterns
-            .iter()
-            .any(|pattern| crate::openhuman::inference::temperature::glob_match(pattern, model))
-        {
-            request.temperature = None;
-        }
+        request.temperature = temperature_for_model(
+            model,
+            &self.patterns,
+            self.temperature_override,
+        );
+    }
+}
+
+fn temperature_for_model(
+    model: &str,
+    patterns: &[String],
+    temperature_override: Option<f64>,
+) -> Option<f64> {
+    if patterns
+        .iter()
+        .any(|pattern| crate::openhuman::inference::temperature::glob_match(pattern, model))
+    {
+        None
+    } else {
+        // The adapter's fixed override is deliberately not configured when
+        // this wrapper is active: unlike the wrapper, the adapter cannot see
+        // the effective per-request model before applying it.
+        temperature_override
     }
 }
 
@@ -113,9 +130,17 @@ pub(crate) fn build_crate_anthropic_model(
         .temperature_unsupported_models
         .iter()
         .any(|pattern| crate::openhuman::inference::temperature::glob_match(pattern, config.model));
-    let adapter_temperature_override = (!model_matches_unsupported_pattern)
-        .then_some(config.temperature_override)
-        .flatten();
+    // If there are unsupported-model patterns, defer the override to the
+    // wrapper below. AnthropicModel applies its fixed override after the
+    // request is prepared and therefore cannot honour a per-request model's
+    // suppression decision.
+    let adapter_temperature_override = if config.temperature_unsupported_models.is_empty()
+        || model_matches_unsupported_pattern
+    {
+        config.temperature_override
+    } else {
+        None
+    };
     let model = AnthropicModel::with_base_url(config.api_key, config.endpoint)
         .with_model(config.model)
         .with_temperature_override(adapter_temperature_override);
@@ -127,6 +152,7 @@ pub(crate) fn build_crate_anthropic_model(
             inner: model,
             default_model: config.model.to_string(),
             patterns: config.temperature_unsupported_models.to_vec(),
+            temperature_override: config.temperature_override,
         })
     }
 }
