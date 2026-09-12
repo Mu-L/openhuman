@@ -13,7 +13,7 @@
 //! - **macOS**: same shape, exercises Seatbelt via `/usr/bin/touch`.
 //! - **Windows**: AppContainer integration is marked `#[ignore]` until
 //!   the raw-`HANDLE` → `Child` bridge lands (see TODO in
-//!   `src/openhuman/cwd_jail/windows.rs`).
+//!   `crates/openhuman-core/src/openhuman/cwd_jail/windows.rs`).
 
 use std::fs;
 use std::path::PathBuf;

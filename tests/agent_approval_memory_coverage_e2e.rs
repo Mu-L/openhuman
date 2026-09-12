@@ -709,7 +709,7 @@ async fn agent_graph_topologies_exports_structure_without_run_state() {
     // dropped the field could still pass. Require the array itself — the handler
     // builds `graphs` as a `Vec<Value>` and returns
     // `json!({ "graphs": graphs, "agents": agents })`
-    // (`src/openhuman/agent/schemas.rs:486`), so it is an array, not an object.
+    // (`crates/openhuman-core/src/openhuman/agent/schemas.rs:486`), so it is an array, not an object.
     body.get("graphs")
         .and_then(Value::as_array)
         .unwrap_or_else(|| panic!("graph_topologies must return a `graphs` array: {body}"));

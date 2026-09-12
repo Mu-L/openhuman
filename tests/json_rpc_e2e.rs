@@ -11256,7 +11256,7 @@ async fn json_rpc_flows_lifecycle_round_trip() {
 /// the RPC-layer counterpart to the direct-API tests
 /// `flows_run_detached_returns_running_run_id_and_inserts_row` /
 /// `flows_run_detached_registers_the_run_before_returning_its_id` in
-/// `src/openhuman/flows/ops_tests.rs` — same contract, exercised through the
+/// `crates/openhuman-core/src/openhuman/flows/ops_tests.rs` — same contract, exercised through the
 /// `openhuman.flows_run_detached` controller (schema + handler wiring), not
 /// just the `ops::flows_run_detached` fn directly.
 #[cfg(feature = "flows")]
@@ -11370,7 +11370,7 @@ async fn json_rpc_flows_run_detached_returns_before_run_completes() {
 /// caller's raw toggle. This is the RPC-layer counterpart to the direct-API
 /// tests `flows_update_forces_require_approval_when_adding_side_effect_nodes`
 /// / `flows_update_does_not_force_require_approval_on_readonly_graph` in
-/// `src/openhuman/flows/ops_tests.rs` — same rule, exercised through the
+/// `crates/openhuman-core/src/openhuman/flows/ops_tests.rs` — same rule, exercised through the
 /// `openhuman.flows_update` controller (schema + handler wiring), not just
 /// the `ops::flows_update` fn directly.
 #[cfg(feature = "flows")]
@@ -14099,7 +14099,7 @@ async fn memory_flavour_agent_tool_e2e_5172() {
 
 /// The `memory_diff` RPC surface is gone, and the `memory` domain is not (#5839).
 ///
-/// #5839 deleted the `memory-git` feature, `src/openhuman/memory/diff/`, the
+/// #5839 deleted the `memory-git` feature, `crates/openhuman-core/src/openhuman/memory/diff/`, the
 /// `memory_diff` tool and `tests/memory_artifacts_e2e.rs`. What it left behind
 /// is a unit test over `all_controller_schemas()`
 /// (`crates/openhuman-core/src/core/all_tests.rs::memory_diff_controllers_are_gone_and_memory_survives`),

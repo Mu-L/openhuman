@@ -22,7 +22,7 @@
 //!    `agent_chat_simple`, `transcribe`, `transcribe_bytes`, `tts` and
 //!    `download_asset`. The handlers deserialize params, load the ambient
 //!    config, and trim string inputs before delegating
-//!    (`src/openhuman/inference/local/schemas.rs:309-395`). None of that is
+//!    (`crates/openhuman-core/src/openhuman/inference/local/schemas.rs:309-395`). None of that is
 //!    reachable from a direct call to the op, so none of it was covered.
 //!
 //! # Offline discipline
@@ -182,7 +182,7 @@ fn write_stub_piper(dir: &Path, name: &str, transcript: &Path) -> PathBuf {
 }
 
 /// The eleven controllers `all_registered_controllers` builds
-/// (`src/openhuman/inference/local/schemas.rs:92-138`), paired with the wire
+/// (`crates/openhuman-core/src/openhuman/inference/local/schemas.rs:92-138`), paired with the wire
 /// method name each one must dispatch under.
 const EXPECTED_WIRE_METHODS: &[(&str, &str)] = &[
     ("agent_chat", "openhuman.inference_agent_chat"),

@@ -72,8 +72,8 @@
 //!     `run_subagent` to push 2 MB over.
 //!
 //! The actual stack-overflow fix is in
-//! [`src/openhuman/config/schema/load.rs`](`parse_config_with_recovery`)
-//! and [`src/openhuman/config/ops.rs`](`load_config_with_timeout`):
+//! [`crates/openhuman-core/src/openhuman/config/schema/load.rs`](`parse_config_with_recovery`)
+//! and [`crates/openhuman-core/src/openhuman/config/ops.rs`](`load_config_with_timeout`):
 //!
 //!   * `parse_config_with_recovery` runs `toml::from_str::<Config>` on
 //!     a blocking-pool thread via `spawn_blocking`. The blocking thread

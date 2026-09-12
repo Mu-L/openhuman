@@ -742,7 +742,7 @@ async fn mcp_setup_install_paths_validate_handles_and_report_dial_failure_in_ban
     // arm needs a package that installs and then refuses to dial, which means a
     // registry-resolvable package and a subprocess; it is covered by the unit
     // tests on `classify_install_connect` in
-    // `src/openhuman/mcp/registry/setup_ops_tests.rs`.
+    // `crates/openhuman-core/src/openhuman/mcp/registry/setup_ops_tests.rs`.
     let install = rpc(
         &harness.rpc_base,
         225,
