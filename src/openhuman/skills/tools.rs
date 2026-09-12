@@ -274,7 +274,13 @@ impl Tool for WorkflowDescribeTool {
         log::debug!("[tool][workflows] describe invoked");
         let skill_id = read_workflow_id(&args)?;
         let profile_local = profile_local_skill_ids(self.profile_skills_root.as_deref());
-        if !skill_allowed_including_profile(&self.skill_allowlist, &profile_local, &skill_id) {
+        if !skill_allowed_including_profile(
+            &self.skill_allowlist,
+            &profile_local,
+            &self.workspace_dir,
+            self.profile_skills_root.as_deref(),
+            &skill_id,
+        ) {
             log::debug!("[profiles] describe_workflow blocked by profile allowlist: {skill_id}");
             return Ok(ToolResult::error(format!(
                 "describe_workflow: workflow `{skill_id}` is not available to the active agent profile"
@@ -359,7 +365,13 @@ impl Tool for WorkflowReadResourceTool {
         log::debug!("[tool][workflows] read_resource invoked");
         let skill_id = read_workflow_id(&args)?;
         let profile_local = profile_local_skill_ids(self.profile_skills_root.as_deref());
-        if !skill_allowed_including_profile(&self.skill_allowlist, &profile_local, &skill_id) {
+        if !skill_allowed_including_profile(
+            &self.skill_allowlist,
+            &profile_local,
+            &self.workspace_dir,
+            self.profile_skills_root.as_deref(),
+            &skill_id,
+        ) {
             log::debug!(
                 "[profiles] read_workflow_resource blocked by profile allowlist: {skill_id}"
             );
@@ -468,6 +480,8 @@ impl Tool for WorkflowRecentRunsTool {
                     && skill_allowed_including_profile(
                         &self.skill_allowlist,
                         &profile_local,
+                        &self.workspace_dir,
+                        self.profile_skills_root.as_deref(),
                         &run.workflow_id,
                     )
             })
@@ -567,6 +581,8 @@ impl Tool for WorkflowReadRunLogTool {
                     && skill_allowed_including_profile(
                         &self.skill_allowlist,
                         &profile_local,
+                        &self.workspace_dir,
+                        self.profile_skills_root.as_deref(),
                         &run.workflow_id,
                     )
             })
