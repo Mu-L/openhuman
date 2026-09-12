@@ -16,6 +16,7 @@ Opencompany recipe (production embed — no benchmark/harness code):
 
 ```bash
 cargo build --release \
+  -p openhuman-embed \
   --no-default-features --features "skills,flows"
 ```
 
@@ -24,6 +25,7 @@ cargo build --release \
 
   ```bash
   cargo build --release \
+    -p openhuman \
     --no-default-features --features "rss-bench,skills,flows" \
     --bin library-profile --bin rss-bench
   ```
@@ -157,7 +159,7 @@ The disabled-build test gotcha (AGENTS.md: CI's smoke lane runs `cargo check`
 only and never compiles `--no-default-features` test code) was checked directly:
 
 ```bash
-cargo test --lib --no-default-features --features "skills,flows" core::
+cargo test -p openhuman --lib --no-default-features --features "skills,flows" core::
 # result: ok. 660 passed; 0 failed; 1 ignored; 10513 filtered out
 ```
 
