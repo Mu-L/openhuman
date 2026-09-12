@@ -106,10 +106,7 @@ fn adding_a_target_costs_only_its_name_and_description() {
     // growth must be linear in the *description*, not in the envelope.
     let one = CollapsedDelegationTool::for_targets(vec![DelegateTarget {
         tool_name: "research".to_string(),
-        agent_id:
-            crate::openhuman::agent::orchestration::tools::archetype_delegation::DelegationTarget(
-                "researcher".to_string(),
-            ),
+        agent_id: "researcher".to_string(),
         description: String::new(),
     }])
     .expect("non-empty");
@@ -237,7 +234,10 @@ fn the_member_and_the_collapsed_tool_agree_on_the_envelope() {
     // advertise a field `render_structured_handoff` never reads.
     let member = ArchetypeDelegationTool {
         tool_name: "research".to_string(),
-        agent_id: "researcher".to_string(),
+        agent_id:
+            crate::openhuman::agent::orchestration::tools::archetype_delegation::DelegationTarget(
+                "researcher".to_string(),
+            ),
         tool_description: "Web research.".to_string(),
     };
     let member_props = member.parameters_schema()["properties"]
