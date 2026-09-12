@@ -94,13 +94,13 @@ The renderer talks to the local core **directly over HTTP** — `app/src/service
 
 ### Bundled resources
 
-`tauri.conf.json` bundles **`../../crates/openhuman-core/src/openhuman/agent/prompts`** so the core prompt markdown ships with the app.
+`tauri.conf.json` bundles **`../../crates/openhuman-core/src/agent/prompts`** so the core prompt markdown ships with the app.
 
 ### Related
 
 - IPC surface: see the [Commands](#tauri-ipc-commands-app-src-tauri) section below
 - HTTP bridge: see the [Core bridge & helpers](#core-bridge-helpers-app-src-tauri) section below
-- Rust domains and runtime: `crates/openhuman-core/src/openhuman/`, `crates/openhuman-core/src/core/`
+- Rust domains and runtime: `crates/openhuman-core/src/`, `crates/openhuman-core/src/core/`
 
 ## Tauri IPC commands (`crates/openhuman-app`)
 
@@ -239,7 +239,7 @@ Registered in **`lib.rs`** (`ptt_hotkeys.rs` + `ptt_overlay.rs`). These commands
 
 Registered in **`lib.rs`** at startup under the event-bus native-request method
 `computer.input_on_main_thread` (`INPUT_ON_MAIN_THREAD_METHOD`, defined in
-`openhuman_core::openhuman::tools::computer::main_thread`). This is **not** a
+`openhuman_core::tools::computer::main_thread`). This is **not** a
 `@tauri-apps/api` `invoke` command. It is an in-process native request the
 **core** dispatches to the **shell** so synthetic input runs on the real app
 main thread.

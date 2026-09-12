@@ -14,9 +14,9 @@ use super::provider::Provider;
 use super::workspace::{ResolvedWorkspace, Workspace};
 use super::{Harness, HARNESS_LIVE};
 use crate::{Core, Session};
+use openhuman_core::config::Config;
 use openhuman_core::core::runtime::{CoreBuilder, DomainSet, ServiceSet, TokenSource};
 use openhuman_core::core::types::HostKind;
-use openhuman_core::openhuman::config::Config;
 
 /// Builder for a [`Harness`]. Obtain with [`Harness::builder`].
 pub struct HarnessBuilder {
@@ -29,7 +29,7 @@ pub struct HarnessBuilder {
     mcp_servers: Vec<super::mcp::McpServer>,
     services: Option<ServiceSet>,
     domains: Option<DomainSet>,
-    tool_groups: Option<openhuman_core::openhuman::tools::toolpacks::ToolGroups>,
+    tool_groups: Option<openhuman_core::tools::toolpacks::ToolGroups>,
     host_kind: HostKind,
     config: Option<Config>,
     session: Option<Session>,
@@ -155,12 +155,12 @@ impl HarnessBuilder {
     /// );
     /// ```
     ///
-    /// [`ToolGroups::advertised`]: openhuman_core::openhuman::tools::toolpacks::ToolGroups::advertised
-    /// [`ToolGroups::none`]: openhuman_core::openhuman::tools::toolpacks::ToolGroups::none
-    /// [`ToolGroups::with`]: openhuman_core::openhuman::tools::toolpacks::ToolGroups::with
+    /// [`ToolGroups::advertised`]: openhuman_core::tools::toolpacks::ToolGroups::advertised
+    /// [`ToolGroups::none`]: openhuman_core::tools::toolpacks::ToolGroups::none
+    /// [`ToolGroups::with`]: openhuman_core::tools::toolpacks::ToolGroups::with
     pub fn tool_groups(
         mut self,
-        tool_groups: openhuman_core::openhuman::tools::toolpacks::ToolGroups,
+        tool_groups: openhuman_core::tools::toolpacks::ToolGroups,
     ) -> Self {
         self.tool_groups = Some(tool_groups);
         self
@@ -262,7 +262,7 @@ impl HarnessBuilder {
         let mut config = match (&self.workspace, self.config) {
             (Workspace::Inherit, Some(config)) => Some(config),
             (Workspace::Inherit, None) => Some(
-                openhuman_core::openhuman::config::Config::load_or_init()
+                openhuman_core::config::Config::load_or_init()
                     .await
                     .map_err(HarnessError::Build)?,
             ),

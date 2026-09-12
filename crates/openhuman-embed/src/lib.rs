@@ -50,19 +50,19 @@
 //! [`CoreError::Unavailable`] so a host can hide the surface instead of
 //! reporting a failure.
 
+pub use openhuman_core::agent::turn_origin::{AgentTurnOrigin, TrustedAutomationSource};
 pub use openhuman_core::api::{product_identity, set_product_identity, ProductIdentity};
-pub use openhuman_core::openhuman::agent::turn_origin::{AgentTurnOrigin, TrustedAutomationSource};
-pub use openhuman_core::openhuman::config::Config as RuntimeConfig;
-pub use openhuman_core::openhuman::security::TrustedAccess;
-pub use openhuman_core::openhuman::tools::toolpacks::{GroupMode, ToolGroups};
+pub use openhuman_core::config::Config as RuntimeConfig;
+pub use openhuman_core::security::TrustedAccess;
+pub use openhuman_core::tools::toolpacks::{GroupMode, ToolGroups};
 pub use openhuman_core::{
     CoreBuilder, CoreRuntime, DaemonConfig, DomainSet, HostKind, ServiceSet, TokenSource,
 };
 
 /// Live agent-turn progress for in-process embedders.
 pub mod agent_progress {
-    pub use openhuman_core::openhuman::agent::progress::AgentProgress;
-    pub use openhuman_core::openhuman::agent::progress_sink::{
+    pub use openhuman_core::agent::progress::AgentProgress;
+    pub use openhuman_core::agent::progress_sink::{
         current_progress_sink, with_progress_sink, ProgressSink, AGENT_PROGRESS_SINK,
     };
 }

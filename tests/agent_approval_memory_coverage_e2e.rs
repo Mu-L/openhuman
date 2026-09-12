@@ -214,7 +214,7 @@ fn ok<'a>(value: &'a Value, context: &str) -> &'a Value {
 /// Peel the conditional `RpcOutcome` envelope. A handler that emits no log
 /// lines returns the bare value; one that emits any returns
 /// `{ result, logs }`. Both shapes are valid for the same method, so every
-/// consumer has to tolerate both — see `crates/openhuman-core/src/rpc/mod.rs`.
+/// consumer has to tolerate both — see `crates/openhuman-rpc/src/mod.rs`.
 fn payload<'a>(value: &'a Value, context: &str) -> &'a Value {
     let result = ok(value, context);
     result.get("result").unwrap_or(result)
@@ -487,9 +487,9 @@ async fn approval_preauthorize_flow_rejects_malformed_params_over_the_wire() {
 fn composio_write_tools_declare_an_external_effect_so_the_approval_gate_parks_them() {
     use std::sync::Arc;
 
-    use openhuman_core::openhuman::config::Config;
-    use openhuman_core::openhuman::integrations::composio::tools::ComposioExecuteTool;
-    use openhuman_core::openhuman::tools::traits::Tool;
+    use openhuman_core::config::Config;
+    use openhuman_core::integrations::composio::tools::ComposioExecuteTool;
+    use openhuman_core::tools::traits::Tool;
 
     let tool = ComposioExecuteTool::new(Arc::new(Config::default()));
 
@@ -709,7 +709,7 @@ async fn agent_graph_topologies_exports_structure_without_run_state() {
     // dropped the field could still pass. Require the array itself — the handler
     // builds `graphs` as a `Vec<Value>` and returns
     // `json!({ "graphs": graphs, "agents": agents })`
-    // (`crates/openhuman-core/src/openhuman/agent/schemas.rs:486`), so it is an array, not an object.
+    // (`crates/openhuman-core/src/agent/schemas.rs:486`), so it is an array, not an object.
     body.get("graphs")
         .and_then(Value::as_array)
         .unwrap_or_else(|| panic!("graph_topologies must return a `graphs` array: {body}"));

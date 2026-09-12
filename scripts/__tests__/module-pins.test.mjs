@@ -85,7 +85,7 @@ function submodulesPresent() {
 // ── Registry parsing ──────────────────────────────────────────────────────────
 
 test("parses every record `ALL` lists out of the real registry", () => {
-  const src = readRustModule("crates/openhuman-core/src/openhuman/modules/registry.rs");
+  const src = readRustModule("crates/openhuman-core/src/modules/registry.rs");
   const names = parseAllList(src);
   const records = parseRecords(src);
   assert.ok(
@@ -105,7 +105,7 @@ test("parses every record `ALL` lists out of the real registry", () => {
 });
 
 test("parses per-platform assets, digests included", () => {
-  const src = readRustModule("crates/openhuman-core/src/openhuman/modules/registry.rs");
+  const src = readRustModule("crates/openhuman-core/src/modules/registry.rs");
   const mem = [...parseRecords(src).values()].find(
     (r) => r.id === "tinymemory",
   );
@@ -126,7 +126,7 @@ test("reading a registry with no ALL block throws rather than returning empty", 
 });
 
 test("finds ARTIFACT_CAPABILITIES_PIN and the workflow memory blocks", () => {
-  const memSrc = readRustModule("crates/openhuman-core/src/openhuman/modules/memory.rs");
+  const memSrc = readRustModule("crates/openhuman-core/src/modules/memory.rs");
   assert.match(parseArtifactCapabilitiesPin(memSrc), /^\d+\.\d+\.\d+$/);
   const wf = readFileSync(
     join(REPO_ROOT, ".github/workflows/ci-lite.yml"),
@@ -301,8 +301,8 @@ const MINIMAL_WORKFLOW =
 
 test("an unparseable registry fails the gate instead of passing", () => {
   const root = fixtureRoot({
-    "crates/openhuman-core/src/openhuman/modules/registry.rs": "// everything here got deleted\n",
-    "crates/openhuman-core/src/openhuman/modules/memory.rs":
+    "crates/openhuman-core/src/modules/registry.rs": "// everything here got deleted\n",
+    "crates/openhuman-core/src/modules/memory.rs":
       'pub(crate) const ARTIFACT_CAPABILITIES_PIN: &str = "9.9.9";\n',
     ".github/workflows/ci-full.yml": MINIMAL_WORKFLOW,
     ".github/workflows/ci-lite.yml": MINIMAL_WORKFLOW,
@@ -357,8 +357,8 @@ test("records with no checked-out submodule fail the gate instead of being skipp
     "",
   ].join("\n");
   const root = fixtureRoot({
-    "crates/openhuman-core/src/openhuman/modules/registry.rs": registry,
-    "crates/openhuman-core/src/openhuman/modules/memory.rs":
+    "crates/openhuman-core/src/modules/registry.rs": registry,
+    "crates/openhuman-core/src/modules/memory.rs":
       'pub(crate) const ARTIFACT_CAPABILITIES_PIN: &str = "1.12.0";\n',
     ".github/workflows/ci-full.yml": MINIMAL_WORKFLOW,
     ".github/workflows/ci-lite.yml": MINIMAL_WORKFLOW,

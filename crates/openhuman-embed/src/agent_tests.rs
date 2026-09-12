@@ -14,11 +14,10 @@ use serde_json::json;
 /// controller it is sent to.
 #[test]
 fn turn_request_field_names_match_the_controller() {
-    let schema =
-        openhuman_core::openhuman::inference::local::all_local_inference_controller_schemas()
-            .into_iter()
-            .find(|s| s.namespace == "inference" && s.function == "agent_chat")
-            .expect("inference.agent_chat is a registered controller");
+    let schema = openhuman_core::inference::local::all_local_inference_controller_schemas()
+        .into_iter()
+        .find(|s| s.namespace == "inference" && s.function == "agent_chat")
+        .expect("inference.agent_chat is a registered controller");
 
     let declared: std::collections::HashSet<&str> =
         schema.inputs.iter().map(|field| field.name).collect();

@@ -6,14 +6,14 @@ description: >-
 icon: shield-halved
 ---
 
-# Security (`crates/openhuman-core/src/openhuman/security/`)
+# Security (`crates/openhuman-core/src/security/`)
 
-`crates/openhuman-core/src/openhuman/security/` is the **trust boundary for the autonomous core**. It owns the autonomy / risk policy that decides whether a given tool call is allowed, the pluggable sandbox backends that confine those calls when the host supports it, the append-only audit log of every agent action, the encrypted secret store, the pairing guard that gates public binding of the RPC server, and the `redact()` helper every other domain uses to keep logs free of plaintext credentials.
+`crates/openhuman-core/src/security/` is the **trust boundary for the autonomous core**. It owns the autonomy / risk policy that decides whether a given tool call is allowed, the pluggable sandbox backends that confine those calls when the host supports it, the append-only audit log of every agent action, the encrypted secret store, the pairing guard that gates public binding of the RPC server, and the `redact()` helper every other domain uses to keep logs free of plaintext credentials.
 
 It does **not** own:
 
-- The cross-domain `EncryptionEngine`, which lives in `crates/openhuman-core/src/openhuman/security/encryption/`.
-- Per-channel credential storage, which lives in `crates/openhuman-core/src/openhuman/security/credentials/`.
+- The cross-domain `EncryptionEngine`, which lives in `crates/openhuman-core/src/security/encryption/`.
+- Per-channel credential storage, which lives in `crates/openhuman-core/src/security/credentials/`.
 
 This module is the place to look first when asking "is this agent action allowed, and if so, how is it confined?"
 
@@ -95,18 +95,18 @@ The agent never sees the choice; it just calls into `Sandbox::run(...)` and the 
 
 ## Calls into
 
-- `crates/openhuman-core/src/openhuman/config/`: `SecurityConfig`, `AutonomyConfig` for policy + sandbox selection.
+- `crates/openhuman-core/src/config/`: `SecurityConfig`, `AutonomyConfig` for policy + sandbox selection.
 - OS-level sandbox tools: `docker`, `bwrap`, `firejail`, Landlock syscalls (per backend).
 - Workspace filesystem, for the audit log and secret store.
 
 ## Called by
 
-- `crates/openhuman-core/src/openhuman/cron/scheduler.rs`: wraps shell jobs in `SecurityPolicy::from_config`.
-- `crates/openhuman-core/src/openhuman/tools/local_cli.rs`, `tools/ops.rs`, and most `tools/impl/{system,network,memory,agent}/*.rs`: every executable tool consults `SecurityPolicy`.
-- `crates/openhuman-core/src/openhuman/tools/impl/network/{curl,http_request,composio}.rs`: risk-classify outbound calls.
-- `crates/openhuman-core/src/openhuman/memory/tools/{store,forget}.rs`: sensitive-write tracking.
-- `crates/openhuman-core/src/openhuman/agent/tools/delegate.rs`: sub-agent dispatch goes through the autonomy gate.
-- `crates/openhuman-core/src/openhuman/security/credentials/`: uses `SecretStore` and `redact`.
+- `crates/openhuman-core/src/cron/scheduler.rs`: wraps shell jobs in `SecurityPolicy::from_config`.
+- `crates/openhuman-core/src/tools/local_cli.rs`, `tools/ops.rs`, and most `tools/impl/{system,network,memory,agent}/*.rs`: every executable tool consults `SecurityPolicy`.
+- `crates/openhuman-core/src/tools/impl/network/{curl,http_request,composio}.rs`: risk-classify outbound calls.
+- `crates/openhuman-core/src/memory/tools/{store,forget}.rs`: sensitive-write tracking.
+- `crates/openhuman-core/src/agent/tools/delegate.rs`: sub-agent dispatch goes through the autonomy gate.
+- `crates/openhuman-core/src/security/credentials/`: uses `SecretStore` and `redact`.
 
 ## Tests
 
@@ -116,6 +116,6 @@ The agent never sees the choice; it just calls into `Sandbox::run(...)` and the 
 
 ## Related
 
-- [`security/README.md`](https://github.com/tinyhumansai/openhuman/blob/main/crates/openhuman-core/src/openhuman/security/README.md): authoritative internal-audience overview this page mirrors.
+- [`security/README.md`](https://github.com/tinyhumansai/openhuman/blob/main/crates/openhuman-core/src/security/README.md): authoritative internal-audience overview this page mirrors.
 - [Architecture overview](../architecture.md): wider system context.
 - [Agent Harness](agent-harness.md): where `SecurityPolicy` is consulted on every tool dispatch.

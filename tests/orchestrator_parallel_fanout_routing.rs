@@ -21,9 +21,8 @@
 //! with the tool. Anchoring on the retired name is what left this suite
 //! asserting against a prompt that no longer mentions it.
 
-const ORCHESTRATOR_PROMPT: &str = include_str!(
-    "../crates/openhuman-core/src/openhuman/agent/registry/agents/orchestrator/prompt.md"
-);
+const ORCHESTRATOR_PROMPT: &str =
+    include_str!("../crates/openhuman-core/src/agent/registry/agents/orchestrator/prompt.md");
 
 #[test]
 fn prompt_routes_fanout_to_concurrent_async_spawns() {

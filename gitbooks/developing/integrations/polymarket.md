@@ -28,7 +28,7 @@ Supported write actions:
 
 ## Architecture
 
-Implementation lives in `crates/openhuman-core/src/openhuman/tools/impl/network/polymarket.rs` with helper modules:
+Implementation lives in `crates/openhuman-core/src/tools/impl/network/polymarket.rs` with helper modules:
 
 - `clob_auth.rs`: L1 credential derivation + L2 HMAC headers
 - `polymarket_orders.rs`: EIP-712 order typed-data signing
@@ -116,7 +116,7 @@ If allowance is insufficient, approval must be executed separately (wallet tool 
 
 ## Test Strategy
 
-Unit tests are in `crates/openhuman-core/src/openhuman/tools/impl/network/polymarket_tests.rs` plus helper-module tests.
+Unit tests are in `crates/openhuman-core/src/tools/impl/network/polymarket_tests.rs` plus helper-module tests.
 
 - Existing read-path and retry behavior tests remain covered.
 - Added coverage for authenticated read actions, write approval gating, and Polygon allowance reads.

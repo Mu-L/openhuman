@@ -9,7 +9,7 @@
 // build's `cargo test --no-default-features --tests` fails to compile against the removed API (#4799).
 #![cfg(feature = "mcp")]
 
-use openhuman_core::openhuman::mcp::config_servers::McpStdioClient;
+use openhuman_core::mcp::config_servers::McpStdioClient;
 use std::path::PathBuf;
 use tinymcp_bus::McpClientIdentityConfig;
 

@@ -8,7 +8,7 @@
 //! # Why the params are a struct rather than `json!`
 //!
 //! The controller behind this method deserializes
-//! [`AgentChatParams`](openhuman_core::openhuman::inference::local::schemas) — which
+//! [`AgentChatParams`](openhuman_core::inference::local::schemas) — which
 //! carries no `#[serde(rename_all)]`, so its wire names are the Rust field names
 //! exactly as spelled. Every embedder that hand-writes that JSON is therefore
 //! depending on an unmarked, unversioned naming coincidence: rename a field
@@ -20,13 +20,13 @@
 //!
 //! A turn reads two `tokio` task-locals that no parameter can carry:
 //!
-//! - **origin** ([`turn_origin`](openhuman_core::openhuman::agent::turn_origin)) — the
+//! - **origin** ([`turn_origin`](openhuman_core::agent::turn_origin)) — the
 //!   caller's statement of authority. The approval gate is *fail-closed*: an
 //!   unlabelled call gets the `Cli` default, and a caller wanting anything
 //!   else — a workflow's blanket automation grant, say — must scope it around
 //!   the dispatch. Miss it and the turn still succeeds while every acting tool
 //!   quietly refuses, which reads as a bad model rather than a missing scope.
-//! - **progress** ([`progress_sink`](openhuman_core::openhuman::agent::progress_sink)) —
+//! - **progress** ([`progress_sink`](openhuman_core::agent::progress_sink)) —
 //!   the call resolves to one final string, so an embedder that wants tool
 //!   calls and deltas has to have installed the sink *before* awaiting.
 //!
@@ -40,10 +40,10 @@ use serde::{Deserialize, Serialize};
 
 use super::call::call;
 use super::error::CoreError;
+use openhuman_core::agent::progress::AgentProgress;
+use openhuman_core::agent::turn_origin::AgentTurnOrigin;
 use openhuman_core::core::runtime::CoreRuntime;
-use openhuman_core::openhuman::agent::progress::AgentProgress;
-use openhuman_core::openhuman::agent::turn_origin::AgentTurnOrigin;
-use openhuman_core::openhuman::inference::INFERENCE_AGENT_CHAT as AGENT_CHAT;
+use openhuman_core::inference::INFERENCE_AGENT_CHAT as AGENT_CHAT;
 
 /// The routed chat entry point.
 ///
@@ -351,18 +351,17 @@ impl Turn<'_> {
 
         let reply = match (self.origin, self.progress) {
             (Some(origin), Some(sink)) => {
-                openhuman_core::openhuman::agent::progress_sink::with_progress_sink(
+                openhuman_core::agent::progress_sink::with_progress_sink(
                     sink,
-                    openhuman_core::openhuman::agent::turn_origin::with_origin(origin, dispatch),
+                    openhuman_core::agent::turn_origin::with_origin(origin, dispatch),
                 )
                 .await
             }
             (Some(origin), None) => {
-                openhuman_core::openhuman::agent::turn_origin::with_origin(origin, dispatch).await
+                openhuman_core::agent::turn_origin::with_origin(origin, dispatch).await
             }
             (None, Some(sink)) => {
-                openhuman_core::openhuman::agent::progress_sink::with_progress_sink(sink, dispatch)
-                    .await
+                openhuman_core::agent::progress_sink::with_progress_sink(sink, dispatch).await
             }
             (None, None) => dispatch.await,
         }

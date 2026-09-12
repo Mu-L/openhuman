@@ -12,17 +12,15 @@
 //! prefixed names (`generate_presentation_v2`, `generate_presentation_legacy`)
 //! cannot satisfy the assertion accidentally.
 
-const ORCHESTRATOR_TOML: &str = include_str!(
-    "../crates/openhuman-core/src/openhuman/agent/registry/agents/orchestrator/agent.toml"
-);
+const ORCHESTRATOR_TOML: &str =
+    include_str!("../crates/openhuman-core/src/agent/registry/agents/orchestrator/agent.toml");
 
 const PRESENTATION_AGENT_TOML: &str = include_str!(
-    "../crates/openhuman-core/src/openhuman/agent/registry/agents/presentation_agent/agent.toml"
+    "../crates/openhuman-core/src/agent/registry/agents/presentation_agent/agent.toml"
 );
 
-const CODE_EXECUTOR_TOML: &str = include_str!(
-    "../crates/openhuman-core/src/openhuman/agent/registry/agents/code_executor/agent.toml"
-);
+const CODE_EXECUTOR_TOML: &str =
+    include_str!("../crates/openhuman-core/src/agent/registry/agents/code_executor/agent.toml");
 
 const TOOL_NAME: &str = "generate_presentation";
 

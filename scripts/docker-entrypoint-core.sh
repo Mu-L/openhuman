@@ -98,7 +98,7 @@ heal_dir() {
 #   HOME_OPENHUMAN_DIR   core.token always lands in $HOME/.openhuman, whatever
 #                        OPENHUMAN_WORKSPACE says.
 #   LEGACY_DIR           `resolve_config_dir_for_workspace`
-#                        (crates/openhuman-core/src/openhuman/config/schema/load/dirs.rs) falls back to
+#                        (crates/openhuman-core/src/config/schema/load/dirs.rs) falls back to
 #                        `<parent-of-workspace>/.openhuman` when the workspace
 #                        itself holds no config.toml. For the image default the
 #                        three collapse to one path; a custom OPENHUMAN_WORKSPACE

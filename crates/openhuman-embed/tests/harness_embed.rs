@@ -16,8 +16,8 @@
 //! also what makes the routing assertion possible — if the turn had gone
 //! anywhere else, the mock would have recorded no request.
 
+use openhuman_core::config::Config;
 use openhuman_core::core::runtime::{AGENT_WORKER_STACK_BYTES, MAX_BLOCKING_THREADS};
-use openhuman_core::openhuman::config::Config;
 use openhuman_embed::{Access, Harness, Provider, Workspace};
 use serde_json::json;
 use wiremock::matchers::{any, method, path};

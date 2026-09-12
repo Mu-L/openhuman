@@ -1,5 +1,5 @@
 use super::*;
-use openhuman_core::openhuman::config::Config;
+use openhuman_core::config::Config;
 
 /// The regression this whole type exists for.
 ///

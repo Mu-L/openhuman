@@ -59,7 +59,7 @@ Run a CodeRabbit-style review against these axes:
 **Correctness** — logic bugs, off-by-one, null/undefined, async/await misuse, race conditions, error propagation (`Result<T>` / `RpcOutcome<T>`).
 
 **Project standards** (from `CLAUDE.md`)
-- New Rust functionality under `crates/openhuman-core/src/openhuman/<domain>/`, not root-level `.rs` files.
+- New Rust functionality under `crates/openhuman-core/src/<domain>/`, not root-level `.rs` files.
 - Domain exposure via `schemas.rs` + registry — not ad-hoc branches in `crates/openhuman-core/src/core/cli.rs` / `crates/openhuman-core/src/core/jsonrpc.rs`.
 - No dynamic `import()` in production `app/src` code.
 - Frontend `VITE_*` reads via `app/src/utils/config.ts`.
@@ -68,7 +68,7 @@ Run a CodeRabbit-style review against these axes:
 - CEF webviews must not grow new JS injection.
 - Debug logging on new flows (entry/exit, branches, retries); grep-friendly prefixes; no secrets/PII.
 - Files preferably ≤ ~500 lines.
-- Capability changes update `crates/openhuman-core/src/openhuman/platform/about_app/`.
+- Capability changes update `crates/openhuman-core/src/platform/about_app/`.
 
 **Testing** — new behavior ships with tests; coverage gate is ≥ 80% on changed lines.
 

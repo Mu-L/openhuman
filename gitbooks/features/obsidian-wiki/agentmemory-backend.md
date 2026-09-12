@@ -213,10 +213,10 @@ A dedicated bulk import path is filed as a follow-up.
 
 In-tree files:
 
-- [`store/agentmemory/mod.rs`](https://github.com/tinyhumansai/openhuman/tree/main/crates/openhuman-core/src/openhuman/memory/store/agentmemory/mod.rs): module surface
-- [`store/agentmemory/backend.rs`](https://github.com/tinyhumansai/openhuman/tree/main/crates/openhuman-core/src/openhuman/memory/store/agentmemory/backend.rs): `impl Memory for AgentMemoryBackend`
-- [`store/agentmemory/client.rs`](https://github.com/tinyhumansai/openhuman/tree/main/crates/openhuman-core/src/openhuman/memory/store/agentmemory/client.rs): reqwest wrapper + plaintext-bearer guard
-- [`store/agentmemory/mapping.rs`](https://github.com/tinyhumansai/openhuman/tree/main/crates/openhuman-core/src/openhuman/memory/store/agentmemory/mapping.rs): `MemoryEntry` ↔ agentmemory JSON
+- [`store/agentmemory/mod.rs`](https://github.com/tinyhumansai/openhuman/tree/main/crates/openhuman-core/src/memory/store/agentmemory/mod.rs): module surface
+- [`store/agentmemory/backend.rs`](https://github.com/tinyhumansai/openhuman/tree/main/crates/openhuman-core/src/memory/store/agentmemory/backend.rs): `impl Memory for AgentMemoryBackend`
+- [`store/agentmemory/client.rs`](https://github.com/tinyhumansai/openhuman/tree/main/crates/openhuman-core/src/memory/store/agentmemory/client.rs): reqwest wrapper + plaintext-bearer guard
+- [`store/agentmemory/mapping.rs`](https://github.com/tinyhumansai/openhuman/tree/main/crates/openhuman-core/src/memory/store/agentmemory/mapping.rs): `MemoryEntry` ↔ agentmemory JSON
 - [`tests/agentmemory_backend.rs`](https://github.com/tinyhumansai/openhuman/tree/main/tests/agentmemory_backend.rs): 12 axum-mock integration tests
 
 Related upstream:

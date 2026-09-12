@@ -236,11 +236,7 @@ async fn logout(runtime: &Arc<CoreRuntime>, ui: &mut UiState) {
 }
 
 fn rpc_payload(value: &serde_json::Value) -> &serde_json::Value {
-    value
-        .get("result")
-        .or_else(|| value.get("data"))
-        .map(rpc_payload)
-        .unwrap_or(value)
+    openhuman_rpc::unwrap_rpc(value)
 }
 
 fn string_at(value: &serde_json::Value, path: &[&str]) -> String {

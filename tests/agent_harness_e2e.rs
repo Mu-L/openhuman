@@ -27,9 +27,9 @@ use futures_util::StreamExt;
 use serde_json::{json, Value};
 use tempfile::tempdir;
 
+use openhuman_core::agent::harness::AgentDefinitionRegistry;
 use openhuman_core::core::auth::{init_rpc_token, CORE_TOKEN_ENV_VAR};
 use openhuman_core::core::jsonrpc::build_core_http_router;
-use openhuman_core::openhuman::agent::harness::AgentDefinitionRegistry;
 
 const TEST_RPC_TOKEN: &str = "json-rpc-e2e-local-token";
 
@@ -511,7 +511,7 @@ encrypt = false
     {
         write_config_file(&openhuman_dir.join("users").join("local"), &cfg);
     }
-    let _: openhuman_core::openhuman::config::Config =
+    let _: openhuman_core::config::Config =
         toml::from_str(&cfg).expect("config toml must match Config schema");
 }
 
@@ -886,8 +886,8 @@ async fn multi_turn_state_persistence_inner() {
 
 // ─── Task 3: Subagent delegation happy path ───────────────────────────────────
 //
-// Tool surface (crates/openhuman-core/src/openhuman/tools/orchestrator_tools.rs,
-//   crates/openhuman-core/src/openhuman/agent/registry/agents/researcher/agent.toml):
+// Tool surface (crates/openhuman-core/src/tools/orchestrator_tools.rs,
+//   crates/openhuman-core/src/agent/registry/agents/researcher/agent.toml):
 //   - researcher has `delegate_name = "research"`, so the orchestrator LLM sees a
 //     tool named "research" synthesised by collect_orchestrator_tools.
 //   - The tool takes { "prompt": string, ... } per ArchetypeDelegationTool schema.
@@ -1163,7 +1163,7 @@ async fn scheduling_clarification_flow_inner() {
 //
 // Architecture notes for file_write approval:
 //
-// `FileWriteTool::external_effect_with_args` (crates/openhuman-core/src/openhuman/tools/impl/filesystem/file_write.rs:65)
+// `FileWriteTool::external_effect_with_args` (crates/openhuman-core/src/tools/impl/filesystem/file_write.rs:65)
 // only returns `true` when the target file ALREADY EXISTS at `action_dir/path`.
 // Logic: "exists = edit → prompt; new = create → free". The default action_dir
 // is `~/OpenHuman/projects` (derived from the HOME env var that boot_stack
@@ -1184,7 +1184,7 @@ async fn scheduling_clarification_flow_inner() {
 // restore it on drop via EnvVarGuard.
 
 async fn ensure_approval_gate() {
-    use openhuman_core::openhuman::security::approval::ApprovalGate;
+    use openhuman_core::security::approval::ApprovalGate;
 
     // The global bus must be initialized before registering subscribers.
     // `build_core_http_router` does NOT call `bootstrap_core_runtime`, so the
@@ -1192,7 +1192,7 @@ async fn ensure_approval_gate() {
     // connects to a broker — which is why this helper is too. Idempotent.
     openhuman_core::core::bus::init().await.expect("bus init");
 
-    let mut cfg: openhuman_core::openhuman::config::Config = toml::from_str(
+    let mut cfg: openhuman_core::config::Config = toml::from_str(
         r#"api_url = "http://127.0.0.1:1"
 default_model = "e2e-mock-model"
 default_temperature = 0.7
@@ -1241,7 +1241,7 @@ encrypt = false
 /// same binary lose the bridge silently. This per-test helper avoids the issue by
 /// registering a fresh subscription on each test's own runtime.
 fn register_approval_bridge() -> Option<tinybus::SubscriptionHandle> {
-    openhuman_core::openhuman::web_chat::fresh_approval_surface_subscription()
+    openhuman_core::web_chat::fresh_approval_surface_subscription()
 }
 
 /// Pre-create a file in the action_dir so file_write sees it as an existing
@@ -1271,7 +1271,7 @@ fn approval_gate_installed_after_ensure() {
 
 async fn approval_gate_installed_after_ensure_inner() {
     let _lock = env_lock();
-    use openhuman_core::openhuman::security::approval::ApprovalGate;
+    use openhuman_core::security::approval::ApprovalGate;
     ensure_approval_gate().await;
     assert!(
         ApprovalGate::try_global().is_some(),
@@ -1356,7 +1356,7 @@ async fn approval_gate_approve_flow_inner() {
     .await;
 
     // Wait for the approval_request SSE event.
-    // Actual shape (crates/openhuman-core/src/openhuman/web_chat/event_bus.rs:195-224):
+    // Actual shape (crates/openhuman-core/src/web_chat/event_bus.rs:195-224):
     //   { "event": "approval_request", "data": { "request_id": "...", "tool_name": "...",
     //     "action_summary": "...", "args_redacted": {...} }, ... }
     let approval = wait_for_event(&mut events, "approval_request", Duration::from_secs(60)).await;
@@ -1514,7 +1514,7 @@ async fn approval_gate_deny_flow_inner() {
 //
 // Architecture: The approval gate fires for file_write inside a subagent context
 // only when the subagent run carries a WebChat turn origin. `dispatch_subagent`
-// (crates/openhuman-core/src/openhuman/agent/orchestration/tools/dispatch.rs) invokes `run_subagent`
+// (crates/openhuman-core/src/agent/orchestration/tools/dispatch.rs) invokes `run_subagent`
 // which runs the subagent's tool loop inside the SAME task that the orchestrator's
 // WebChat turn started in. Because `APPROVAL_CHAT_CONTEXT` and `turn_origin` are
 // tokio task-locals (not thread-locals), and `run_subagent` does NOT re-scope them,
@@ -1522,7 +1522,7 @@ async fn approval_gate_deny_flow_inner() {
 // Therefore file_write inside a ArchetypeDelegationTool subagent CAN trigger the
 // approval gate and publish approval_request events.
 //
-// code_executor has delegate_name = "run_code" (crates/openhuman-core/src/openhuman/agent/registry/
+// code_executor has delegate_name = "run_code" (crates/openhuman-core/src/agent/registry/
 // agents/code_executor/agent.toml:3). The orchestrator synthesizes a `run_code`
 // delegation tool from this. code_executor has file_write in its tool surface.
 // The researcher agent does NOT have file_write.
@@ -1590,8 +1590,8 @@ async fn subagent_with_approval_gate_inner() {
 
     // The approval gate fires because the subagent inherits the orchestrator's
     // WebChat task-local origin (turn_origin + APPROVAL_CHAT_CONTEXT are not
-    // re-scoped by dispatch_subagent/run_subagent — crates/openhuman-core/src/openhuman/agent/harness/
-    // subagent_runner/ and crates/openhuman-core/src/openhuman/agent/orchestration/tools/dispatch.rs).
+    // re-scoped by dispatch_subagent/run_subagent — crates/openhuman-core/src/agent/harness/
+    // subagent_runner/ and crates/openhuman-core/src/agent/orchestration/tools/dispatch.rs).
     // If approval_request never fires within 120s, the event JSON is dumped.
     let approval = wait_for_event(&mut events, "approval_request", Duration::from_secs(120)).await;
     let request_id = approval
@@ -2257,7 +2257,7 @@ async fn multi_hop_delegation_chain_inner() {
 //
 // HONESTY CHECK — where does accumulation actually live?
 //
-// Read crates/openhuman-core/src/openhuman/agent/harness/engine/core.rs:370-448:
+// Read crates/openhuman-core/src/agent/harness/engine/core.rs:370-448:
 //
 //   provider.chat(ChatRequest { stream: delta_tx_opt.as_ref(), … }).await
 //   // returns the COMPLETE ChatResponse — tool_calls already fully assembled
@@ -2291,12 +2291,12 @@ async fn multi_hop_delegation_chain_inner() {
 
 mod streaming_support {
     use async_trait::async_trait;
-    use openhuman_core::openhuman::agent::dispatcher::NativeToolDispatcher;
-    use openhuman_core::openhuman::agent::Agent;
-    use openhuman_core::openhuman::config::{AgentConfig, ContextConfig};
-    use openhuman_core::openhuman::memory::Memory;
-    use openhuman_core::openhuman::tools::traits::ToolCallOptions;
-    use openhuman_core::openhuman::tools::{
+    use openhuman_core::agent::dispatcher::NativeToolDispatcher;
+    use openhuman_core::agent::Agent;
+    use openhuman_core::config::{AgentConfig, ContextConfig};
+    use openhuman_core::memory::Memory;
+    use openhuman_core::tools::traits::ToolCallOptions;
+    use openhuman_core::tools::{
         PermissionLevel, Tool, ToolContent, ToolResult, ToolScope as RuntimeToolScope,
     };
     use serde_json::json;
@@ -2426,7 +2426,7 @@ mod streaming_support {
             _namespace: &str,
             _key: &str,
             _content: &str,
-            _category: openhuman_core::openhuman::memory::api::types::MemoryCategory,
+            _category: openhuman_core::memory::api::types::MemoryCategory,
             _session_id: Option<&str>,
         ) -> anyhow::Result<()> {
             Ok(())
@@ -2435,26 +2435,23 @@ mod streaming_support {
             &self,
             _query: &str,
             _limit: usize,
-            _opts: openhuman_core::openhuman::memory::api::recall::RecallOpts<'_>,
-        ) -> anyhow::Result<Vec<openhuman_core::openhuman::memory::api::types::MemoryEntry>>
-        {
+            _opts: openhuman_core::memory::api::recall::RecallOpts<'_>,
+        ) -> anyhow::Result<Vec<openhuman_core::memory::api::types::MemoryEntry>> {
             Ok(Vec::new())
         }
         async fn get(
             &self,
             _namespace: &str,
             _key: &str,
-        ) -> anyhow::Result<Option<openhuman_core::openhuman::memory::api::types::MemoryEntry>>
-        {
+        ) -> anyhow::Result<Option<openhuman_core::memory::api::types::MemoryEntry>> {
             Ok(None)
         }
         async fn list(
             &self,
             _namespace: Option<&str>,
-            _category: Option<&openhuman_core::openhuman::memory::api::types::MemoryCategory>,
+            _category: Option<&openhuman_core::memory::api::types::MemoryCategory>,
             _session_id: Option<&str>,
-        ) -> anyhow::Result<Vec<openhuman_core::openhuman::memory::api::types::MemoryEntry>>
-        {
+        ) -> anyhow::Result<Vec<openhuman_core::memory::api::types::MemoryEntry>> {
             Ok(Vec::new())
         }
         async fn forget(&self, _namespace: &str, _key: &str) -> anyhow::Result<bool> {
@@ -2462,8 +2459,7 @@ mod streaming_support {
         }
         async fn namespace_summaries(
             &self,
-        ) -> anyhow::Result<Vec<openhuman_core::openhuman::memory::api::types::NamespaceSummary>>
-        {
+        ) -> anyhow::Result<Vec<openhuman_core::memory::api::types::NamespaceSummary>> {
             Ok(Vec::new())
         }
         async fn count(&self) -> anyhow::Result<usize> {
@@ -2586,7 +2582,7 @@ mod streaming_support {
 ///   Dispatch uses `resp.tool_calls` from the final `ModelResponse`, NOT from
 ///   accumulated stream deltas.  The `ModelStreamItem::ToolCallDelta` events
 ///   flow only to the progress channel (UI streaming) via `spawn_delta_forwarder`
-///   (crates/openhuman-core/src/openhuman/agent/harness/engine/progress.rs:329-370).
+///   (crates/openhuman-core/src/agent/harness/engine/progress.rs:329-370).
 ///
 ///   In the real HTTP providers (compatible_stream_native.rs:322,405-425) the
 ///   fragment accumulation buffer (`entry.arguments.push_str(args)`) IS what
@@ -2608,7 +2604,7 @@ mod streaming_support {
 ///   5. Final answer is "stream final".
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn streaming_tool_call_accumulation() {
-    use openhuman_core::openhuman::agent::progress::AgentProgress;
+    use openhuman_core::agent::progress::AgentProgress;
     use std::sync::Mutex;
     use streaming_support::{
         agent_with_s, native_tool_response_s, text_response_s, workspace_s, EchoTool,
@@ -2804,7 +2800,7 @@ async fn streaming_tool_call_accumulation() {
 }
 
 /// Needed for streaming_tool_call_accumulation.
-use openhuman_core::openhuman::config::AgentConfig;
+use openhuman_core::config::AgentConfig;
 
 // ─── Case 13 (provider-level): SSE tool-arg accumulation ──────────────────────
 //
@@ -3204,14 +3200,14 @@ async fn model_call_ceiling_bounds_a_wedged_call_below_the_turn_deadline_inner()
 mod tool_policy_boundary_placement {
     use anyhow::Result;
     use async_trait::async_trait;
-    use openhuman_core::openhuman::agent::context::prompt::LearnedContextData;
-    use openhuman_core::openhuman::agent::dispatcher::NativeToolDispatcher;
-    use openhuman_core::openhuman::agent::Agent;
-    use openhuman_core::openhuman::config::AgentConfig;
-    use openhuman_core::openhuman::memory::{
+    use openhuman_core::agent::context::prompt::LearnedContextData;
+    use openhuman_core::agent::dispatcher::NativeToolDispatcher;
+    use openhuman_core::agent::Agent;
+    use openhuman_core::config::AgentConfig;
+    use openhuman_core::memory::{
         Memory, MemoryCategory, MemoryEntry, NamespaceSummary as MemoryNamespaceSummary, RecallOpts,
     };
-    use openhuman_core::openhuman::tools::{PermissionLevel, Tool, ToolResult};
+    use openhuman_core::tools::{PermissionLevel, Tool, ToolResult};
     use std::collections::VecDeque;
     use std::sync::{Arc, Mutex};
 

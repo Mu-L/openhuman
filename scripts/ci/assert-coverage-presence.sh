@@ -3,7 +3,7 @@
 # coverage records at all — i.e. the lane never compiled it, so neither the
 # scoped test run nor diff-cover could possibly have verified it.
 #
-# WHY THIS EXISTS (PR #5593). `crates/openhuman-core/src/openhuman/hosting/**` is gated behind a Cargo
+# WHY THIS EXISTS (PR #5593). `crates/openhuman-core/src/hosting/**` is gated behind a Cargo
 # feature that is in neither `[features] default` nor
 # `scripts/ci/product-features.txt`, so the coverage lane compiled none of it.
 # The scoped libtest filter matched nothing (`running 0 tests … ok`) and
@@ -42,10 +42,10 @@ die() {
 # is a path prefix plus the reason it can never appear, so a future reader can
 # tell "excluded on purpose" from "forgotten" — the ambiguity that let #4918 sit.
 #
-#   crates/openhuman-core/src/openhuman/test_support/    `e2e-test-support`; the destructive
+#   crates/openhuman-core/src/test_support/    `e2e-test-support`; the destructive
 #                                  `openhuman.test_reset` RPC must never ship.
 #   .../browser/native_backend.rs  `browser-native`, an opt-in dev backend.
-UNCOVERED_BY_DESIGN='^(crates/openhuman-core/src/openhuman/test_support/|crates/openhuman-core/src/openhuman/tools/impl/browser/native_backend\.rs$)'
+UNCOVERED_BY_DESIGN='^(crates/openhuman-core/src/test_support/|crates/openhuman-core/src/tools/impl/browser/native_backend\.rs$)'
 
 # Invocation help, printed to stdout for --help and to stderr on a usage error.
 usage() {
@@ -114,7 +114,7 @@ esac
 # the worst failure this script has, so it does not depend on the prefix.
 #
 # The last `/src/` rather than the first: a developer checkout at
-# `~/crates/openhuman-core/src/openhuman/` contains two, and the repo-relative path is the trailing
+# `~/crates/openhuman-core/src/` contains two, and the repo-relative path is the trailing
 # one. Unambiguous here because no tracked path under `src/` contains a nested
 # `src/` component, and all 1,354 `SF:` records in the reference artifact carry
 # the `/src/` marker.
@@ -165,7 +165,7 @@ allowlisted() {
 # and is silently skipped. It only bites files long enough for the writer to
 # still be going when the reader leaves, i.e. exactly the large files this gate
 # most needs to check: it wrongly excluded 299 of 1,377 eligible sources,
-# `crates/openhuman-core/src/openhuman/hosting/tools.rs` (937 lines) among them.
+# `crates/openhuman-core/src/hosting/tools.rs` (937 lines) among them.
 #
 # The pattern avoids `\b` (a GNU extension) so the check behaves identically
 # under the BSD grep/awk a contributor runs locally and the GNU one in CI.

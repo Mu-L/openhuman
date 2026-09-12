@@ -22,11 +22,11 @@ use super::call::call;
 use super::error::CoreError;
 use openhuman_core::core::runtime::CoreRuntime;
 
-pub use openhuman_core::openhuman::medulla::client::{
+pub use openhuman_core::medulla::client::{
     AbortResult, Message, RosterWorker, SendResult, SessionCreated, SessionDetail, SessionSummary,
     WireEventEnvelope,
 };
-pub use openhuman_core::openhuman::medulla::ops::MedullaStatus;
+pub use openhuman_core::medulla::ops::MedullaStatus;
 
 /// Typed access to the Medulla backend.
 ///
@@ -162,7 +162,7 @@ impl Medulla<'_> {
 
 #[cfg(test)]
 mod tests {
-    use openhuman_core::openhuman::medulla::all_medulla_registered_controllers;
+    use openhuman_core::medulla::all_medulla_registered_controllers;
 
     /// Every method this facade dispatches must name a registered controller.
     ///

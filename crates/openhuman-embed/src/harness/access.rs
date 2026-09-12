@@ -20,8 +20,8 @@
 //! expensive to diagnose. [`Access`] therefore always yields **both** halves
 //! together, and they cannot be set independently.
 
-use openhuman_core::openhuman::agent::turn_origin::{AgentTurnOrigin, TrustedAutomationSource};
-use openhuman_core::openhuman::security::{AutonomyLevel, TrustedAccess, TrustedRoot};
+use openhuman_core::agent::turn_origin::{AgentTurnOrigin, TrustedAutomationSource};
+use openhuman_core::security::{AutonomyLevel, TrustedAccess, TrustedRoot};
 
 /// The authority a harness's turns run with.
 #[derive(Debug, Clone)]
@@ -142,7 +142,7 @@ impl Access {
     }
 
     /// Write this access level into `config`.
-    pub(super) fn apply(&self, config: &mut openhuman_core::openhuman::config::Config) {
+    pub(super) fn apply(&self, config: &mut openhuman_core::config::Config) {
         config.autonomy.level = self.level;
         config.autonomy.allow_tool_install = self.allow_tool_install;
         config

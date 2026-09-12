@@ -57,8 +57,8 @@ OpenHuman’s desktop UI is a **React 19** app (`app/src/`) that:
 
 - Uses **Redux Toolkit** with persistence for session-related state
 - Connects to the backend with **REST** (`apiClient`) and to the local core with **Socket.io** (`socketService` → core socket endpoint)
-- Calls the **Rust core** (embedded in the Tauri host as a tokio task) over HTTP via **`coreRpcClient`** (JSON-RPC methods implemented in repo root `crates/openhuman-core/src/openhuman/`); non-loopback plain-http runtimes are relayed through the Tauri **`relay_http_rpc`** command
-- Leaves **AI prompts** to the core: bundled `crates/openhuman-core/src/openhuman/agent/prompts` (repo root) ship as Tauri resources and are read core-side, not by the frontend
+- Calls the **Rust core** (embedded in the Tauri host as a tokio task) over HTTP via **`coreRpcClient`** (JSON-RPC methods implemented in repo root `crates/openhuman-core/src/`); non-loopback plain-http runtimes are relayed through the Tauri **`relay_http_rpc`** command
+- Leaves **AI prompts** to the core: bundled `crates/openhuman-core/src/agent/prompts` (repo root) ship as Tauri resources and are read core-side, not by the frontend
 - Uses a **minimal MCP-style** helper layer under `lib/mcp/` (transport, validation)
 
 ### Entry points

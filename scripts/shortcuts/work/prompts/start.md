@@ -25,7 +25,7 @@ Ground the change in the existing codebase before writing any code:
 
 ## 2. Implement in Rust (if core logic is involved)
 
-- New functionality goes in a **dedicated subdirectory** under `crates/openhuman-core/src/openhuman/<domain>/`. Do **not** add new standalone `*.rs` files at the `crates/openhuman-core/src/openhuman/` root.
+- New functionality goes in a **dedicated subdirectory** under `crates/openhuman-core/src/<domain>/`. Do **not** add new standalone `*.rs` files at the `crates/openhuman-core/src/` root.
 - Domain `mod.rs` is export-focused; operational code in `ops.rs` / `store.rs` / `types.rs` / `schemas.rs`.
 - Expose features through the controller registry — never add domain branches in `crates/openhuman-core/src/core/cli.rs` / `crates/openhuman-core/src/core/jsonrpc.rs`.
 - Use the event bus singletons (`publish_global` / `subscribe_global` / `register_native_global` / `request_native_global`); never construct `EventBus` / `NativeRegistry` directly.
@@ -56,7 +56,7 @@ Add verbose diagnostics on new/changed flows: entry/exit, branches, retries, tim
 
 ## 7. Capability catalog
 
-If this adds, removes, or renames a user-facing feature, update `crates/openhuman-core/src/openhuman/platform/about_app/` in the same change.
+If this adds, removes, or renames a user-facing feature, update `crates/openhuman-core/src/platform/about_app/` in the same change.
 
 ## 8. Pre-merge quality checks
 

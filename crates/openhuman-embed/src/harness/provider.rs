@@ -9,7 +9,7 @@
 //! write and the restore would leave it repointed for good.
 //!
 //! So [`Provider`] compiles down to the core's
-//! [`EphemeralRoute`](openhuman_core::openhuman::config::schema::EphemeralRoute) — a
+//! [`EphemeralRoute`](openhuman_core::config::schema::EphemeralRoute) — a
 //! `#[serde(skip)]` field that has no place in `config.toml` to be saved into,
 //! carried per call. The route pins only the four roles a turn actually runs on
 //! (chat, reasoning, agentic, coding) and deliberately leaves the background

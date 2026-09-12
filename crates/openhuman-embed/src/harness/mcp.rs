@@ -17,8 +17,8 @@
 
 use std::collections::HashMap;
 
-use openhuman_core::openhuman::config::schema::McpServerConfig;
-pub use openhuman_core::openhuman::config::schema::{HttpHeader, McpAuthConfig};
+use openhuman_core::config::schema::McpServerConfig;
+pub use openhuman_core::config::schema::{HttpHeader, McpAuthConfig};
 
 /// One MCP server the agent may call tools on.
 ///
