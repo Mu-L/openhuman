@@ -62,12 +62,18 @@ impl TemperatureUnsupportedAnthropicModel {
     fn suppress_temperature(&self, request: &mut ModelRequest) {
         let model = request.model.as_deref().unwrap_or(&self.default_model);
         request.temperature =
-            temperature_for_model(model, &self.patterns, self.temperature_override);
+            temperature_for_model(
+                model,
+                request.temperature,
+                &self.patterns,
+                self.temperature_override,
+            );
     }
 }
 
 fn temperature_for_model(
     model: &str,
+    request_temperature: Option<f64>,
     patterns: &[String],
     temperature_override: Option<f64>,
 ) -> Option<f64> {
@@ -79,8 +85,10 @@ fn temperature_for_model(
     } else {
         // The adapter's fixed override is deliberately not configured when
         // this wrapper is active: unlike the wrapper, the adapter cannot see
-        // the effective per-request model before applying it.
-        temperature_override
+        // the effective per-request model before applying it. Preserve the
+        // caller/default-model temperature when no explicit suffix override
+        // was supplied.
+        temperature_override.or(request_temperature)
     }
 }
 
