@@ -251,7 +251,6 @@ impl Tool for ToolSearchTool {
 #[path = "tool_search_tests.rs"]
 mod tests;
 
-
 /// Remove every [`ToolExposure::Deferred`] and [`ToolExposure::Hidden`] tool
 /// from an agent's advertised set, returning the specs of the deferred ones so
 /// the caller can index them.
@@ -327,5 +326,4 @@ pub fn bind_tool_search_index(tools: &[Box<dyn Tool>], deferred: Vec<ToolSpec>) 
             false
         }
     }
-
 }
