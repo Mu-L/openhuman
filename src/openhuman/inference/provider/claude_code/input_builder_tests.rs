@@ -131,7 +131,7 @@ fn empty_history_yields_empty_bytes() {
 fn image_blocks_preserve_text_order() {
     let s = String::from_utf8(build_stdin(
         &[ChatMessage::user(
-            "before [IMAGE:data:image/png;base64,QUJD] between [IMAGE:data:image/gif;base64,R0lG] after",
+            "before [OH_IMAGE:data:image/png;base64,QUJD] between [OH_IMAGE:data:image/gif;base64,R0lG] after",
         )],
         true,
     ))
@@ -154,20 +154,35 @@ fn literal_file_marker_is_not_read() {
     ))
     .unwrap();
     assert!(!s.contains("\"type\":\"image\""), "{s}");
-    assert!(s.contains("could not be read"), "{s}");
+    assert!(s.contains("[IMAGE:/etc/hostname]"), "{s}");
+}
+
+#[test]
+fn new_session_history_preserves_answered_user_images() {
+    let history = vec![
+        ChatMessage::user("earlier [OH_IMAGE:data:image/png;base64,QUJD]"),
+        ChatMessage::assistant("old answer"),
+        ChatMessage::user("latest"),
+    ];
+    let s = String::from_utf8(build_stdin(&history, true)).unwrap();
+    let row: Value = serde_json::from_str(s.lines().next().unwrap()).unwrap();
+    let content = row["message"]["content"].as_array().unwrap();
+    assert!(content.iter().any(|block| block["type"] == "image"));
+    assert!(content.iter().any(|block| block["text"] == "User: earlier "));
+    assert!(s.contains("Assistant: old answer"));
 }
 
 #[test]
 fn unterminated_image_marker_preserves_trailing_text() {
     let s = String::from_utf8(build_stdin(
         &[ChatMessage::user(
-            "before [IMAGE:data:image/png;base64,QUJD after",
+            "before [OH_IMAGE:data:image/png;base64,QUJD after",
         )],
         true,
     ))
     .unwrap();
     assert!(
-        s.contains("before [IMAGE:data:image/png;base64,QUJD after"),
+        s.contains("before [OH_IMAGE:data:image/png;base64,QUJD after"),
         "{s}"
     );
 }

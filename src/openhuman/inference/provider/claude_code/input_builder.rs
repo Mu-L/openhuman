@@ -150,6 +150,12 @@ fn content_blocks(raw: &str) -> Vec<Value> {
         let reference = &raw[start + prefix.len()..end - 1];
         match image_block(reference, prefix == NATIVE_IMAGE_PREFIX) {
             Some(block) => blocks.push(block),
+            None if prefix == IMAGE_PREFIX => {
+                // `[IMAGE:…]` is ordinary text unless it names a managed
+                // attachment. Never interpret a user-typed data URI as an
+                // instruction to send an image.
+                blocks.push(json!({"type": "text", "text": &raw[start..end]}));
+            }
             None => blocks
                 .push(json!({"type": "text", "text": "[an attached image could not be read]"})),
         }
