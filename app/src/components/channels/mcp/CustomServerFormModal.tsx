@@ -81,6 +81,14 @@ const inputClass =
 
 const labelClass = 'block text-xs font-medium text-content-muted mb-1';
 
+const originOf = (value: string): string | null => {
+  try {
+    return new URL(value).origin;
+  } catch {
+    return null;
+  }
+};
+
 const CustomServerFormModal = ({ mode, server, onClose, onSubmit }: CustomServerFormModalProps) => {
   const { t } = useT();
 
@@ -99,6 +107,10 @@ const CustomServerFormModal = ({ mode, server, onClose, onSubmit }: CustomServer
   // reverting to the stored set. Keyed by transport; the value is what to show
   // when that transport becomes active again.
   const stashedRows = useRef<Partial<Record<TransportKind, EnvRow[]>>>({});
+  const initialHttpOrigin = useRef(
+    mode === 'edit' && seedTransport(server) === 'http_remote' ? originOf(seedUrl(server)) : null
+  );
+  const httpOriginChanged = useRef(false);
 
   const isEdit = mode === 'edit';
 
@@ -153,6 +165,26 @@ const CustomServerFormModal = ({ mode, server, onClose, onSubmit }: CustomServer
         (next === seedTransport(server) ? seedEnvRows(server) : [newRow()])
     );
     setError(null);
+  };
+
+  const handleUrlChange = (next: string) => {
+    setUrl(next);
+    const initialOrigin = initialHttpOrigin.current;
+    const nextOrigin = originOf(next);
+    if (nextOrigin === initialOrigin) {
+      httpOriginChanged.current = false;
+    } else if (
+      isEdit &&
+      transport === 'http_remote' &&
+      initialOrigin &&
+      !httpOriginChanged.current
+    ) {
+      // The core drops credentials when the HTTP origin changes. Clear the
+      // write-only rows too, so the form cannot imply that blank means keep.
+      setEnvRows([newRow()]);
+      setError(null);
+      httpOriginChanged.current = true;
+    }
   };
 
   /**
@@ -342,7 +374,7 @@ const CustomServerFormModal = ({ mode, server, onClose, onSubmit }: CustomServer
               id="custom-server-url"
               className={inputClass}
               value={url}
-              onChange={e => setUrl(e.target.value)}
+              onChange={e => handleUrlChange(e.target.value)}
               placeholder={t('mcp.custom.form.urlPlaceholder')}
             />
           </div>

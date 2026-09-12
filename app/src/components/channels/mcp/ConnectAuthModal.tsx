@@ -289,6 +289,7 @@ const ConnectAuthModal = ({ server, onClose, onConnected }: ConnectAuthModalProp
     void (async () => {
       try {
         const url = await mcpClientsApi.oauthBegin(server.server_id);
+        if (oauthCancelled.current) return;
         await openUrl(url);
         const started = Date.now();
         const poll = async (): Promise<void> => {
