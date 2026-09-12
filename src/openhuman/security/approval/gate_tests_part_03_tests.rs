@@ -136,7 +136,7 @@ async fn intercept_with_external_channel_origin_persists_and_ttl_denies() {
     // Non-web channel inbound (Telegram / Discord / Slack / etc.):
     // persist an audit row but TTL-deny — there is no channel-routed
     // approval surface yet, and the input is remote-attacker text.
-    let (gate, _dir) = test_gate(); // 2s TTL
+    let (gate, _dir, env) = expiry_gate();
     let gate = Arc::new(gate);
     let origin = AgentTurnOrigin::ExternalChannel {
         channel: "telegram".into(),
@@ -165,8 +165,11 @@ async fn intercept_with_external_channel_origin_persists_and_ttl_denies() {
         tokio::time::sleep(Duration::from_millis(10)).await;
     }
 
+    // The TTL was captured when the row was inserted; release the process-wide
+    // environment lock before waiting so expiry tests can run concurrently.
+    drop(env);
     // Without a routable channel approval surface, the parked future
-    // TTL-denies (2s — matches the test_gate fixture).
+    // TTL-denies after `EXPIRY_TEST_TTL`.
     let outcome = handle.await.unwrap();
     match outcome {
         GateOutcome::Deny { reason } => assert!(reason.contains("timed out")),
@@ -380,7 +383,11 @@ async fn flow_tool_trust_auto_allows_before_parking() {
     // short-circuit to `Allow` even for a `require_approval: true` flow —
     // that is the whole point of "approve always for this workflow": no
     // pending row is created and the call never parks.
-    let (gate, _dir) = test_gate();
+    //
+    // The second half of this test *does* wait a park out, so it needs the
+    // short window even though it never inspects the "timed out" reason.
+    let (gate, _dir, env) = expiry_gate();
+    let gate = Arc::new(gate);
     store::insert_flow_trust(&gate.config, "flow-trusted", "composio").unwrap();
 
     let outcome = turn_origin::with_origin(
@@ -402,18 +409,33 @@ async fn flow_tool_trust_auto_allows_before_parking() {
     );
 
     // A different tool on the same trusted flow is unaffected — it still
-    // parks (TTL-denies on the 2s test gate).
-    let untrusted_outcome = turn_origin::with_origin(
-        flow_origin("flow-trusted", true),
-        APPROVAL_FLOW_RUN_CONTEXT.scope(
-            FlowRunContext {
-                flow_id: "flow-trusted".to_string(),
-                run_id: "run-1".to_string(),
-            },
-            gate.intercept("pushover", "send push", serde_json::json!({})),
-        ),
-    )
-    .await;
+    // parks, and nothing decides it, so it TTL-denies after
+    // `EXPIRY_TEST_TTL`.
+    let g = gate.clone();
+    let handle = tokio::spawn(async move {
+        turn_origin::with_origin(
+            flow_origin("flow-trusted", true),
+            APPROVAL_FLOW_RUN_CONTEXT.scope(
+                FlowRunContext {
+                    flow_id: "flow-trusted".to_string(),
+                    run_id: "run-1".to_string(),
+                },
+                g.intercept("pushover", "send push", serde_json::json!({})),
+            ),
+        )
+        .await
+    });
+    let mut tries = 0;
+    while parked_request_id(&gate).is_none() {
+        tries += 1;
+        assert!(
+            tries < 50,
+            "audit row never appeared for untrusted flow tool"
+        );
+        tokio::time::sleep(Duration::from_millis(10)).await;
+    }
+    drop(env);
+    let untrusted_outcome = handle.await.unwrap();
     assert!(
         matches!(untrusted_outcome, GateOutcome::Deny { .. }),
         "trust must be scoped to the exact tool granted, not the whole flow"
@@ -449,15 +471,15 @@ async fn decide_approve_always_for_flow_then_insert_flow_trust_composes_to_auto_
         .await
     });
 
-    let pending = loop {
-        if let Some(p) = gate.list_pending().unwrap().into_iter().next() {
-            break p;
+    let request_id = loop {
+        if let Some(request_id) = parked_request_id(&gate) {
+            break request_id;
         }
         tokio::time::sleep(Duration::from_millis(10)).await;
     };
 
     let decided = gate
-        .decide(&pending.request_id, ApprovalDecision::ApproveAlwaysForFlow)
+        .decide(&request_id, ApprovalDecision::ApproveAlwaysForFlow)
         .unwrap()
         .expect("decided row");
 

@@ -3,8 +3,10 @@
 //! Feeds a captured representative CC 2.x stream-json transcript through
 //! `StreamJsonParser` → `EventMapper` and asserts that:
 //! - text deltas arrive in order and aggregate into the final response
-//! - tool-use blocks already executed by the CLI are suppressed rather than
-//!   handed back to OpenHuman's harness for duplicate execution
+//! - a `tool_use` block is the CLI's **own, already-executed** call: its
+//!   `input_json_delta`s are kept out of the visible text and nothing is
+//!   surfaced to the harness — no `ToolCallStart`, no `ToolCallArgsDelta`,
+//!   no aggregated `ToolCall` (see the `event_mapper` module docs; #5739)
 //! - the `result` event finalizes usage tokens (incl. cache_read)
 //! - session_id is captured from the first `system` event
 //!
@@ -69,16 +71,29 @@ fn captures_text_tool_call_and_usage() {
         .collect();
     assert_eq!(text_chunks, vec!["Hello", " world"]);
 
-    // Claude Code executes its own tool-use blocks. They must not escape as
-    // provider deltas or aggregated calls for OpenHuman to dispatch again.
-    assert!(!deltas.iter().any(|d| matches!(
-        d,
-        ProviderDelta::ToolCallStart { .. } | ProviderDelta::ToolCallArgsDelta { .. }
-    )));
+    // The CLI's own tool call is suppressed end to end: nothing about
+    // `call_42` reaches the harness, and its argument JSON never leaks into
+    // the text stream.
+    assert!(
+        !deltas.iter().any(|d| matches!(
+            d,
+            ProviderDelta::ToolCallStart { .. } | ProviderDelta::ToolCallArgsDelta { .. }
+        )),
+        "a self-executed CLI tool_use block must not surface as a harness tool call: {deltas:?}"
+    );
+    assert!(
+        !text_chunks
+            .iter()
+            .any(|t| t.contains("que") || t.contains("ry\"")),
+        "input_json_delta text must stay out of the visible text: {text_chunks:?}"
+    );
 
     // Aggregated response.
     assert_eq!(mapper.final_text, "Hello world");
-    assert!(mapper.tool_calls.is_empty());
+    assert!(
+        mapper.tool_calls.is_empty(),
+        "no ToolCall is aggregated for a CLI-internal tool_use block"
+    );
 
     // Usage from the `result` event.
     assert!(mapper.finished);

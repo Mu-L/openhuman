@@ -221,6 +221,7 @@ fn chat(role: &str, content: &str) -> ChatMessage {
         role: role.into(),
         content: content.into(),
         extra_metadata: None,
+        cache_breakpoints: Vec::new(),
     }
 }
 

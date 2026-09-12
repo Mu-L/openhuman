@@ -7,6 +7,7 @@ use crate::openhuman::agent::context::prompt::SystemPromptBuilder;
 use crate::openhuman::agent::dispatcher::{
     NativeToolDispatcher, PFormatToolDispatcher, XmlToolDispatcher,
 };
+use crate::openhuman::agent::harness::definition::NO_TOOLS_SENTINEL;
 use crate::openhuman::agent::harness::definition::{
     AgentDefinitionRegistry, PromptSource, ToolScope,
 };
@@ -832,8 +833,39 @@ impl Agent {
                     ToolScope::Named(names) => {
                         let mut set: std::collections::HashSet<String> =
                             names.iter().cloned().collect();
+                        // Only the *advertised* ones. A synthesised tool that
+                        // reports `ToolExposure::Hidden` is a member of a
+                        // collapsed tool — today every `ArchetypeDelegationTool`,
+                        // whose family the single `delegate_to` tool now stands
+                        // for. Inserting it here would put it back on the wire
+                        // beside the tool that replaced it, shipping both
+                        // surfaces and saving nothing.
+                        //
+                        // This is not the same judgement as
+                        // `strip_deferred_from_visible`, which deliberately
+                        // leaves a hand-written `[tools] named` belt alone. That
+                        // restraint is about not second-guessing a human's
+                        // choice; these names were never chosen by a human, they
+                        // are inserted right here. Hiding one removes nothing an
+                        // author asked for.
+                        //
+                        // The tool stays in `synthed`, so it stays registered
+                        // and dispatchable for a replayed transcript or a saved
+                        // skill that names it — exactly like a packed tool.
                         for t in &synthed {
+                            if t.exposure() == crate::openhuman::tools::traits::ToolExposure::Hidden
+                            {
+                                continue;
+                            }
                             set.insert(t.name().to_string());
+                        }
+                        // `named = []` means zero tools. An empty set here is
+                        // the harness's "no filter" sentinel and would advertise
+                        // the whole registry instead — the exact inversion that
+                        // handed `summarizer` and `trigger_triage` 109 tools
+                        // each. Spell the empty belt so it survives.
+                        if set.is_empty() {
+                            set.insert(NO_TOOLS_SENTINEL.to_string());
                         }
                         Some(set)
                     }
@@ -885,7 +917,17 @@ impl Agent {
                      tool scope"
                 );
                 let filter: Option<std::collections::HashSet<String>> = match &def.tools {
-                    ToolScope::Named(names) => Some(names.iter().cloned().collect()),
+                    ToolScope::Named(names) => {
+                        let mut set: std::collections::HashSet<String> =
+                            names.iter().cloned().collect();
+                        // Same rule as the branch above: an empty named scope
+                        // is zero tools, and an empty set would mean the
+                        // opposite.
+                        if set.is_empty() {
+                            set.insert(NO_TOOLS_SENTINEL.to_string());
+                        }
+                        Some(set)
+                    }
                     ToolScope::Wildcard => None,
                 };
                 (Vec::new(), filter)
@@ -912,6 +954,7 @@ impl Agent {
             Some(set) => set,
             None => delegation_tools
                 .iter()
+                .filter(|t| t.exposure() != crate::openhuman::tools::traits::ToolExposure::Hidden)
                 .map(|t| t.name().to_string())
                 .collect(),
         };
@@ -932,7 +975,15 @@ impl Agent {
                         visible = tools
                             .iter()
                             .map(|t| t.name().to_string())
-                            .chain(delegation_tools.iter().map(|t| t.name().to_string()))
+                            .chain(
+                                delegation_tools
+                                    .iter()
+                                    .filter(|t| {
+                                        t.exposure()
+                                            != crate::openhuman::tools::traits::ToolExposure::Hidden
+                                    })
+                                    .map(|t| t.name().to_string()),
+                            )
                             .filter(|name| !definition_disallows_tool(&def.disallowed_tools, name))
                             .collect();
                     }
@@ -940,6 +991,11 @@ impl Agent {
                         visible
                             .retain(|name| !definition_disallows_tool(&def.disallowed_tools, name));
                     }
+                }
+                // Disallowing every tool must remain a zero-tool scope. An
+                // empty visible set means "no filter" to the harness.
+                if visible.is_empty() {
+                    visible.insert(NO_TOOLS_SENTINEL.to_string());
                 }
             }
         }
@@ -968,7 +1024,7 @@ impl Agent {
                 // non-empty with an unregistered name so it advertises and
                 // permits zero tools rather than accidentally broadening.
                 if visible.is_empty() {
-                    visible.insert("__profile_no_tools__".to_string());
+                    visible.insert(NO_TOOLS_SENTINEL.to_string());
                 }
             }
         }
@@ -1219,12 +1275,15 @@ impl Agent {
                 )
             }))
             .profile_memory_storage(memory_subdir, session_raw_subdir)
-            .workflows(
-                crate::openhuman::skills::load_workflow_metadata_for_profile(
+            .workflows({
+                let mut catalogue = crate::openhuman::skills::load_workflow_metadata_for_profile(
                     &config.workspace_dir,
                     profile_skills_root.as_deref(),
-                ),
-            )
+                );
+                #[cfg(feature = "flows")]
+                catalogue.extend(crate::openhuman::flows::catalogue::flow_entries(config));
+                catalogue
+            })
             .auto_save(config.memory.auto_save)
             .post_turn_hooks(post_turn_hooks)
             .learning_enabled(config.learning.enabled)
@@ -1420,19 +1479,6 @@ pub(crate) fn provider_role_for(agent_id: &str, default_model: Option<&str>) -> 
 #[path = "factory_provider_role_tests_tests.rs"]
 mod provider_role_tests;
 
-/// Section D — derive the top-level chat turn's per-profile workspace
-/// descriptor. Shared by [`Agent::build_session_agent_inner`] and its unit tests
-/// so the two can never drift.
-///
-/// Returns a [`WorkspaceDescriptor`](tinyagents_harness::workspace::WorkspaceDescriptor)
-/// rooted at `<action_dir>/profiles/<id>` when `profile` opts into
-/// `dedicated_workspace` and its id passes validation (via
-/// [`dedicated_workspace_dir`](crate::openhuman::agent::profiles::dedicated_workspace_dir)),
-/// creating the dir as a side effect; `None` for the shared-workspace common case,
-/// for legacy ids that fail validation, and when the directory can't be created
-/// (all three fall back to the shared `action_dir` cwd rather than binding tools
-/// to a nonexistent dir). The returned descriptor propagates to subagents — see
-/// the deliberate-isolation note at the call site.
 pub(crate) fn derive_profile_workspace_descriptor(
     action_dir: &std::path::Path,
     profile: Option<&crate::openhuman::agent::profiles::AgentProfile>,
@@ -1465,24 +1511,6 @@ pub(crate) fn derive_profile_workspace_descriptor(
     )
 }
 
-/// Section D, embedder variant — the turn's workspace descriptor from the
-/// per-turn root an embedder scoped via
-/// [`turn_workspace::with_workspace`](crate::openhuman::agent::turn_workspace::with_workspace).
-///
-/// Returns a [`WorkspaceDescriptor`](tinyagents_harness::workspace::WorkspaceDescriptor)
-/// rooted at the scoped directory so this turn's acting tools (shell, file,
-/// git) resolve their default cwd there instead of the shared `action_dir`.
-/// `None` — every caller that scoped nothing — leaves the shared-`action_dir`
-/// behaviour byte-identical.
-///
-/// The root is only honoured when it is an existing directory: binding every
-/// acting tool to a cwd that does not exist would turn a host's stale path into
-/// an unexplained failure in each individual tool, and the shared `action_dir`
-/// is the better fallback (same reasoning as the profile variant's
-/// create-failure path).
-///
-/// The policy id is a fixed label rather than the path: it is surfaced in tool
-/// logs, and a host's checkout path is not something to spread through them.
 fn derive_turn_workspace_descriptor() -> Option<tinyagents_harness::workspace::WorkspaceDescriptor>
 {
     let root = crate::openhuman::agent::turn_workspace::current()?;
@@ -1516,13 +1544,6 @@ fn build_profile_security(
     }
 }
 
-/// Section D — per-profile dedicated-workspace descriptor seam.
-///
-/// These tests exercise the **production** [`derive_profile_workspace_descriptor`]
-/// directly (the same function the session builder calls), so they cannot drift
-/// from the real seam. They pin that the descriptor root points at
-/// `<action_dir>/profiles/<id>` for an opted-in profile, and that shared/legacy
-/// profiles produce no descriptor (so the shared `action_dir` cwd is preserved).
 #[cfg(test)]
 #[path = "factory_profile_workspace_descriptor_tests_tests.rs"]
 mod profile_workspace_descriptor_tests;

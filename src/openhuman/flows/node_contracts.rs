@@ -208,6 +208,27 @@ pub fn render_node_kinds_line() -> String {
         .join(" | ")
 }
 
+/// Renders the node kinds and only their required configuration fields.
+pub fn render_node_kinds_required() -> String {
+    all_node_kind_contracts()
+        .iter()
+        .map(|c| {
+            let required: Vec<&str> = c
+                .config_fields
+                .iter()
+                .filter(|f| f.required)
+                .map(|f| f.name.as_str())
+                .collect();
+            if required.is_empty() {
+                c.kind.clone()
+            } else {
+                format!("{}(config.{})", c.kind, required.join(", config."))
+            }
+        })
+        .collect::<Vec<_>>()
+        .join(", ")
+}
+
 #[cfg(test)]
 #[path = "node_contracts_tests.rs"]
 mod tests;

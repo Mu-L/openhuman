@@ -380,6 +380,14 @@ fn round20_credentials_profiles_cover_legacy_plaintext_errors_and_active_edges()
     .expect("write legacy plaintext store");
 
     let loaded = store.load().expect("load plaintext legacy profiles");
+    // Since #5432 `load` re-keys every profile to its canonical
+    // `<provider>:<profile_name>` id and rewrites `active_profiles` to match,
+    // so the raw `legacy-*` keys are gone after the load.
+    assert!(
+        !loaded.profiles.contains_key("legacy-token")
+            && !loaded.profiles.contains_key("legacy-oauth"),
+        "non-canonical profile ids must be re-keyed on load"
+    );
     assert_eq!(
         loaded
             .profiles
@@ -387,7 +395,18 @@ fn round20_credentials_profiles_cover_legacy_plaintext_errors_and_active_edges()
             .and_then(|profile| profile.token.as_deref()),
         Some("plain-secret")
     );
-    let oauth = loaded.profiles.get("github:oauth").expect("oauth loaded");
+    assert_eq!(
+        loaded.active_profiles.get("token").map(String::as_str),
+        Some("token:plain")
+    );
+    assert_eq!(
+        loaded.active_profiles.get("github").map(String::as_str),
+        Some("github:oauth")
+    );
+    let oauth = loaded
+        .profiles
+        .get("github:oauth")
+        .expect("oauth re-keyed to its canonical id");
     assert_eq!(oauth.kind, AuthProfileKind::OAuth);
     assert_eq!(
         oauth.token_set.as_ref().map(|tokens| (
