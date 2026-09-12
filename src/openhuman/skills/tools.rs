@@ -32,6 +32,8 @@ use super::ops_install::{
     install_workflow_from_url, uninstall_workflow, InstallWorkflowFromUrlParams,
     UninstallWorkflowParams,
 };
+use super::ops_types::WorkflowScope;
+use super::registry::get_workflow_with_profile;
 use super::run_log::{read_run_log_slice, scan_runs};
 
 fn read_required_str(args: &serde_json::Value, key: &str) -> anyhow::Result<String> {
