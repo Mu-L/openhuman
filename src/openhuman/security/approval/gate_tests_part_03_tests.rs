@@ -165,8 +165,11 @@ async fn intercept_with_external_channel_origin_persists_and_ttl_denies() {
         tokio::time::sleep(Duration::from_millis(10)).await;
     }
 
+    // The TTL was captured when the row was inserted; release the process-wide
+    // environment lock before waiting so expiry tests can run concurrently.
+    drop(env);
     // Without a routable channel approval surface, the parked future
-    // TTL-denies (2s — matches the test_gate fixture).
+    // TTL-denies after `EXPIRY_TEST_TTL`.
     let outcome = handle.await.unwrap();
     match outcome {
         GateOutcome::Deny { reason } => assert!(reason.contains("timed out")),
@@ -383,7 +386,7 @@ async fn flow_tool_trust_auto_allows_before_parking() {
     //
     // The second half of this test *does* wait a park out, so it needs the
     // short window even though it never inspects the "timed out" reason.
-    let (gate, _dir, _env) = expiry_gate();
+    let (gate, _dir, env) = expiry_gate();
     store::insert_flow_trust(&gate.config, "flow-trusted", "composio").unwrap();
 
     let outcome = turn_origin::with_origin(
@@ -424,7 +427,10 @@ async fn flow_tool_trust_auto_allows_before_parking() {
     let mut tries = 0;
     while gate.list_pending().unwrap().is_empty() {
         tries += 1;
-        assert!(tries < 50, "audit row never appeared for untrusted flow tool");
+        assert!(
+            tries < 50,
+            "audit row never appeared for untrusted flow tool"
+        );
         tokio::time::sleep(Duration::from_millis(10)).await;
     }
     drop(env);

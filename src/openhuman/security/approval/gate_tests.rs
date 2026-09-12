@@ -54,7 +54,7 @@ fn test_gate_with_ttl(ttl: Duration) -> (ApprovalGate, TempDir) {
 }
 
 /// A gate for the tests that let a park expire, plus the env lock they
-/// have to hold while it does.
+/// hold until the pending row captures its effective TTL.
 ///
 /// [`ApprovalGate::effective_ttl`] reads `OPENHUMAN_APPROVAL_TTL_SECS` at
 /// park time, not at construction, and this whole suite is a debug build,
@@ -64,8 +64,10 @@ fn test_gate_with_ttl(ttl: Duration) -> (ApprovalGate, TempDir) {
 /// their `42`, and a row that was supposed to die in two seconds outlives
 /// the test that is waiting for it instead.
 ///
-/// The guard is returned rather than dropped here: holding it only while
-/// the gate is built would leave the window open for the park itself.
+/// Callers drop the returned guard after observing the pending row. Holding
+/// it only while the gate is built would leave the window open for the park's
+/// initial `effective_ttl` read, while holding it through expiry serializes
+/// these tests unnecessarily.
 /// `test_gate_with_ttl` must not take the lock, because the
 /// `effective_ttl_*` tests call it while already holding it.
 struct ExpiryEnvGuard {
