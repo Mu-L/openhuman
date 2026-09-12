@@ -59,8 +59,12 @@ fn new_session_carries_prior_turns_as_one_labelled_transcript() {
     let lines: Vec<_> = s.lines().collect();
 
     // The transcript and latest prompt are content blocks in one user row.
-    assert_eq!(lines.len(), 1, "got:
-{s}");
+    assert_eq!(
+        lines.len(),
+        1,
+        "got:
+{s}"
+    );
     assert!(lines[0].contains("User: hi"));
     assert!(lines[0].contains("Assistant: hello"));
     assert!(
