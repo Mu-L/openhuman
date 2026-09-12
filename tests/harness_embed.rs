@@ -52,6 +52,11 @@ fn offline_config() -> Config {
     config.memory_tree.embedding_endpoint = None;
     config.memory_tree.embedding_model = None;
     config.memory_tree.embedding_strict = false;
+    // User-message memory autosave is intentionally fire-and-forget. It can
+    // still be writing after a turn returns, which is useful in the product but
+    // unrelated to this test's provider/session/concurrency contract and would
+    // race the final ephemeral-workspace cleanup assertion.
+    config.memory.auto_save = false;
     config.default_temperature = 0.0;
     config
 }
