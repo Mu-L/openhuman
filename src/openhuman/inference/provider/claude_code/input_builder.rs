@@ -108,13 +108,23 @@ fn prior_conversation_preamble(non_system: &[&ChatMessage], end: usize) -> Optio
                 }
             }
             "user" => {
-                // Only fold an *answered* user turn (an assistant reply follows).
+                // A consecutive group of user turns is answered when the
+                // assistant follows the group. This preserves queued
+                // steering messages while omitting a trailing attempt.
+                let mut next = i + 1;
+                while non_system
+                    .get(next)
+                    .is_some_and(|message| message.role == "user")
+                {
+                    next += 1;
+                }
                 let answered = non_system
-                    .get(i + 1)
-                    .is_some_and(|next| next.role == "assistant");
-                if answered {
-                    if !m.content.is_empty() {
-                        turns.push(format!("User: {}", m.content));
+                    .get(next)
+                    .is_some_and(|message| message.role == "assistant");
+                if answered && !m.content.is_empty() {
+                    let (text, _images) = parse_image_markers(&m.content);
+                    if !text.is_empty() {
+                        turns.push(format!("User: {text}"));
                     }
                 }
             }
@@ -137,12 +147,17 @@ fn prior_conversation_preamble(non_system: &[&ChatMessage], end: usize) -> Optio
 fn content_blocks(raw: &str) -> Vec<Value> {
     const IMAGE_PREFIX: &str = "[IMAGE:";
     const NATIVE_IMAGE_PREFIX: &str = "[OH_IMAGE:";
+    const LITERAL_NATIVE_IMAGE_PREFIX: &str = "[OH_IMAGE_LITERAL:";
     let mut blocks: Vec<Value> = Vec::new();
     let mut cursor = 0;
-    while let Some((relative, prefix)) = [IMAGE_PREFIX, NATIVE_IMAGE_PREFIX]
-        .iter()
-        .filter_map(|prefix| raw[cursor..].find(prefix).map(|offset| (offset, *prefix)))
-        .min_by_key(|(offset, _)| *offset)
+    while let Some((relative, prefix)) = [
+        IMAGE_PREFIX,
+        NATIVE_IMAGE_PREFIX,
+        LITERAL_NATIVE_IMAGE_PREFIX,
+    ]
+    .iter()
+    .filter_map(|prefix| raw[cursor..].find(prefix).map(|offset| (offset, *prefix)))
+    .min_by_key(|(offset, _)| *offset)
     {
         let start = cursor + relative;
         let Some(end_relative) = raw[start..].find(']') else {
@@ -158,16 +173,25 @@ fn content_blocks(raw: &str) -> Vec<Value> {
             blocks.push(json!({"type": "text", "text": &raw[cursor..start]}));
         }
         let reference = &raw[start + prefix.len()..end - 1];
-        match image_block(reference, prefix == NATIVE_IMAGE_PREFIX) {
-            Some(block) => blocks.push(block),
-            None if prefix == IMAGE_PREFIX => {
-                // `[IMAGE:…]` is ordinary text unless it names a managed
-                // attachment. Never interpret a user-typed data URI as an
-                // instruction to send an image.
-                blocks.push(json!({"type": "text", "text": &raw[start..end]}));
+        if prefix == LITERAL_NATIVE_IMAGE_PREFIX {
+            blocks.push(json!({
+                "type": "text",
+                "text": format!("[OH_IMAGE:{reference}]"),
+            }));
+        } else {
+            match image_block(reference, prefix == NATIVE_IMAGE_PREFIX) {
+                Some(block) => blocks.push(block),
+                None if prefix == IMAGE_PREFIX => {
+                    // `[IMAGE:…]` is ordinary text unless it names a managed
+                    // attachment. Never interpret a user-typed data URI as an
+                    // instruction to send an image.
+                    blocks.push(json!({"type": "text", "text": &raw[start..end]}));
+                }
+                None => blocks.push(json!({
+                    "type": "text",
+                    "text": "[an attached image could not be read]"
+                })),
             }
-            None => blocks
-                .push(json!({"type": "text", "text": "[an attached image could not be read]"})),
         }
         cursor = end;
     }

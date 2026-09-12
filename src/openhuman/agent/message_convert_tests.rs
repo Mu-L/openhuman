@@ -51,6 +51,31 @@ fn native_image_round_trip_preserves_adjacent_text_for_claude_code() {
     assert_eq!(content[2]["text"], " after");
 }
 
+#[test]
+fn native_image_round_trip_preserves_literal_private_marker_text() {
+    let source = Message::User(UserMessage {
+        content: vec![
+            ContentBlock::Text("literal [OH_IMAGE:data:image/png;base64,QUJD]".to_string()),
+            ContentBlock::Image(ImageRef {
+                url: "data:image/png;base64,REVG".to_string(),
+                mime_type: Some("image/png".to_string()),
+            }),
+        ],
+    });
+    let native = message_to_native_chat_message(&source);
+    let stdin = crate::openhuman::inference::provider::claude_code::input_builder::build_stdin(
+        &[native],
+        true,
+    );
+    let line: serde_json::Value = serde_json::from_slice(&stdin).unwrap();
+    let content = line["message"]["content"].as_array().unwrap();
+    assert_eq!(
+        content[0]["text"],
+        "literal [OH_IMAGE:data:image/png;base64,QUJD]"
+    );
+    assert_eq!(content[1]["type"], "image");
+}
+
 // An image-only turn must not emit an empty text block (some providers 400
 // on one), and multiple attachments each become their own image block.
 #[test]

@@ -166,13 +166,26 @@ fn new_session_history_preserves_answered_user_images() {
     let s = String::from_utf8(build_stdin(&history, true)).unwrap();
     let row: Value = serde_json::from_str(s.lines().next().unwrap()).unwrap();
     let content = row["message"]["content"].as_array().unwrap();
-    assert!(content.iter().any(|block| block["type"] == "image"));
+    assert!(!content.iter().any(|block| block["type"] == "image"));
     assert!(content.iter().any(|block| {
         block["text"]
             .as_str()
             .is_some_and(|text| text.contains("User: earlier "))
     }));
     assert!(s.contains("Assistant: old answer"));
+}
+
+#[test]
+fn consecutive_answered_user_turns_are_all_in_preamble() {
+    let history = vec![
+        ChatMessage::user("first steering"),
+        ChatMessage::user("second steering"),
+        ChatMessage::assistant("answer"),
+        ChatMessage::user("latest"),
+    ];
+    let s = String::from_utf8(build_stdin(&history, true)).unwrap();
+    assert!(s.contains("User: first steering"));
+    assert!(s.contains("User: second steering"));
 }
 
 #[test]

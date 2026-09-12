@@ -334,7 +334,7 @@ fn native_user_content(msg: &Message) -> String {
     let mut out = String::new();
     for block in &user.content {
         let piece = match block {
-            ContentBlock::Text(text) => text.clone(),
+            ContentBlock::Text(text) => text.replace("[OH_IMAGE:", "[OH_IMAGE_LITERAL:"),
             // Use a private wire marker so provider input builders can
             // distinguish an image block from literal text that happens to
             // look like `[IMAGE:…]`.
