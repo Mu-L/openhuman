@@ -92,8 +92,9 @@ async fn list_chunks_page(
     let (rows, total) = if tokens.len() > 1 {
         let mut unpaged = query.clone();
         unpaged.content_contains = None;
-        // Keep every provider scan bounded before intersecting the results.
-        unpaged.limit = Some(limit as usize);
+        // Intersect the complete match sets before applying pagination. A
+        // provider page can otherwise hide rows that match every token.
+        unpaged.limit = None;
         unpaged.offset = None;
         let rows = token_and_details(chunks, &unpaged, &tokens, "list_chunks").await?;
         let total = rows.len() as u64;
@@ -382,7 +383,13 @@ pub async fn search_rpc(
     k: u32,
 ) -> Result<RpcOutcome<Vec<ChunkRow>>, String> {
     let limit = k.clamp(1, MAX_LIST_LIMIT);
-    let content_contains = query_tokens(Some(&query)).first().cloned();
+    let tokens = query_tokens(Some(&query));
+    let content_contains = if tokens.len() > 1 {
+        None
+    } else {
+        let trimmed = query.trim();
+        (!trimmed.is_empty()).then(|| trimmed.to_string())
+    };
     // Captured before `query` is shadowed by the `ChunkQuery` below. The log
     // line reports the length of the search TEXT, never of the built query, and
     // it is deliberately the length rather than the text itself — a search term
@@ -404,10 +411,9 @@ pub async fn search_rpc(
     // `content_contains` and a limit, and nothing else: no source predicate, no
     // time window, no offset. `scope` is `None` for the same reason the listing
     // passes `None` — the SQL this replaces carried no allowlist clause.
-    let tokens = query_tokens(Some(&query));
     let rows = if tokens.len() > 1 {
         let query = ChunkQuery {
-            limit: Some(limit as usize),
+            limit: None,
             ..Default::default()
         };
         token_and_details(chunks, &query, &tokens, "search")
