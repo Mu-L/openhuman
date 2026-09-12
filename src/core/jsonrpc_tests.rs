@@ -7,10 +7,9 @@ use std::time::Duration;
 use tokio_util::sync::CancellationToken;
 
 use super::{
-    default_state, group_first_time, group_first_time_when_bus_ready, invoke_method,
-    is_session_expired_error, is_unconfirmed_unauthorized_error,
-    learning_first_time_when_bus_ready, params_to_object, parse_json_params, type_name,
-    DomainSubscriberPlan,
+    default_state, group_first_time_when_bus_ready, invoke_method, is_session_expired_error,
+    is_unconfirmed_unauthorized_error, learning_first_time_when_bus_ready, params_to_object,
+    parse_json_params, type_name, DomainSubscriberPlan,
 };
 // These are the `http-server`-gated RPC-surface symbols (#5048); the tests that
 // name them below carry the same `#[cfg]` so the disabled-build test compile
@@ -179,12 +178,22 @@ fn learning_subscriber_registration_is_idempotent_after_success() {
 }
 
 #[test]
-fn domain_subscriber_registration_wrapper_uses_the_global_bus() {
+fn domain_subscriber_registration_readiness_helper_is_idempotent() {
     use crate::core::all::DomainGroup;
+    use std::collections::HashSet;
+    use std::sync::Mutex;
 
-    crate::core::event_bus::init_global(crate::core::event_bus::DEFAULT_CAPACITY);
-    assert!(group_first_time(DomainGroup::Media));
-    assert!(!group_first_time(DomainGroup::Media));
+    let completed = Mutex::new(HashSet::new());
+    assert!(group_first_time_when_bus_ready(
+        &completed,
+        DomainGroup::Media,
+        true
+    ));
+    assert!(!group_first_time_when_bus_ready(
+        &completed,
+        DomainGroup::Media,
+        true
+    ));
 }
 
 /// #5027 — the tool-execution timeout must be seeded on the always-on core boot

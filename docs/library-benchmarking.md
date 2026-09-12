@@ -11,14 +11,14 @@ subconscious pass, a memory ingest, a bare embed) that each have their own
 startup cost, steady-state footprint, and growth curve.
 
 This document describes the benchmark environment built to measure that: a
-pinned `library-profile` binary with six scenarios, four driver scripts
+pinned `library-profile` binary with eight scenarios, four driver scripts
 under `scripts/profile/`, and the comparison point the team cares about
 (ZeroClaw). It builds on the manual investigation in
-[`docs/resource-profiling-session-2026-07-21.md`](resource-profiling-session-2026-07-21.md);
+`docs/resource-profiling-session-2026-07-21.md`;
 read that document for the deep memory/CPU attribution work. This document is
 about running repeatable benchmarks, not re-deriving those findings.
 
-## The scenarios
+## The eight scenarios
 
 All scenarios run in `target/release/library-profile <scenario>`, replace
 network inference with a deterministic provider (`rss-bench` feature), and
@@ -27,22 +27,14 @@ stderr). Each models a distinct embedding use case:
 
 | Scenario | Models |
 | --- | --- |
+| `memory-ingest` | Canonicalizing and ingesting a batch of chat messages through the real extraction/admission/tree-queue pipeline. |
+| `subagents` | A delegation turn: an orchestrator session spawns real subagents via `spawn_parallel_agents` and merges their findings. |
 | `agent-turn` | The minimal embed case: one agent, one turn, no delegation, no workflow. The smallest useful "hello world" for a host that just wants a single reply. |
 | `long-agent` | A long-running agent loop (`OPENHUMAN_PROFILE_TURNS`, default 25) in one process, to see whether RSS plateaus or grows per turn. |
 | `workflow` | A saved automation run (`flows_create` + `flows_run`), representing the flows/automation embedding path rather than ad hoc chat. |
+| `subconscious` | A background subconscious turn (the always-on reflective pass), distinct from an interactive chat turn. |
+| `cold-phases` | Bootstrap attribution: per-phase checkpoints (config load, registry init, agent build, memory construction, first turn) so cold-start cost can be attributed to a phase instead of one lump sum. |
 | `fleet` | N concurrent live agents with latency-realistic mock inference — the "100-1000 agents in a 2 GB / 2 vCPU server" question. See [below](#the-2-gb--2-vcpu-server-budget). |
-
-Four scenarios that this table used to list are gone, for two different
-reasons. `memory-ingest` and `cold-phases` measured the memory engine embedded
-in this process — one drained its queue, the other checkpointed its bootstrap
-through `tinymemory_core::store::MemoryClient` — and the binary no longer links
-one (openhuman#6161). Measuring the memory *module* over the bus instead is a
-different scenario and wants its own design, not a revived file. `subagents`
-and `subconscious` had already stopped existing before that: the subconscious
-domain was removed from the product outright, and both were still named in
-`library-bench.sh`'s sweep list, where `dispatch` answered "unknown scenario".
-The measurement tables further down are left as recorded — they are a log of
-what was measured when, not a description of what runs today.
 
 ## How to run
 
@@ -55,15 +47,15 @@ Six scripts under `scripts/profile/` (each has `-h`/`--help`):
   ```bash
   ./scripts/profile/library-bench.sh                     # default build, all scenarios
   ./scripts/profile/library-bench.sh --slim               # --no-default-features recipe
-  ./scripts/profile/library-bench.sh --scenarios "long-agent,subagent-storm" --turns 50 --warm
+  ./scripts/profile/library-bench.sh --scenarios "long-agent,subagents" --turns 50 --warm
   ```
 
 - **`library-cpu.sh`** — a `samply` wrapper for one scenario's CPU profile,
   isolated from persistence/timezone noise by default.
 
   ```bash
-  ./scripts/profile/library-cpu.sh subagent-storm
-  samply load target/profile/rust-library/subagent-storm-cpu.json.gz
+  ./scripts/profile/library-cpu.sh subagents
+  samply load target/profile/rust-library/subagents-cpu.json.gz
   ```
 
 - **`library-heap.sh`** — builds the `rss-bench-dhat` variant and runs a
@@ -72,8 +64,8 @@ Six scripts under `scripts/profile/` (each has `-h`/`--help`):
   `library-bench.sh` output.
 
   ```bash
-  ./scripts/profile/library-heap.sh agent-turn
-  # load target/profile/rust-library/dhat-agent-turn.json at
+  ./scripts/profile/library-heap.sh memory-ingest
+  # load target/profile/rust-library/dhat-memory-ingest.json at
   # https://nnethercote.github.io/dh_view/dh_view.html
   ```
 
@@ -106,12 +98,12 @@ Six scripts under `scripts/profile/` (each has `-h`/`--help`):
 
 ### Default vs slim builds
 
-Default-feature builds link every compile-time domain gate (`voice`, `web3`,
+The Product/desktop feature set links every compile-time domain gate (`voice`, `web3`,
 `media`, `meet`, `skills`, `flows`, `mcp`, `tui`) — the byte-identical desktop
 recipe. The slim recipe drops everything not required by the harness:
 
 ```bash
-GGML_NATIVE=OFF cargo build --release \
+cargo build --release \
   --no-default-features --features rss-bench \
   --bin library-profile --bin rss-bench
 ```
@@ -126,7 +118,7 @@ behavior, not linked code size.
 | Variable | Effect |
 | --- | --- |
 | `OPENHUMAN_PROFILE_TURNS` | Turn count for `long-agent` (default 25). |
-| `OPENHUMAN_PROFILE_PREWARM_SUBAGENTS=1` | Run one warm-up turn before measuring (`subagent-storm`), isolating first-use cost from steady state. |
+| `OPENHUMAN_PROFILE_PREWARM_SUBAGENTS=1` | Run one warm-up turn before measuring (`subagents`/`subconscious`), isolating first-use cost from steady state. |
 | `OPENHUMAN_PROFILE_DISABLE_MEMORY_WRITES=1` | Disable `memory.auto_save` and episodic capture, isolating orchestration from persistence. |
 | `OPENHUMAN_PROFILE_FORCE_UTC=1` | Skip `iana_time_zone`/CoreFoundation timezone resolution. |
 | `OPENHUMAN_PROFILE_HOLD_SECS` / `HOLD_BEFORE_SECS` | Pause the process at settled/baseline state for external inspection (`vmmap`, `heap`, `malloc_history`, Instruments). |
@@ -148,7 +140,7 @@ visible directly.
 footprint, 3.18 MiB live heap, 18.7 MiB resident executable text, and ~9.4 MiB
 of resident-but-mostly-inactive malloc pages (allocator high-water
 retention). See
-[`docs/resource-profiling-session-2026-07-21.md`](resource-profiling-session-2026-07-21.md#deep-memory-attribution)
+`docs/resource-profiling-session-2026-07-21.md`
 for the full breakdown, the executable-paging finding (a cold turn faults in
 ~15 MiB of previously nonresident OpenHuman code), and the warmed-process
 control showing steady-state turns cost ~0.5-1.9 MiB once warm rather than
@@ -253,14 +245,9 @@ extrapolation estimate:
 means running the same binary under real `cgroup` memory limits (e.g.
 `docker run --memory=2g`) on a Linux host and observing whether it survives
 or gets OOM-killed at the target instance count — not projecting from local
-sum-RSS. That is follow-up work, and it belongs on a Linux box: this repo's
-own `openhuman-core` Docker build is currently blocked on Apple Silicon (the
-`whisper-rs-sys`/whisper.cpp NEON fp16 intrinsics fail to compile under
-arm64-Linux emulation with GCC 12 — see the umbrella repo's root `CLAUDE.md`
-gotchas and `docs/resource-profiling-session-2026-07-21.md`). The path
-around that blocker is either building for `linux/amd64` under emulation (the
-whisper AVX path has no NEON bug) or running the validation on a native Linux
-host rather than macOS Docker Desktop.
+sum-RSS. That is follow-up work, and it belongs on a Linux box. Run the
+validation on a native Linux host or under a Linux container with the target
+memory limit rather than relying on macOS Docker Desktop.
 
 ## Profiling escalation path
 
@@ -272,12 +259,12 @@ Start cheap, escalate only as needed:
 4. **Instruments / `vmmap` / `heap` / `malloc_history`** — deepest macOS-native attribution, using the `OPENHUMAN_PROFILE_HOLD_SECS` / `HOLD_BEFORE_SECS` hooks to pause the process at baseline or settled state:
 
    ```bash
-   OPENHUMAN_PROFILE_HOLD_SECS=120 target/release/library-profile subagent-storm &
+   OPENHUMAN_PROFILE_HOLD_SECS=120 target/release/library-profile subagents &
    vmmap -summary <pid>
    heap -sH <pid>
 
    MallocStackLogging=1 OPENHUMAN_PROFILE_HOLD_SECS=120 \
-     target/release/library-profile subagent-storm &
+     target/release/library-profile subagents &
    malloc_history <pid> -allBySize
    ```
 
@@ -375,19 +362,12 @@ The pool is configured in `[runtime_pool]` (master switch + per-language
 `max_queue_depth`); `enabled = false` reverts every caller to the legacy
 per-call spawn.
 
-The pool itself now lives in the `tinyruntime` module. That does **not** change
-what this scenario measures: a TinyBus module is a `cdylib` loaded into this
-process, so a worker it spawns is still a child of the host and still shows up in
-the process-tree sample the gate asserts on. What changed is which code spawns
-it. The configuration keys, the backpressure behaviour, and the
-`enabled = false` escape hatch are unchanged.
-
 Watch-items from the sweep: thread count grows ~0.35/agent (needs
 attribution + cap before real 1000-agent runs), and p95 latency at N=500 on
 2 workers shows CPU saturation is the load constraint, not memory.
 
 ## See also
 
-- [`docs/resource-profiling-session-2026-07-21.md`](resource-profiling-session-2026-07-21.md) — the full manual investigation (deep attribution, cold-path CPU, library-design implications, recommended optimization order).
+- `docs/resource-profiling-session-2026-07-21.md` — the full manual investigation (deep attribution, cold-path CPU, library-design implications, recommended optimization order).
 - [`scripts/profile/README.md`](../scripts/profile/README.md) — script quick reference.
 - `src/bin/library_profile/main.rs` — the scenario implementations.

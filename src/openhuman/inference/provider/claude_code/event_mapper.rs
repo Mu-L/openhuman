@@ -4,12 +4,31 @@
 //! The CLI emits content as anthropic-style content blocks. We map:
 //!   - `content_block_start` text  → start a text accumulator
 //!   - `content_block_delta` text  → `ProviderDelta::TextDelta`
-//!   - `content_block_start` tool  → `ProviderDelta::ToolCallStart`
-//!   - `content_block_delta` tool  → `ProviderDelta::ToolCallArgsDelta`
+//!   - `content_block_*`      tool → tracked but **NOT surfaced** (see below)
 //!   - `result`                    → finalize usage + cost
 //!
 //! Thinking blocks (`thinking_delta`) are forwarded as
 //! `ProviderDelta::ThinkingDelta`.
+//!
+//! ## Tool blocks are deliberately not surfaced
+//!
+//! The `claude` CLI is a **self-executing** agent: it runs its own built-in
+//! tools (`Read`/`Write`/`Edit`/`Bash`/`Glob`/…) and OpenHuman's MCP tools
+//! internally, in its own agent loop, and returns their results itself. So a
+//! `tool_use` block in the stream is a call the CLI has **already executed** —
+//! not a request for OpenHuman to run something.
+//!
+//! If we surfaced these as OpenHuman [`ToolCall`]s, the tinyagents harness would
+//! try to dispatch them, hold none of them by those names, and reject each one
+//! (`unknown tool \`Read\`; valid tools: [...]`) — injecting that corrective
+//! back into the transcript and looping until it aborts (`N tool calls in a row
+//! failed with no progress`). That is the intermittent "something went wrong"
+//! wall users hit (it only bit when a `tool_use` block arrived as a streamed
+//! partial rather than solely in the skipped final `assistant` message).
+//!
+//! So we track a `tool_use` block only enough to keep its `input_json_delta`s
+//! out of the visible text, and surface nothing. The CLI's final assistant text
+//! is the turn's result; its live narration/thinking still streams to the UI.
 
 use std::collections::HashMap;
 
@@ -23,10 +42,8 @@ use crate::openhuman::inference::provider::types::{
 #[derive(Debug, Clone)]
 struct BlockState {
     kind: BlockKind,
-    call_id: Option<String>,
     tool_name: Option<String>,
     text_accum: String,
-    input_accum: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -40,6 +57,10 @@ enum BlockKind {
 pub struct EventMapper {
     blocks: HashMap<u64, BlockState>,
     pub final_text: String,
+    /// Always empty for the self-executing `claude` CLI: its `tool_use` blocks
+    /// are calls it already ran itself, so they are never surfaced as OpenHuman
+    /// tool calls (see the module docs). Kept as the response's `tool_calls`
+    /// slot so the harness always sees a terminal, tool-less response.
     pub tool_calls: Vec<ToolCall>,
     pub usage: Option<UsageInfo>,
     pub error: Option<String>,
@@ -132,10 +153,8 @@ impl EventMapper {
                     index,
                     BlockState {
                         kind: BlockKind::Text,
-                        call_id: None,
                         tool_name: None,
                         text_accum: String::new(),
-                        input_accum: String::new(),
                     },
                 );
                 Vec::new()
@@ -145,44 +164,40 @@ impl EventMapper {
                     index,
                     BlockState {
                         kind: BlockKind::Thinking,
-                        call_id: None,
                         tool_name: None,
                         text_accum: String::new(),
-                        input_accum: String::new(),
                     },
                 );
                 Vec::new()
             }
             "tool_use" => {
-                let call_id = block
-                    .get("id")
-                    .and_then(Value::as_str)
-                    .filter(|s| !s.is_empty())
-                    .map(str::to_string);
+                // The CLI has ALREADY executed this tool itself (see the module
+                // docs). Track the block so its argument deltas don't leak into
+                // the visible text, but surface no `ToolCallStart` — OpenHuman's
+                // harness must never try to re-dispatch a call the CLI ran.
                 let tool_name = block
                     .get("name")
                     .and_then(Value::as_str)
                     .filter(|s| !s.is_empty())
                     .map(str::to_string);
-                if call_id.is_none() || tool_name.is_none() {
-                    log::warn!(
-                        "[claude-code][event-mapper] skipping tool_use block with missing id or name"
+                if let Some(name) = tool_name.as_deref() {
+                    log::debug!(
+                        "[claude-code][event-mapper] CLI self-executed tool `{name}` (not surfaced to the harness)"
                     );
-                    return Vec::new();
                 }
-                let call_id = call_id.unwrap();
-                let tool_name = tool_name.unwrap();
+                // The block is tracked so its `input_json_delta`s and its stop
+                // event are swallowed rather than leaking, but it is NOT
+                // surfaced to OpenHuman's harness — see the note on
+                // `on_block_stop`.
                 self.blocks.insert(
                     index,
                     BlockState {
                         kind: BlockKind::Tool,
-                        call_id: Some(call_id.clone()),
-                        tool_name: Some(tool_name.clone()),
+                        tool_name,
                         text_accum: String::new(),
-                        input_accum: String::new(),
                     },
                 );
-                vec![ProviderDelta::ToolCallStart { call_id, tool_name }]
+                Vec::new()
             }
             _ => Vec::new(),
         }
@@ -219,17 +234,10 @@ impl EventMapper {
                 vec![ProviderDelta::ThinkingDelta { delta: text }]
             }
             (BlockKind::Tool, "input_json_delta") => {
-                let partial = delta
-                    .get("partial_json")
-                    .and_then(Value::as_str)
-                    .unwrap_or("")
-                    .to_string();
-                state.input_accum.push_str(&partial);
-                let call_id = state.call_id.clone().unwrap_or_default();
-                vec![ProviderDelta::ToolCallArgsDelta {
-                    call_id,
-                    delta: partial,
-                }]
+                // Self-executed by the CLI (see the module docs). Discard the
+                // argument fragments: they are not surfaced to the harness and
+                // retaining them until block stop only wastes memory.
+                Vec::new()
             }
             _ => Vec::new(),
         }
@@ -240,20 +248,25 @@ impl EventMapper {
             return Vec::new();
         };
         if state.kind == BlockKind::Tool {
-            let call_id = state.call_id.unwrap_or_default();
-            let name = state.tool_name.unwrap_or_default();
-            let arguments = if state.input_accum.trim().is_empty() {
-                "{}".to_string()
-            } else {
-                state.input_accum.clone()
-            };
-            self.tool_calls.push(ToolCall {
-                id: call_id,
-                name,
-                arguments,
-                // Claude Code CLI events carry no OpenAI-compat extra_content.
-                extra_content: None,
-            });
+            // A native `tool_use` block from this CLI is the CLI's OWN call —
+            // its builtins (Bash / Read / Write / Edit …) or a server from the
+            // `--mcp-config` we hand it. The CLI executes them itself inside
+            // its own agentic loop, which is why the matching `tool_result`
+            // blocks are deliberately dropped in `map_event`.
+            //
+            // Surfacing the *call* while dropping its *result* handed
+            // OpenHuman's harness a tool it does not own and cannot run: with
+            // `full_access` on (no `--disallowedTools`), a turn that reached
+            // for `Bash` produced repeated tool failures until the circuit
+            // breaker halted the run, and the turn then burned its 900s
+            // wall-clock backstop. So neither half is surfaced, and this
+            // provider behaves as what it is — a chat model whose tool use is
+            // internal. OpenHuman's own tools reach it through the prompt
+            // catalogue, not through native tool calls.
+            log::debug!(
+                "[claude-code][event-mapper] dropping cli-internal tool call name={}",
+                state.tool_name.unwrap_or_default(),
+            );
         }
         Vec::new()
     }

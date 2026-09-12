@@ -1350,7 +1350,7 @@ const messages: TranslationMap = {
   'settings.search.title': 'محرك البحث',
   'settings.search.menuDesc': 'تخلف عن البحث أو التنصت على مزودك الخاص بمفتاح اكسوكس',
   'settings.search.description':
-    'اختر محرك البحث الذي يستخدمه الوكيل، أو عطّل أدوات البحث بالكامل. يستخدم الوضع المُدار واجهة خلفية OpenHuman (بدون إعداد). تعمل محركات Parallel وBrave وQuerit وExa مباشرةً من جهازك باستخدام مفتاح API الخاص بك.',
+    'اختر محرك البحث الذي يستخدمه الوكيل، أو عطّل أدوات البحث بالكامل. يستخدم الوضع المُدار واجهة خلفية OpenHuman (بدون إعداد). تعمل محركات Parallel وBrave وQuerit وExa وTavily مباشرةً من جهازك باستخدام مفتاح API الخاص بك.',
   'settings.search.engineAria': 'محرك البحث',
   'settings.search.engineDisabledLabel': 'Disabled',
   'settings.search.engineDisabledDesc': 'أزل أدوات البحث من سياق الوكيل وقائمة الأدوات المتاحة.',
@@ -1358,7 +1358,7 @@ const messages: TranslationMap = {
   'settings.search.engineManagedDesc':
     'الإعداد الافتراضي. يتم توجيهه عبر خادم OpenHuman الخلفي، المدعوم حاليًا بواسطة Exa: لا حاجة إلى مفتاح API.',
   'settings.search.localManagedUnavailable':
-    'بحث OpenHuman المُدار غير متاح للمستخدمين المحليين. أضف مفتاح Parallel أو Brave أو Querit أو Exa الخاص بك لتفعيل البحث على الويب.',
+    'بحث OpenHuman المُدار غير متاح للمستخدمين المحليين. أضف مفتاح Parallel أو Brave أو Querit أو Exa أو Tavily الخاص بك لتفعيل البحث على الويب.',
   'settings.search.engineParallelLabel': 'Parallel',
   'settings.search.engineParallelDesc':
     'واجهة برمجية متوازية مباشرة: أدوات البحث والاستخراج والمحادثة والبحث المتعمق والإثراء ومجموعات البيانات.',
@@ -1370,6 +1370,9 @@ const messages: TranslationMap = {
   'settings.search.engineExaLabel': 'Exa',
   'settings.search.engineExaDesc':
     'بحث عصبي مدعوم من Exa. يتطلب مفتاح API الخاص بك من Exa. يضيف أدوات البحث والعثور على صفحات مشابهة واسترجاع محتوى الصفحات.',
+  'settings.search.engineTavilyLabel': 'Tavily',
+  'settings.search.engineTavilyDesc':
+    'بحث الويب والأخبار والمالية مدعوم من Tavily. يتطلب مفتاح API الخاص بك من Tavily. يضيف أدوات البحث واستخراج محتوى الصفحات.',
   'settings.search.statusConfigured': 'تم تكوينه',
   'settings.search.statusNeedsKey': 'يحتاج إلى مفتاح API',
   'settings.search.fallbackToManaged':
@@ -1391,6 +1394,8 @@ const messages: TranslationMap = {
   'settings.search.placeholderBrave': 'BSA...',
   'settings.search.placeholderQuerit': 'مفتاح API الخاص بـ Querit',
   'settings.search.placeholderExa': 'الصق مفتاح API الخاص بـ Exa…',
+  'settings.search.tavilyKeyLabel': 'مفتاح API الخاص بـ Tavily',
+  'settings.search.placeholderTavily': 'tvly-...',
   'settings.search.allowedSitesLabel': 'المواقع الشبكية المسموح بها',
   'settings.search.allowedSitesHint':
     'المضيفون الذين يُسمح للمساعد بفتحهم وقراءتهم (عبر جلب الويب وأداة المتصفح) مضيف واحد في كل سطر، مثل reuters.com. يشمل المضيف نطاقاته الفرعية أيضًا. البحث على الويب نفسه لا يتقيّد بهذه القائمة.',
@@ -4251,7 +4256,7 @@ const messages: TranslationMap = {
   'settings.ai.claudeCode.signIn': 'تسجيل الدخول عبر Claude',
   'settings.ai.claudeCode.reconnect': 'إعادة الاتصال',
   'settings.ai.claudeCode.loginHint':
-    'يفتح طرفية تُشغّل claude login. بعد اكتمالها، انقر على إعادة الفحص.',
+    'يفتح طرفية تُشغّل claude auth login --claudeai. بعد اكتمالها، انقر على إعادة الفحص.',
   'settings.ai.claudeCode.loginError': 'تعذّر فتح طرفية تسجيل الدخول. يُرجى المحاولة مرة أخرى.',
   'settings.ai.claudeCode.fullAccess': 'وصول كامل',
   'settings.ai.claudeCode.fullAccessOn':
@@ -4594,6 +4599,7 @@ const messages: TranslationMap = {
     'يقوم OpenHuman بتمرير استدعاءات الأدوات عبر خادمنا الخلفي (موصى به). تتم وساطة المصادقة؛ لن تلصق مفتاح Composio API. الـ webhooks مُوجَّهة بالكامل.',
   'settings.composio.routingMode': 'وضع التوجيه',
   'settings.composio.saveErrorNoKey': 'فشل الحفظ. الوضع المباشر يتطلب مفتاح API غير فارغ.',
+  'settings.composio.invalidApiKey': 'مفتاح Composio API غير صالح.',
   'settings.composio.saving': 'جارٍ الحفظ…',
   'settings.composio.switching': 'جارٍ التبديل…',
   'settings.cron.jobs.commandRequired': 'الأمر مطلوب لمهام shell',
