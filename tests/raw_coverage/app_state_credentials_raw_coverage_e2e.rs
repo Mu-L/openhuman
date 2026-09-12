@@ -1412,14 +1412,20 @@ fn round14_profiles_cover_oauth_token_selection_schema_and_quarantine_edges() {
 
     let migrated = store.load().expect("schema 0 should migrate in memory");
     assert_eq!(migrated.schema_version, 1);
-    assert!(migrated.profiles.contains_key("legacy-empty"));
-    assert!(migrated
+    // Since #5432 the migration re-keys every profile to its canonical
+    // `<provider>:<profile_name>` id, so the raw `legacy-empty` key is
+    // rewritten to `legacy:empty` rather than kept verbatim.
+    assert!(
+        !migrated.profiles.contains_key("legacy-empty"),
+        "a non-canonical profile id must be re-keyed by the migration"
+    );
+    let legacy = migrated
         .profiles
-        .get("legacy-empty")
-        .expect("legacy")
-        .token
-        .as_deref()
-        .is_none_or(str::is_empty));
+        .get("legacy:empty")
+        .expect("legacy profile re-keyed to its canonical id");
+    assert_eq!(legacy.id, "legacy:empty");
+    assert_eq!(legacy.provider, "legacy");
+    assert!(legacy.token.as_deref().is_none_or(str::is_empty));
 
     raw["schema_version"] = json!(999);
     std::fs::write(
