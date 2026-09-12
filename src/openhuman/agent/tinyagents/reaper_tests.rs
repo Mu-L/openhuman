@@ -90,10 +90,25 @@ async fn reap_on_empty_workspace_is_a_noop() {
 /// from `serve()`) would leave that caller reading the previous process's
 /// graveyard. This pins the sweep to the build path with every optional
 /// service off.
+///
+/// The build itself runs in a **child process** (this same test binary,
+/// re-invoked with `--exact` on this test and `REAPER_BOOT_CHILD` set).
+/// `CoreBuilder::build` → `CoreContext::init` → `bootstrap_core_runtime`
+/// installs process-wide `OnceLock` singletons that can never be unset — the
+/// default `CoreContext` (here with `DomainSet::harness()` and a throw-away
+/// workspace), the global `ApprovalGate`, the socket manager, native-bus
+/// handlers. Booting in the lib test binary leaked all of them into every
+/// test that ran afterwards under `--test-threads=1`: `all_tools` lost its
+/// acting tool groups, the tinyflows HTTP adapter hit the origin-label gate
+/// instead of the SSRF guard, memory-binding tests saw a workspace they never
+/// set up. The parent seeds the store and verifies the sweep; only the child
+/// touches the singletons, and it exits with them.
 #[tokio::test]
 async fn a_build_only_runtime_is_swept_before_it_can_be_invoked() {
-    use crate::core::runtime::{CoreBuilder, DomainSet, ServiceSet};
-    use crate::core::types::HostKind;
+    if std::env::var_os(REAPER_BOOT_CHILD_ENV).is_some() {
+        boot_child().await;
+        return;
+    }
 
     let tmp = std::env::temp_dir().join(format!("oh-reaper-boot-{}", uuid::Uuid::new_v4()));
     // `OPENHUMAN_WORKSPACE` names the root; the resolved workspace is the
@@ -103,38 +118,25 @@ async fn a_build_only_runtime_is_swept_before_it_can_be_invoked() {
     let orphan = seed_status(&store, ExecutionStatus::Running).await;
     assert_eq!(store.list_active().await.unwrap().len(), 1);
 
-    // Point the runtime at this workspace, then build it with no transport
-    // and no services — the shape `examples/embed_headless.rs` documents.
-    //
-    // Two process-global locks, because `build()` touches two kinds of global
-    // state. `TEST_ENV_LOCK` covers `OPENHUMAN_WORKSPACE`, which is read from
-    // the environment. `BUS_HANDLER_LOCK` covers the native-bus registrations
-    // `CoreContext::init` performs: without it this build re-registers the real
-    // `agent.run_turn` handler over a `mock_agent_run_turn` stub another test is
-    // relying on, and that test then reaches a real harness it never scripted.
-    // `bus_testing` states the rule — "any test that touches global native-bus
-    // registration state should acquire this lock first" — and building a core
-    // is exactly that.
-    let _bus = crate::core::bus_testing::BUS_HANDLER_LOCK.lock().await;
-    let _env = crate::openhuman::config::TEST_ENV_LOCK
-        .lock()
-        .unwrap_or_else(|e| e.into_inner());
-    let previous = std::env::var("OPENHUMAN_WORKSPACE").ok();
-    std::env::set_var("OPENHUMAN_WORKSPACE", &tmp);
-    let built = CoreBuilder::new(HostKind::Cli)
-        .services(ServiceSet::none())
-        .domains(DomainSet::harness())
-        .build()
-        .await;
-    match previous {
-        Some(value) => std::env::set_var("OPENHUMAN_WORKSPACE", value),
-        None => std::env::remove_var("OPENHUMAN_WORKSPACE"),
-    }
-    let built = built.expect("a headless build succeeds");
-    assert_eq!(
-        built.context().workspace_dir().ok(),
-        Some(workspace.clone()),
-        "the build must have resolved the workspace this test seeded"
+    let exe = std::env::current_exe().expect("test binary path");
+    let output = std::process::Command::new(exe)
+        .args([
+            "--exact",
+            "openhuman::agent::tinyagents::reaper::tests::\
+             a_build_only_runtime_is_swept_before_it_can_be_invoked",
+            "--test-threads=1",
+            "--nocapture",
+        ])
+        .env(REAPER_BOOT_CHILD_ENV, "1")
+        .env("OPENHUMAN_WORKSPACE", &tmp)
+        .output()
+        .expect("spawn the boot child");
+    assert!(
+        output.status.success(),
+        "the boot child must build a core and pass its own assertions\n\
+         --- stdout ---\n{}\n--- stderr ---\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
     );
 
     let after = store
@@ -151,4 +153,33 @@ async fn a_build_only_runtime_is_swept_before_it_can_be_invoked() {
     assert!(store.list_active().await.unwrap().is_empty());
 
     let _ = std::fs::remove_dir_all(&tmp);
+}
+
+/// Set on the re-invoked test binary so the test body knows it is the boot
+/// child rather than the seeding/verifying parent.
+const REAPER_BOOT_CHILD_ENV: &str = "OPENHUMAN_TEST_REAPER_BOOT_CHILD";
+
+/// The child half of `a_build_only_runtime_is_swept_before_it_can_be_invoked`:
+/// build a runtime with no transport and no services — the shape
+/// `examples/embed_headless.rs` documents — against the `OPENHUMAN_WORKSPACE`
+/// the parent exported, and check the build resolved that workspace. The
+/// parent reads the sweep's effect out of the store afterwards.
+async fn boot_child() {
+    use crate::core::runtime::{CoreBuilder, DomainSet, ServiceSet};
+    use crate::core::types::HostKind;
+
+    let root = std::path::PathBuf::from(
+        std::env::var_os("OPENHUMAN_WORKSPACE").expect("parent exports OPENHUMAN_WORKSPACE"),
+    );
+    let built = CoreBuilder::new(HostKind::Cli)
+        .services(ServiceSet::none())
+        .domains(DomainSet::harness())
+        .build()
+        .await
+        .expect("a headless build succeeds");
+    assert_eq!(
+        built.context().workspace_dir().ok(),
+        Some(root.join("workspace")),
+        "the build must have resolved the workspace the parent seeded"
+    );
 }
