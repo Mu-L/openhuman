@@ -954,9 +954,7 @@ impl Agent {
             Some(set) => set,
             None => delegation_tools
                 .iter()
-                .filter(|t| {
-                    t.exposure() != crate::openhuman::tools::traits::ToolExposure::Hidden
-                })
+                .filter(|t| t.exposure() != crate::openhuman::tools::traits::ToolExposure::Hidden)
                 .map(|t| t.name().to_string())
                 .collect(),
         };
