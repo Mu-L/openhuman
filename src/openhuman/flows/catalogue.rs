@@ -24,22 +24,12 @@
 //! in as `User` skills: the difference is real, and a consumer that needs to
 //! know can ask.
 //!
-//! # Descriptions: the author's, or the graph's shape
+//! # Descriptions: the graph's shape
 //!
-//! [`Flow::description`] is what the catalogue wants — one line saying what the
-//! automation is *for*, which is the half a reader acts on and the half
-//! `skill_search` ranks well. When it is set, it is used verbatim.
-//!
-//! It is often not set, and that is not a bug to design around: every flow
-//! saved before the field existed has none, the canvas does not force one, and
-//! a draft promoted to a flow carries none. Those fall back to describing the
-//! graph's **shape** — trigger and step count — which says what the thing is
-//! without claiming to know why it exists.
-//!
-//! Do not close that gap by inventing prose from node internals. A summary
-//! synthesised from a graph reads exactly as authoritative as one a human
-//! wrote, and is wrong often enough to route work to the wrong automation. An
-//! honestly thin line beats a confident wrong one.
+//! Saved flows carry the name and graph metadata supplied by the shared catalog
+//! crate, but no separate catalogue description. The summary below therefore
+//! describes only the graph's shape, without inventing a purpose from node
+//! internals.
 
 use crate::openhuman::config::Config;
 use crate::openhuman::skills::{Workflow, WorkflowScope};
@@ -114,20 +104,8 @@ fn entry_for(flow: super::types::Flow) -> Workflow {
     }
 }
 
-/// The author's description, or a structural fallback.
-///
-/// The paused note is appended either way: whether a flow currently runs is a
-/// fact about the record, not about its purpose, so an author's line never
-/// suppresses it.
+/// A structural summary of the flow graph.
 fn describe(flow: &super::types::Flow) -> String {
-    let authored = flow.description.trim();
-    if !authored.is_empty() {
-        let mut out = authored.to_string();
-        if !flow.enabled {
-            out.push_str(" Currently disabled.");
-        }
-        return out;
-    }
     describe_shape(flow)
 }
 
