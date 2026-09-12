@@ -244,15 +244,14 @@ fn same_transport_keeps_stored_env() {
     ]);
     let submitted = HashMap::from([("API_KEY".to_string(), String::new())]);
 
-    let resolved =
-        resolve_env_for_transport(
-            &submitted,
-            &stored,
-            &Transport::Stdio,
-            &Transport::Stdio,
-            None,
-            None,
-        );
+    let resolved = resolve_env_for_transport(
+        &submitted,
+        &stored,
+        &Transport::Stdio,
+        &Transport::Stdio,
+        None,
+        None,
+    );
 
     assert_eq!(resolved.get("API_KEY"), Some(&"secret".to_string()));
     assert_eq!(resolved.get("__oauth__"), Some(&"{}".to_string()));

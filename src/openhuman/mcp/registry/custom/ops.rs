@@ -191,9 +191,8 @@ pub async fn mcp_clients_update_custom(
                      come from the catalog listing and cannot be edited here"
                 )));
             }
-            let scope_changed =
-                credential_scope(&current.transport, Some(&current.command))
-                    != credential_scope(&transport, Some(&command));
+            let scope_changed = credential_scope(&current.transport, Some(&current.command))
+                != credential_scope(&transport, Some(&command));
             let env = resolve_env_for_transport(
                 &input.env,
                 &stored_env.into_iter().collect::<HashMap<String, String>>(),
