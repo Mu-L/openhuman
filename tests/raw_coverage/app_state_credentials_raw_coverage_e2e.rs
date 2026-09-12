@@ -1425,7 +1425,14 @@ fn round14_profiles_cover_oauth_token_selection_schema_and_quarantine_edges() {
         .expect("legacy profile re-keyed to its canonical id");
     assert_eq!(legacy.id, "legacy:empty");
     assert_eq!(legacy.provider, "legacy");
-    assert_eq!(legacy.token.as_deref(), Some(""));
+    // The empty legacy token surfaces as `Some("")` from the file-backed store
+    // and as `None` where the secret lives in a keychain (CI has none), so
+    // accept either — what matters is that no non-empty token appears.
+    assert!(
+        legacy.token.as_deref().is_none_or(str::is_empty),
+        "legacy token must be empty, got {:?}",
+        legacy.token
+    );
 
     raw["schema_version"] = json!(999);
     std::fs::write(
