@@ -714,12 +714,6 @@ impl PromptSection for UserIdentitySection {
             _ => return Ok(String::new()),
         };
 
-        // Render the field list FIRST, then decide whether to ship the
-        // heading. `UserIdentity::is_empty()` only checks `None`-ness —
-        // a struct whose fields are all `Some("")` / whitespace would
-        // otherwise leave the prompt with a `## User` heading + intro
-        // pointing at zero fields, which is exactly the empty-prompt
-        // failure mode we're trying to suppress (#926).
         let mut fields = String::new();
         if let Some(name) = identity.name.as_deref().filter(|s| !s.trim().is_empty()) {
             let _ = writeln!(fields, "- name: {}", sanitize_identity_field(name));
@@ -743,10 +737,6 @@ impl PromptSection for UserIdentitySection {
         Ok(out.trim_end().to_string())
     }
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Private helpers
-// ─────────────────────────────────────────────────────────────────────────────
 
 /// Collapse newlines and runs of whitespace in a user-identity field so
 /// it fits on a single markdown bullet without breaking the prompt

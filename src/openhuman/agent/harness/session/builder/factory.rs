@@ -1280,12 +1280,6 @@ impl Agent {
                     &config.workspace_dir,
                     profile_skills_root.as_deref(),
                 );
-                // Saved Flows automations join the same catalogue. The prompt
-                // section that renders this used to carry a paragraph
-                // explaining that it deliberately omitted them and that the
-                // obvious tool "will error" on one; closing the gap is cheaper
-                // than describing it, and a user asking "what can this already
-                // do for me" never drew the distinction anyway.
                 #[cfg(feature = "flows")]
                 catalogue.extend(crate::openhuman::flows::catalogue::flow_entries(config));
                 catalogue

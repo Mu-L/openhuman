@@ -747,10 +747,5 @@ fn resolve_workflow_for_resource(
     }
 }
 
-#[cfg(test)]
-#[path = "ops_discover_include_skills_tests_tests.rs"]
-mod include_skills_tests;
-
-#[cfg(test)]
-#[path = "ops_discover_profile_scope_tests_tests.rs"]
-mod profile_scope_tests;
+#[cfg(test)] #[path = "ops_discover_include_skills_tests_tests.rs"] mod include_skills_tests;
+#[cfg(test)] #[path = "ops_discover_profile_scope_tests_tests.rs"] mod profile_scope_tests;
