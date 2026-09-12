@@ -61,6 +61,8 @@ pub struct ServiceSet {
     pub integrations: bool,
     /// Workspace memory-source periodic sync — repos, folders, RSS, web pages.
     pub memory_sync: bool,
+    /// Orchestration relay-mailbox drain supervisor.
+    pub orchestration: bool,
 }
 
 impl ServiceSet {
@@ -79,6 +81,7 @@ impl ServiceSet {
             mcp_boot: true,
             integrations: true,
             memory_sync: true,
+            orchestration: true,
         }
     }
 
@@ -98,6 +101,7 @@ impl ServiceSet {
             mcp_boot: false,
             integrations: false,
             memory_sync: false,
+            orchestration: false,
         }
     }
 
@@ -117,6 +121,7 @@ impl ServiceSet {
             mcp_boot: false,
             integrations: false,
             memory_sync: false,
+            orchestration: false,
         }
     }
 
@@ -146,6 +151,7 @@ impl ServiceSet {
             mcp_boot: false,
             integrations: false,
             memory_sync: true,
+            orchestration: false,
         }
     }
 }
@@ -212,6 +218,8 @@ pub struct DomainSet {
     pub desktop: bool,
     /// Clients of the hosted TinyHumans backend.
     pub hosted: bool,
+    /// The multi-agent relay surface (tinyplace).
+    pub relay: bool,
     /// Loadable native modules: the module host, registry and `modules` RPC.
     pub modules: bool,
     /// Everything not in a named family — always on in `full()`.
@@ -242,6 +250,7 @@ impl DomainSet {
             runtimes: true,
             desktop: true,
             hosted: true,
+            relay: true,
             modules: true,
             platform: true,
         }
@@ -271,6 +280,7 @@ impl DomainSet {
             runtimes: false,
             desktop: false,
             hosted: false,
+            relay: false,
             modules: false,
             platform: false,
         }
@@ -317,6 +327,7 @@ impl DomainSet {
             runtimes: true,
             desktop: false,
             hosted: false,
+            relay: false,
             modules: false,
             platform: true,
         }
@@ -352,6 +363,7 @@ impl DomainSet {
             runtimes: false,
             desktop: false,
             hosted: false,
+            relay: false,
             modules: false,
             platform: false,
         }
@@ -379,6 +391,7 @@ impl DomainSet {
             runtimes: false,
             desktop: false,
             hosted: false,
+            relay: false,
             modules: false,
             platform: false,
         }
@@ -406,6 +419,7 @@ impl DomainSet {
             DomainGroup::Runtimes => self.runtimes,
             DomainGroup::Desktop => self.desktop,
             DomainGroup::Hosted => self.hosted,
+            DomainGroup::Relay => self.relay,
             DomainGroup::Modules => self.modules,
             DomainGroup::Platform => self.platform,
         }
@@ -469,7 +483,7 @@ impl CoreBuilder {
     }
 
     /// Choose how each tool group reaches the model (default: every group
-    /// withheld behind `use_skill`, the desktop app's shape).
+    /// withheld behind `load_skill` / `use_skill`, the desktop app's shape).
     ///
     /// The third narrowing axis, independent of both `services` and `domains`:
     /// `ServiceSet` picks the background services, `DomainSet` picks which
@@ -602,18 +616,25 @@ impl CoreBuilder {
         )
         .await?;
 
-        // Reap agent runs orphaned by a previous process (crash / restart /
-        // deploy). Here, and not with the other boot-once jobs, because those
-        // run from `serve()`: an embedder that only calls `build()` and then
-        // `invoke()` never reaches them, and `openhuman.agent_runs_active` is
-        // dispatchable the moment this returns. The core is a single in-process
-        // runtime, so a run left Pending/Running/Interrupted in the durable
-        // status store has no executor to advance it and would be listed as
-        // active forever. Best-effort — a store that cannot be read logs and
-        // reaps nothing rather than failing the build.
-        if let Some(cfg) = config.as_ref() {
-            crate::openhuman::agent::tinyagents::reaper::reap_orphaned_runs(&cfg.workspace_dir)
-                .await;
+        // Materialise the skills compiled into this binary, into whichever
+        // workspace this host resolved.
+        //
+        // HERE, not in `run_workspace_migrations`, and that distinction cost a
+        // working feature: that function has exactly one caller, the RPC server
+        // boot in `jsonrpc.rs`. The CLI (`openhuman agent dump-prompt`), the TUI
+        // and `Harness` — the library front door — never reach it, so an
+        // embedder got a `workflow_builder` whose system prompt pointed at a
+        // reference manual that did not exist on its disk. `CoreBuilder::build`
+        // is the one path every host takes, including the RPC server.
+        //
+        // Not fallible, and cheap when current: one file read per bundle to
+        // compare digests. Failures are logged per skill inside `install`.
+        if let Ok(workspace_dir) = ctx.workspace_dir() {
+            crate::openhuman::skills::install_bundled_skills(&workspace_dir);
+        } else {
+            tracing::debug!(
+                "[skills][bundled] no workspace resolved at build; builtin skills not installed"
+            );
         }
 
         Ok(CoreRuntime {
@@ -855,16 +876,7 @@ impl CoreRuntime {
             });
         }
 
-        // Arms memory's exit gate for the eventual exit (and clears one a
-        // previous server in this process may have left): from here on a
-        // memory binding built during exit is refused rather than missed.
-        crate::openhuman::memory::exit::server_starting();
-
-        // The serve result is held, not propagated, until the exit work below
-        // has run. A `?` here on a server error would skip the memory teardown
-        // on exactly the exits where a wedged store is likeliest, and the
-        // callers only forward the error — nobody else runs the cleanup.
-        let served = if let Some(shutdown_token) = shutdown_token {
+        if let Some(shutdown_token) = shutdown_token {
             log::info!(
                 "[core] embedded server waiting on cancellation token for graceful shutdown"
             );
@@ -872,25 +884,12 @@ impl CoreRuntime {
                 .with_graceful_shutdown(async move {
                     shutdown_token.cancelled().await;
                 })
-                .await
+                .await?;
         } else {
             axum::serve(listener, app)
                 .with_graceful_shutdown(crate::core::shutdown::signal())
-                .await
-        };
-        if let Err(error) = &served {
-            log::warn!(
-                "[core] embedded server ended with an error; running exit cleanup before \
-                 reporting it: {error}"
-            );
+                .await?;
         }
-
-        // Memory first. The engine's queue worker holds leases on in-flight
-        // jobs, and releasing them is a write to the store, so it has to happen
-        // while the store is still open and before anything else on the way
-        // out (tinymemory#133). Bounded inside, on one shared deadline: a
-        // wedged store costs at most that budget, never the exit.
-        crate::openhuman::memory::exit::shutdown_for_exit().await;
 
         // Server has stopped accepting and in-flight requests drained. Kill any
         // `ollama serve` openhuman itself spawned (no-op when externally
@@ -912,7 +911,6 @@ impl CoreRuntime {
             }
         }
 
-        served?;
         Ok(())
     }
 
@@ -1116,6 +1114,7 @@ mod tests {
         assert!(!custom.mcp_boot);
         assert!(!custom.integrations);
         assert!(!custom.memory_sync);
+        assert!(!custom.orchestration);
 
         let desktop = ServiceSet::desktop();
         assert!(desktop.memory_queue);
@@ -1124,10 +1123,12 @@ mod tests {
         assert!(desktop.mcp_boot);
         assert!(desktop.integrations);
         assert!(desktop.memory_sync);
+        assert!(desktop.orchestration);
 
         // headless_api() runs no bootstrap jobs either.
         let headless = ServiceSet::headless_api();
         assert!(!headless.integrations);
         assert!(!headless.memory_sync);
+        assert!(!headless.orchestration);
     }
 }

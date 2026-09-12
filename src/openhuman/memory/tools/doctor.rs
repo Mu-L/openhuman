@@ -1,20 +1,14 @@
 //! Agent tool: diagnose the memory pipeline (#002 FR-009).
 //!
-//! Thin wrapper over
-//! [`health::report::run_doctor`](crate::openhuman::memory::tree::health::report::run_doctor)
-//! so the agent can self-diagnose an empty / stalled wiki and tell the user the
-//! single first blocking cause + how to fix it — the same report the
-//! `memory_tree_doctor` RPC and CLI return. Read-only: takes no arguments and
-//! mutates nothing, so it carries no security-gate (matching the read-only
-//! memory tools).
-//!
-//! The pass itself is the bound driver's since #5560
-//! (`MemoryMaintenance::diagnose`): the counters and the degradation flags only
-//! exist in the process that ran the pipeline, and that is the module.
+//! Thin wrapper over [`health::run_doctor`] so the agent can self-diagnose an
+//! empty / stalled wiki and tell the user the single first blocking cause +
+//! how to fix it — the same report the `memory_tree_doctor` RPC and CLI
+//! return. Read-only: takes no arguments and mutates nothing, so it carries no
+//! security-gate (matching the read-only memory tools).
 
 use crate::openhuman::config::Config;
-use crate::openhuman::memory::tree::health::report::run_doctor;
-use crate::openhuman::tools::traits::{Tool, ToolResult};
+use crate::openhuman::memory::tree::health::async_run_doctor;
+use crate::openhuman::tools::traits::{Tool, ToolExposure, ToolResult};
 use async_trait::async_trait;
 use serde_json::json;
 use std::sync::Arc;
@@ -32,6 +26,14 @@ impl MemoryDoctorTool {
 
 #[async_trait]
 impl Tool for MemoryDoctorTool {
+    /// Superseded by the `memory` tool, which dispatches every memory
+    /// operation on one `action` field. Kept registered and dispatchable so a
+    /// replayed transcript or a saved skill naming `memory_*` keeps working;
+    /// hidden from the wire so eleven schemas do not ship where one does.
+    fn exposure(&self) -> ToolExposure {
+        ToolExposure::Hidden
+    }
+
     fn name(&self) -> &str {
         "memory_doctor"
     }
@@ -48,7 +50,7 @@ impl Tool for MemoryDoctorTool {
     }
 
     async fn execute(&self, _args: serde_json::Value) -> anyhow::Result<ToolResult> {
-        let report = run_doctor(self.config.as_ref()).await;
+        let report = async_run_doctor(self.config.as_ref()).await;
         // Serialize the structured report so the model gets the typed stages +
         // first_blocking_cause + counters verbatim (it can summarize for the
         // user from there). serde of a plain struct can't fail here.
@@ -59,5 +61,44 @@ impl Tool for MemoryDoctorTool {
 }
 
 #[cfg(test)]
-#[path = "doctor_tests.rs"]
-mod tests;
+mod tests {
+    use super::*;
+    use tempfile::TempDir;
+
+    fn test_config() -> (TempDir, Arc<Config>) {
+        let tmp = TempDir::new().unwrap();
+        let mut cfg = Config::default();
+        cfg.workspace_dir = tmp.path().to_path_buf();
+        cfg.memory_tree.embedding_endpoint = None;
+        cfg.memory_tree.embedding_model = None;
+        (tmp, Arc::new(cfg))
+    }
+
+    #[test]
+    fn name_and_schema() {
+        let (_tmp, cfg) = test_config();
+        let tool = MemoryDoctorTool::new(cfg);
+        assert_eq!(tool.name(), "memory_doctor");
+        // No required args.
+        assert_eq!(tool.parameters_schema()["required"], json!([]));
+    }
+
+    #[tokio::test]
+    async fn execute_returns_a_report_for_a_misconfigured_workspace() {
+        let _g = crate::openhuman::memory::tree::health::test_guard();
+        let (_tmp, cfg) = test_config();
+        // No embeddings provider, local AI off → unhealthy with a typed cause.
+        let tool = MemoryDoctorTool::new(cfg);
+        let result = tool.execute(json!({})).await.unwrap();
+        assert!(!result.is_error);
+        let out = result.output();
+        assert!(
+            out.contains("\"healthy\""),
+            "report should serialize: {out}"
+        );
+        assert!(
+            out.contains("embeddings_unconfigured") || out.contains("\"healthy\": false"),
+            "misconfigured workspace should surface a blocking cause: {out}"
+        );
+    }
+}
