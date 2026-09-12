@@ -371,7 +371,7 @@ dependencies = [
  "serde_json",
  "serde_path_to_error",
  "serde_urlencoded",
- "sha1 0.10.7",
+ "sha1",
  "sync_wrapper",
  "tokio",
  "tokio-tungstenite 0.29.0",
@@ -5777,17 +5777,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sha1"
-version = "0.11.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "aacc4cc499359472b4abe1bf11d0b12e688af9a805fa5e3016f9a386dc2d0214"
-dependencies = [
- "cfg-if",
- "cpufeatures 0.3.1",
- "digest 0.11.3",
-]
-
-[[package]]
 name = "sha2"
 version = "0.10.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6499,7 +6488,7 @@ dependencies = [
  "serde",
  "serde-big-array",
  "serde_json",
- "sha1 0.10.7",
+ "sha1",
  "sha2 0.10.9",
  "thiserror 2.0.20",
  "tinychannels-bus",
@@ -6611,16 +6600,16 @@ dependencies = [
 
 [[package]]
 name = "tinyhosts"
-version = "0.1.6"
+version = "0.1.5"
 dependencies = [
  "async-trait",
- "base64 0.23.1",
+ "base64 0.22.1",
  "hex",
  "percent-encoding",
  "reqwest",
  "serde",
  "serde_json",
- "sha1 0.11.0",
+ "sha1",
  "thiserror 2.0.20",
 ]
 
@@ -7194,7 +7183,7 @@ dependencies = [
  "httparse",
  "log",
  "rand 0.8.8",
- "sha1 0.10.7",
+ "sha1",
  "thiserror 1.0.69",
  "utf-8",
 ]
@@ -7214,7 +7203,7 @@ dependencies = [
  "rand 0.9.5",
  "rustls",
  "rustls-pki-types",
- "sha1 0.10.7",
+ "sha1",
  "thiserror 2.0.20",
 ]
 
@@ -7494,7 +7483,7 @@ dependencies = [
  "serde",
  "serde-big-array",
  "serde_json",
- "sha1 0.10.7",
+ "sha1",
  "sha2 0.10.9",
  "thiserror 2.0.20",
  "typed-builder",
@@ -7576,7 +7565,7 @@ dependencies = [
  "prost",
  "rand 0.10.2",
  "serde",
- "sha1 0.10.7",
+ "sha1",
  "sha2 0.10.9",
  "subtle",
  "thiserror 2.0.20",
