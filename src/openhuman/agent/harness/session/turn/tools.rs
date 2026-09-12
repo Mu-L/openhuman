@@ -382,10 +382,12 @@ impl Agent {
         log::debug!(
             "[agent_loop] refreshing installed-skills metadata (trigger={trigger}, profile_local_skills_active={profile_local_skills_active})"
         );
-        let latest = crate::openhuman::skills::load_workflow_metadata_for_profile(
+        let mut latest = crate::openhuman::skills::load_workflow_metadata_for_profile(
             &self.workspace_dir,
             profile_skills_root.as_deref(),
         );
+        #[cfg(feature = "flows")]
+        latest.extend(crate::openhuman::flows::catalogue::flow_entries(&self.config));
         log::debug!(
             "[agent_loop] refreshed installed-skills metadata (trigger={trigger}, profile_local_skills_active={profile_local_skills_active}, workflow_count={})",
             latest.len()
