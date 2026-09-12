@@ -19,7 +19,7 @@
 
 use std::sync::Arc;
 
-use tinyinference::model::ChatModel;
+use tinyinference::model::{ChatModel, ModelRequest, ModelResponse, ModelStream};
 use tinyinference::providers::anthropic::AnthropicModel;
 
 /// The resolved config for one Anthropic Messages API provider.
@@ -36,6 +36,56 @@ pub(crate) struct CrateAnthropicConfig<'a> {
     /// Fixed temperature override for every call, when set (the `@<temp>`
     /// provider-string suffix).
     pub temperature_override: Option<f64>,
+    /// Model-id `*`-glob patterns whose targets reject a `temperature` param.
+    pub temperature_unsupported_models: &'a [String],
+}
+
+struct TemperatureUnsupportedAnthropicModel {
+    inner: Arc<dyn ChatModel<()>>,
+    default_model: String,
+    patterns: Vec<String>,
+}
+
+impl TemperatureUnsupportedAnthropicModel {
+    fn suppress_temperature(&self, request: &mut ModelRequest) {
+        let model = request.model.as_deref().unwrap_or(&self.default_model);
+        if self
+            .patterns
+            .iter()
+            .any(|pattern| crate::openhuman::inference::temperature::glob_match(pattern, model))
+        {
+            request.temperature = None;
+        }
+    }
+}
+
+#[async_trait::async_trait]
+impl ChatModel<()> for TemperatureUnsupportedAnthropicModel {
+    fn profile(&self) -> Option<&tinyinference::model::ModelProfile> {
+        self.inner.profile()
+    }
+
+    fn cache_identity(&self) -> Option<String> {
+        self.inner.cache_identity()
+    }
+
+    async fn invoke(
+        &self,
+        state: &(),
+        mut request: ModelRequest,
+    ) -> tinyinference::Result<ModelResponse> {
+        self.suppress_temperature(&mut request);
+        self.inner.invoke(state, request).await
+    }
+
+    async fn stream(
+        &self,
+        state: &(),
+        mut request: ModelRequest,
+    ) -> tinyinference::Result<ModelStream> {
+        self.suppress_temperature(&mut request);
+        self.inner.stream(state, request).await
+    }
 }
 
 /// Build a crate-native [`AnthropicModel`] (`ChatModel`) for the given config.
@@ -51,7 +101,16 @@ pub(crate) fn build_crate_anthropic_model(
     let model = AnthropicModel::with_base_url(config.api_key, config.endpoint)
         .with_model(config.model)
         .with_temperature_override(config.temperature_override);
-    Arc::new(model)
+    let model: Arc<dyn ChatModel<()>> = Arc::new(model);
+    if config.temperature_unsupported_models.is_empty() {
+        model
+    } else {
+        Arc::new(TemperatureUnsupportedAnthropicModel {
+            inner: model,
+            default_model: config.model.to_string(),
+            patterns: config.temperature_unsupported_models.to_vec(),
+        })
+    }
 }
 
 #[cfg(test)]

@@ -413,6 +413,9 @@ fn try_create_cloud_slug_chat_model_from_string_with_native_tools(
                         api_key: key.as_str(),
                         model: effective_model.as_str(),
                         temperature_override,
+                        temperature_unsupported_models: config
+                            .temperature_unsupported_models
+                            .as_slice(),
                     },
                 );
                 return Some(Ok((chat, effective_model)));

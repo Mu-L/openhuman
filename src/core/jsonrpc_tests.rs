@@ -177,6 +177,24 @@ fn learning_subscriber_registration_is_idempotent_after_success() {
     assert!(!learning_first_time_when_bus_ready(&completed, true));
 }
 
+#[test]
+fn domain_subscriber_registration_readiness_helper_is_idempotent() {
+    use crate::core::all::DomainGroup;
+    use std::collections::HashSet;
+    use std::sync::Mutex;
+
+    let completed = Mutex::new(HashSet::new());
+    assert!(group_first_time_when_bus_ready(
+        &completed,
+        DomainGroup::Media,
+        true
+    ));
+    assert!(!group_first_time_when_bus_ready(
+        &completed,
+        DomainGroup::Media,
+        true
+    ));
+}
 /// #5027 — the tool-execution timeout must be seeded on the always-on core boot
 /// path (`register_domain_subscribers`), NOT inside
 /// `channels::runtime::startup::start_channels`, which is skipped for

@@ -7,6 +7,7 @@ fn builds_a_native_anthropic_model_with_the_configured_profile() {
         api_key: "sk-ant-secret",
         model: "claude-sonnet-4-6",
         temperature_override: Some(0.2),
+        temperature_unsupported_models: &[],
     });
     let profile = model.profile().expect("anthropic models expose a profile");
     assert_eq!(profile.provider.as_deref(), Some("anthropic"));
