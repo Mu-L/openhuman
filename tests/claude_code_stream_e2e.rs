@@ -75,7 +75,6 @@ fn captures_text_tool_call_and_usage() {
         d,
         ProviderDelta::ToolCallStart { .. }
             | ProviderDelta::ToolCallArgsDelta { .. }
-            | ProviderDelta::ToolCall { .. }
     )));
 
     // Aggregated response.
