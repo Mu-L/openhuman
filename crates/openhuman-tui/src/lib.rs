@@ -17,6 +17,7 @@ mod app;
 mod cockpit;
 mod composer;
 mod controls;
+mod crash_reporting;
 mod render;
 mod runner;
 mod state;
@@ -24,6 +25,7 @@ mod terminal;
 mod ui_state;
 
 pub use runner::run_from_cli;
+pub use crash_reporting::init_crash_reporting;
 
 // State reducer is behaviour-only but has no terminal deps, so its tests run in
 // feature-on builds. Exported for the sibling submodules + tests.

@@ -27,6 +27,10 @@
 
 pub use openhuman_core::agent_progress;
 pub use openhuman_core::embed::*;
+pub use openhuman_core::openhuman::agent::turn_origin::{
+    AgentTurnOrigin, TrustedAutomationSource,
+};
+pub use openhuman_core::openhuman::security::TrustedAccess;
 pub use openhuman_core::openhuman::tools::toolpacks::{GroupMode, ToolGroups};
 pub use openhuman_core::{
     CoreBuilder, CoreRuntime, DaemonConfig, DomainSet, HostKind, ServiceSet, TokenSource,

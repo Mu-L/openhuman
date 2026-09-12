@@ -88,6 +88,7 @@ app/test/e2e/artifacts/
 tauri.key
 tauri.key.pub
 /target/
+/crates/*/target/
 src-tauri/target/
 app/src-tauri-mobile/gen/
 app/src-tauri-mobile/target/
