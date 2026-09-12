@@ -231,7 +231,7 @@ async fn token_and_details(
                 .collect(),
         });
     }
-    Ok(matches.unwrap_or_default().into_values().collect())
+    Ok(matches.unwrap_or_default())
 }
 
 /// Render one contract listing row as the wire [`ChunkRow`] the Memory tab
