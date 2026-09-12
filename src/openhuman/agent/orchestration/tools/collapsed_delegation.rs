@@ -145,14 +145,15 @@ fn build_description(targets: &[DelegateTarget]) -> String {
 }
 
 fn prompt_safe(value: &str) -> String {
-    value
-        .chars()
-        .map(|ch| match ch {
-            '`' => '\'',
-            ch if ch.is_control() => ' ',
-            ch => ch,
-        })
-        .collect()
+    let mut out = String::with_capacity(value.len());
+    for ch in value.chars() {
+        match ch {
+            '`' => out.push('\''),
+            ch if ch.is_control() => out.push_str(&format!("\\u{{{:x}}}", ch as u32)),
+            ch => out.push(ch),
+        }
+    }
+    out
 }
 
 #[async_trait]
