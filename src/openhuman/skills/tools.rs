@@ -32,7 +32,6 @@ use super::ops_install::{
     install_workflow_from_url, uninstall_workflow, InstallWorkflowFromUrlParams,
     UninstallWorkflowParams,
 };
-use super::registry::get_workflow_with_profile;
 use super::run_log::{read_run_log_slice, scan_runs};
 
 fn read_required_str(args: &serde_json::Value, key: &str) -> anyhow::Result<String> {
@@ -93,7 +92,6 @@ fn skill_allowed_including_profile(
     profile_skills_root: Option<&Path>,
     skill_id: &str,
 ) -> bool {
-    let _ = get_workflow_with_profile(workspace_dir, skill_id, profile_skills_root);
     is_builtin_skill(skill_id)
         || profile_local_ids.contains(skill_id)
         || skill_allowed(allowlist, skill_id)
