@@ -6,7 +6,7 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use async_trait::async_trait;
-use openhuman_core::openhuman::inference::provider::types::{ChatResponse, ToolCall};
+use openhuman_core::inference::provider::types::{ChatResponse, ToolCall};
 use tinyinference::message::{AssistantMessage, ContentBlock, Message};
 use tinyinference::model::{ChatModel, ModelRequest, ModelResponse};
 use tinyinference::tool::ToolCall as TinyAgentsToolCall;

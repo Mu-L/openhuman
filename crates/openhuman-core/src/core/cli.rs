@@ -46,10 +46,7 @@ pub fn run_from_cli_args(args: &[String]) -> Result<()> {
     load_dotenv_for_cli()?;
 
     let launch = parse_launch_options(args)?;
-    crate::openhuman::config::set_cli_inference_overrides(
-        launch.provider.as_deref(),
-        launch.model.as_deref(),
-    );
+    crate::config::set_cli_inference_overrides(launch.provider.as_deref(), launch.model.as_deref());
 
     let args = launch.args;
     // Print the welcome banner to stderr to keep stdout clean for JSON output.
@@ -72,15 +69,13 @@ pub fn run_from_cli_args(args: &[String]) -> Result<()> {
     // Match on the first argument to determine the subcommand.
     match args[0].as_str() {
         "run" | "serve" => run_server_command(&args[1..]),
-        "mcp" | "mcp-server" => crate::openhuman::mcp::server::run_stdio_from_cli(&args[1..]),
+        "mcp" | "mcp-server" => crate::mcp::server::run_stdio_from_cli(&args[1..]),
         // Keep the historical names as a migration diagnostic now that the
         // terminal frontend is its own workspace crate and executable.
         "tui" | "chat" => run_moved_tui_diagnostic(),
         "call" => run_call_command(&args[1..]),
         "tree-summarizer" => {
-            crate::openhuman::memory::tree::tree_runtime::cli::run_tree_summarizer_command(
-                &args[1..],
-            )
+            crate::memory::tree::tree_runtime::cli::run_tree_summarizer_command(&args[1..])
         }
         "memory" => crate::core::memory_cli::run_memory_command(&args[1..]),
         "agent" => {
@@ -103,7 +98,7 @@ pub fn run_from_cli_args(args: &[String]) -> Result<()> {
 /// such as `openhuman-tui` compatible with the core CLI's launch flags.
 #[doc(hidden)]
 pub fn set_transient_inference_overrides(provider: Option<&str>, model: Option<&str>) {
-    crate::openhuman::config::set_cli_inference_overrides(provider, model);
+    crate::config::set_cli_inference_overrides(provider, model);
 }
 
 #[derive(Debug, Default, PartialEq, Eq)]
@@ -477,7 +472,7 @@ fn run_call_command(args: &[String]) -> Result<()> {
             // config-install-sink-publish-policy sequence lives with the
             // module host in the openhuman layer (review finding on #5932).
             #[cfg(feature = "modules")]
-            crate::openhuman::modules::memory::publish_cli_boot_policy().await?;
+            crate::modules::memory::publish_cli_boot_policy().await?;
             invoke_method(default_state(), &method, params).await
         })
         .map_err(anyhow::Error::msg)?;

@@ -10,8 +10,8 @@
 //! state deterministically.
 
 use super::*;
-use crate::openhuman::config::schema::MemorySubsystemConfig;
-use crate::openhuman::memory::binding;
+use crate::config::schema::MemorySubsystemConfig;
+use crate::memory::binding;
 
 fn binding_for(name: &str, cfg: MemorySubsystemConfig) -> std::sync::Arc<binding::MemoryBinding> {
     let dir = std::env::temp_dir().join(format!("oh-cli-cap-{name}"));
@@ -109,10 +109,7 @@ async fn bound_driver_probe_reports_the_default_module_driver() {
     // the pin-drift test on every registry bump.
     let cfg = MemorySubsystemConfig::default();
     let binding = binding_for("default", cfg.clone());
-    assert_eq!(
-        binding.driver_id(),
-        crate::openhuman::memory::binding::MODULE_ID
-    );
+    assert_eq!(binding.driver_id(), crate::memory::binding::MODULE_ID);
     let advertised = binding.capabilities();
     assert!(advertised.contains_all(Capabilities::mandatory()));
     assert!(advertised.contains(Capability::Tree));

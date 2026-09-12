@@ -12,7 +12,7 @@
 //! *memory* crate.
 //!
 //! Since M2b the memory adapter exists in
-//! [`crate::openhuman::memory::binding`] (it converts
+//! [`crate::memory::binding`] (it converts
 //! `tinymemory_api::MemoryHealth` into [`DriverHealth`] and the contract's
 //! typed capability set into [`DriverCapabilities`]), and M2c added the
 //! read-only [`status`] projection plus the `subsystems` RPC namespace and the

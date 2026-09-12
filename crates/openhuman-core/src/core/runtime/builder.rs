@@ -23,11 +23,11 @@ use std::sync::Arc;
 
 use tokio_util::sync::CancellationToken;
 
+use crate::config::Config;
 use crate::core::all::DomainGroup;
 use crate::core::jsonrpc::{self, EmbeddedReadySignal};
 use crate::core::runtime::context::CoreContext;
 use crate::core::types::HostKind;
-use crate::openhuman::config::Config;
 
 /// Selects which background services and transports a [`CoreRuntime`] runs.
 ///
@@ -432,10 +432,10 @@ pub struct CoreBuilder {
     token: TokenSource,
     services: ServiceSet,
     domains: DomainSet,
-    tool_groups: crate::openhuman::tools::toolpacks::ToolGroups,
+    tool_groups: crate::tools::toolpacks::ToolGroups,
     host: Option<String>,
     port: Option<u16>,
-    config: Option<crate::openhuman::config::Config>,
+    config: Option<crate::config::Config>,
 }
 
 impl CoreBuilder {
@@ -479,7 +479,7 @@ impl CoreBuilder {
     ///
     /// ```no_run
     /// # use openhuman_core::core::runtime::CoreBuilder;
-    /// # use openhuman_core::openhuman::tools::toolpacks::{GroupMode, ToolGroups};
+    /// # use openhuman_core::tools::toolpacks::{GroupMode, ToolGroups};
     /// # fn f(b: CoreBuilder) -> CoreBuilder {
     /// b.tool_groups(
     ///     ToolGroups::none()
@@ -491,10 +491,7 @@ impl CoreBuilder {
     ///
     /// Narrowing only: a group set to `Advertised` whose tools are compiled
     /// out, or whose `DomainGroup` is off under `domains`, stays absent.
-    pub fn tool_groups(
-        mut self,
-        tool_groups: crate::openhuman::tools::toolpacks::ToolGroups,
-    ) -> Self {
+    pub fn tool_groups(mut self, tool_groups: crate::tools::toolpacks::ToolGroups) -> Self {
         self.tool_groups = tool_groups;
         self
     }
@@ -517,7 +514,7 @@ impl CoreBuilder {
         self
     }
 
-    /// Supply the [`Config`](crate::openhuman::config::Config) outright instead
+    /// Supply the [`Config`](crate::config::Config) outright instead
     /// of letting `build()` discover one from `config.toml` and the environment.
     ///
     /// Without this an embedder can only configure the core by setting
@@ -529,9 +526,9 @@ impl CoreBuilder {
     ///
     /// The config is used **verbatim**: no `config.toml` read and no env
     /// overlay. Call
-    /// [`apply_env_overrides`](crate::openhuman::config::Config::apply_env_overrides)
+    /// [`apply_env_overrides`](crate::config::Config::apply_env_overrides)
     /// yourself first if you want the environment to participate.
-    pub fn config(mut self, config: crate::openhuman::config::Config) -> Self {
+    pub fn config(mut self, config: crate::config::Config) -> Self {
         self.config = Some(config);
         self
     }
@@ -612,8 +609,7 @@ impl CoreBuilder {
         // active forever. Best-effort — a store that cannot be read logs and
         // reaps nothing rather than failing the build.
         if let Some(cfg) = config.as_ref() {
-            crate::openhuman::agent::tinyagents::reaper::reap_orphaned_runs(&cfg.workspace_dir)
-                .await;
+            crate::agent::tinyagents::reaper::reap_orphaned_runs(&cfg.workspace_dir).await;
         }
 
         Ok(CoreRuntime {
@@ -774,9 +770,7 @@ impl CoreRuntime {
         // and reachable from the network. See issue #1919. The self-generated
         // {workspace}/core.token does NOT count — remote clients cannot read it,
         // so treating it as "explicit" would be fail-open.
-        if crate::openhuman::security::pairing::is_public_bind(&resolved_host)
-            && !self.has_operator_token
-        {
+        if crate::security::pairing::is_public_bind(&resolved_host) && !self.has_operator_token {
             log::error!(
                 "[core] SECURITY: refusing to bind on public address {resolved_host} without an \
                  explicit operator-supplied RPC token. Set {} in your environment (or hand the \
@@ -800,7 +794,7 @@ impl CoreRuntime {
 
         let preferred_port = resolved_port;
         let host = resolved_host;
-        let pick = crate::openhuman::platform::connectivity::rpc::pick_listen_port_for_host(
+        let pick = crate::platform::connectivity::rpc::pick_listen_port_for_host(
             host.as_str(),
             preferred_port,
         )
@@ -858,7 +852,7 @@ impl CoreRuntime {
         // Arms memory's exit gate for the eventual exit (and clears one a
         // previous server in this process may have left): from here on a
         // memory binding built during exit is refused rather than missed.
-        crate::openhuman::memory::exit::server_starting();
+        crate::memory::exit::server_starting();
 
         // The serve result is held, not propagated, until the exit work below
         // has run. A `?` here on a server error would skip the memory teardown
@@ -890,14 +884,14 @@ impl CoreRuntime {
         // while the store is still open and before anything else on the way
         // out (tinymemory#133). Bounded inside, on one shared deadline: a
         // wedged store costs at most that budget, never the exit.
-        crate::openhuman::memory::exit::shutdown_for_exit().await;
+        crate::memory::exit::shutdown_for_exit().await;
 
         // Server has stopped accepting and in-flight requests drained. Kill any
         // `ollama serve` openhuman itself spawned (no-op when externally
         // managed) so the next launch doesn't try to reclaim a dead daemon.
         // Bounded so a wedged Ollama can't hold up app shutdown.
-        if let Some(svc) = crate::openhuman::inference::local::try_global() {
-            let cfg = crate::openhuman::config::Config::load_or_init()
+        if let Some(svc) = crate::inference::local::try_global() {
+            let cfg = crate::config::Config::load_or_init()
                 .await
                 .unwrap_or_default();
             log::info!("[core] shutdown: cleaning up openhuman-owned ollama if any");

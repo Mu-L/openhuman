@@ -6,7 +6,7 @@
 //! `AGENTS.md` says `crates/openhuman-core/src/core/` is transport only. This is the one deliberate
 //! exception, and it is narrow: the subsystem registry *is* a kernel binding
 //! table — the same category as `core::all`'s controller registry — and there
-//! is no `crates/openhuman-core/src/openhuman/` family that owns it. Giving it one would mean a new
+//! is no `crates/openhuman-core/src/` family that owns it. Giving it one would mean a new
 //! `DomainGroup` variant plus the four compiler-enforced edits and three
 //! drift-guard lists that come with it, for a single read-only function. So it
 //! is registered from here, tagged `DomainGroup::Platform`.
@@ -72,7 +72,7 @@ pub fn schemas(function: &str) -> ControllerSchema {
 /// Memory is the only occupant today. This is also what
 /// [`crate::core::subsystems_cli`] renders as a table.
 pub async fn subsystems_status() -> Vec<SubsystemStatus> {
-    vec![crate::openhuman::memory::rpc::memory_subsystem_status().await]
+    vec![crate::memory::rpc::memory_subsystem_status().await]
 }
 
 fn handle_status(_params: Map<String, Value>) -> ControllerFuture {

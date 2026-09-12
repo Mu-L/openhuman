@@ -210,7 +210,7 @@ fn backend_api_body_shape(body: &str) -> String {
             // `safe` keys are ASCII identifiers, so the join is ASCII and the
             // truncation can only ever land on a byte boundary — but route it
             // through the UTF-8-safe truncator regardless (defence-in-depth).
-            let keys = crate::openhuman::util::truncate_at_byte_boundary(
+            let keys = crate::util::truncate_at_byte_boundary(
                 &safe.join(","),
                 BACKEND_API_BODY_SHAPE_MAX_BYTES,
             );
@@ -278,8 +278,8 @@ fn build_backend_reqwest_client() -> Result<Client> {
 
     // Platform-appropriate TLS backend: Windows → schannel (honors the OS
     // cert store, required for corporate TLS-inspection proxies); macOS /
-    // Linux → rustls. See [`crate::openhuman::util::tls::tls_client_builder`].
-    crate::openhuman::util::tls::tls_client_builder()
+    // Linux → rustls. See [`crate::util::tls::tls_client_builder`].
+    crate::util::tls::tls_client_builder()
         .default_headers(default_headers)
         .http1_only()
         .timeout(Duration::from_secs(120))
@@ -807,7 +807,7 @@ impl BackendOAuthClient {
             let is_transient_infra =
                 crate::core::observability::is_transient_http_status_code(status_code);
             let is_budget_exhausted = status_code == 400
-                && crate::openhuman::inference::provider::is_budget_exhausted_message(&text);
+                && crate::inference::provider::is_budget_exhausted_message(&text);
             if is_budget_exhausted {
                 tracing::info!(
                     method = method.as_str(),

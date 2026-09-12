@@ -19,10 +19,10 @@ use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 use anyhow::Result;
-use openhuman_core::openhuman::agent::harness::AgentDefinitionRegistry;
-use openhuman_core::openhuman::agent::Agent;
-use openhuman_core::openhuman::inference::provider::factory::test_provider_override;
-use openhuman_core::openhuman::platform::proc_metrics;
+use openhuman_core::agent::harness::AgentDefinitionRegistry;
+use openhuman_core::agent::Agent;
+use openhuman_core::inference::provider::factory::test_provider_override;
+use openhuman_core::platform::proc_metrics;
 
 use crate::harness::{fixture, measure, FleetBudget, ProfileResult, Recorder, TurnLatency};
 use crate::mock::LatencyMock;
@@ -109,7 +109,7 @@ fn latency_summary(mut samples: Vec<u128>) -> Option<TurnLatency> {
 /// mid-construction failure, records `construction-failed-<count>` and returns
 /// what was built rather than crashing.
 fn build_agents(
-    config: &openhuman_core::openhuman::config::Config,
+    config: &openhuman_core::config::Config,
     n: usize,
     rec: &Recorder,
 ) -> Result<Vec<Agent>> {
@@ -145,7 +145,7 @@ pub async fn run() -> Result<ProfileResult> {
 
     let fixture = fixture()?;
     openhuman_core::core::bus::init().await.expect("bus init");
-    openhuman_core::openhuman::agent::bus::register_agent_handlers();
+    openhuman_core::agent::bus::register_agent_handlers();
     let _ = AgentDefinitionRegistry::init_global_builtins();
     let mock = LatencyMock::from_env("Fleet agent: nothing needs your attention.");
     let _provider = test_provider_override::install_model(mock.clone());

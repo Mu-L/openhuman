@@ -81,11 +81,11 @@ use axum::Json;
 use serde_json::json;
 
 #[cfg(feature = "http-server")]
-use crate::openhuman::config::Config;
+use crate::config::Config;
 #[cfg(feature = "http-server")]
-use crate::openhuman::inference::http::EXTERNAL_OPENAI_COMPAT_PROVIDER;
+use crate::inference::http::EXTERNAL_OPENAI_COMPAT_PROVIDER;
 #[cfg(feature = "http-server")]
-use crate::openhuman::security::credentials::AuthService;
+use crate::security::credentials::AuthService;
 
 static RPC_TOKEN: OnceLock<String> = OnceLock::new();
 

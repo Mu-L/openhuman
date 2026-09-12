@@ -140,7 +140,7 @@ pub fn capability_verdict(
 /// config would be strictly worse than one that lets the command run and fail
 /// on its own terms.
 pub async fn bound_memory_driver() -> Option<(String, DriverClass, Capabilities)> {
-    let config = match crate::openhuman::config::Config::load_or_init().await {
+    let config = match crate::config::Config::load_or_init().await {
         Ok(config) => config,
         Err(err) => {
             log::debug!("[cli][capability-gate] config unresolved ({err}); gate defaults OPEN");
@@ -163,9 +163,9 @@ pub async fn bound_memory_driver() -> Option<(String, DriverClass, Capabilities)
 /// reports over RPC.
 pub fn bound_memory_driver_for(
     workspace_dir: &std::path::Path,
-    cfg: &crate::openhuman::config::schema::MemorySubsystemConfig,
+    cfg: &crate::config::schema::MemorySubsystemConfig,
 ) -> Option<(String, DriverClass, Capabilities)> {
-    match crate::openhuman::memory::binding::for_workspace(workspace_dir, cfg) {
+    match crate::memory::binding::for_workspace(workspace_dir, cfg) {
         Ok(binding) => {
             log::debug!(
                 "[cli][capability-gate] bound driver='{}' class={} capabilities=[{}]",

@@ -34,9 +34,9 @@
 //! The workload asserts all K researcher subagents actually executed.
 
 use anyhow::Result;
-use openhuman_core::openhuman::agent::harness::AgentDefinitionRegistry;
-use openhuman_core::openhuman::agent::Agent;
-use openhuman_core::openhuman::inference::provider::factory::test_provider_override;
+use openhuman_core::agent::harness::AgentDefinitionRegistry;
+use openhuman_core::agent::Agent;
+use openhuman_core::inference::provider::factory::test_provider_override;
 
 use crate::harness::{fixture, measure, ProfileResult, TurnLatency};
 use crate::mock::{subagent_marker, SubagentMock};
@@ -92,7 +92,7 @@ pub async fn run() -> Result<ProfileResult> {
     // spawns instead of erroring back to a re-spawn loop.
     fixture.config.agent.max_parallel_tools = width.max(4);
     openhuman_core::core::bus::init().await.expect("bus init");
-    openhuman_core::openhuman::agent::bus::register_agent_handlers();
+    openhuman_core::agent::bus::register_agent_handlers();
     let _ = AgentDefinitionRegistry::init_global_builtins();
 
     let mock = SubagentMock::with_width(width);

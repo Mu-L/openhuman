@@ -23,7 +23,7 @@
 //! A build that never calls the setter sends [`DEFAULT_PRODUCT_IDENTITY`], so
 //! behaviour is unchanged for any host that does not opt in.
 //!
-//! The shape mirrors [`crate::openhuman::config::schema::proxy`]'s runtime
+//! The shape mirrors [`crate::config::schema::proxy`]'s runtime
 //! proxy config — a `OnceLock<RwLock<_>>` holding a defaulted value — rather
 //! than a bare `OnceLock<T>`, which could only ever be set once per process and
 //! would make the override untestable without poisoning the test binary.

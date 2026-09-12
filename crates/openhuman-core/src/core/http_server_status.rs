@@ -3,8 +3,8 @@
 //! Deliberately **ungated**: unlike the rest of the transport surface, this
 //! module is compiled in both feature states, because its whole purpose is to
 //! report which state the binary ended up in. It mirrors
-//! [`crate::openhuman::voice::VOICE_COMPILED_IN`] and
-//! [`crate::openhuman::inference::INFERENCE_COMPILED_IN`].
+//! [`crate::voice::VOICE_COMPILED_IN`] and
+//! [`crate::inference::INFERENCE_COMPILED_IN`].
 
 /// Whether the real HTTP + Socket.IO server transport was compiled into this
 /// binary.

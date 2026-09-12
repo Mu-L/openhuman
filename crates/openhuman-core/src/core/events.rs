@@ -283,7 +283,7 @@ pub enum DomainEvent {
     /// Published by `openhuman.memory_sync_channel` (channel_id = Some(...)) and
     /// `openhuman.memory_sync_all` (channel_id = None). No consumers exist yet —
     /// this variant is a hook for future ingestion subscribers to react to pull
-    /// requests. See `crates/openhuman-core/src/openhuman/memory/ops.rs` for the RPC handlers.
+    /// requests. See `crates/openhuman-core/src/memory/ops.rs` for the RPC handlers.
     MemorySyncRequested { channel_id: Option<String> },
     /// A high-level memory sync orchestration stage changed.
     ///
@@ -657,15 +657,15 @@ pub enum DomainEvent {
 
     // ── Egress (privacy spine) ──────────────────────────────────────────
     /// An external data transfer is about to leave the device. Published by
-    /// [`crate::openhuman::security::egress::emit_external_transfer`] from every
+    /// [`crate::security::egress::emit_external_transfer`] from every
     /// external-egress point (LLM inference, Composio tool calls, backend
     /// integrations, network-fetch tools, cloud embeddings) *before* the
-    /// transfer, carrying an [`EgressDescriptor`](crate::openhuman::security::egress::EgressDescriptor)
+    /// transfer, carrying an [`EgressDescriptor`](crate::security::egress::EgressDescriptor)
     /// that answers "what leaves, to where, why". Privacy epic S2 (#4436).
     ///
     /// Bridged to the `external_transfer_pending` web-channel socket event by
     /// `EgressSurfaceSubscriber` (defined in
-    /// `crates/openhuman-core/src/openhuman/web_chat/event_bus.rs`) when the emitting
+    /// `crates/openhuman-core/src/web_chat/event_bus.rs`) when the emitting
     /// turn carries chat routing. `thread_id` / `client_id` come from the
     /// ambient `APPROVAL_CHAT_CONTEXT` and are `None` for CLI / cron /
     /// background transfers (no chat surface to route to).
@@ -675,7 +675,7 @@ pub enum DomainEvent {
     ExternalTransferPending {
         /// What leaves, to where, and why (plus S5 identification-risk fields,
         /// default-empty until the detector lands).
-        descriptor: crate::openhuman::security::egress::EgressDescriptor,
+        descriptor: crate::security::egress::EgressDescriptor,
         /// Chat thread the transfer belongs to, when the turn originated from a
         /// chat channel. `None` for non-chat callers.
         thread_id: Option<String>,
@@ -687,7 +687,7 @@ pub enum DomainEvent {
     // ── Plan review (interactive plan-mode gate) ────────────────────────
     /// An interactive turn parked on a thread-scoped plan the user must
     /// review before execution. Published by
-    /// [`crate::openhuman::agent::plan_review::gate::PlanReviewGate::request_review`]
+    /// [`crate::agent::plan_review::gate::PlanReviewGate::request_review`]
     /// and bridged to the web channel as a `plan_review_request` socket event.
     PlanReviewRequested {
         /// Unique id correlating the decision back to the parked turn.
@@ -713,10 +713,10 @@ pub enum DomainEvent {
     // ── Artifacts ───────────────────────────────────────────────────────
     /// An artifact transitioned to [`ArtifactStatus::Ready`] — file
     /// is on disk and ready to be downloaded. Published by
-    /// [`crate::openhuman::agent::artifacts::store::finalize_artifact`].
+    /// [`crate::agent::artifacts::store::finalize_artifact`].
     /// Bridged to the web channel as an `artifact_ready` socket event
     /// when the publishing turn carries an `APPROVAL_CHAT_CONTEXT`
-    /// (see [`crate::openhuman::security::approval::ApprovalChatContext`]).
+    /// (see [`crate::security::approval::ApprovalChatContext`]).
     /// Sub-task #2779 of #1535.
     ArtifactReady {
         /// UUID of the artifact record.
@@ -769,7 +769,7 @@ pub enum DomainEvent {
     /// An artifact record has been **created** (`ArtifactStatus::Pending`)
     /// but no bytes are on disk yet — the producing tool has only just
     /// reserved the row. Published by
-    /// [`crate::openhuman::agent::artifacts::store::create_artifact`].
+    /// [`crate::agent::artifacts::store::create_artifact`].
     /// Bridged to the web channel as an `artifact_pending` socket event
     /// so the frontend can render an in-progress / "Generating…" card the
     /// moment the tool dispatches, instead of waiting until the file
@@ -804,7 +804,7 @@ pub enum DomainEvent {
     // ── Webhooks ────────────────────────────────────────────────────────
     /// An incoming webhook request from the transport layer, ready for routing.
     WebhookIncomingRequest {
-        request: crate::openhuman::skills::webhooks::WebhookRequest,
+        request: crate::skills::webhooks::WebhookRequest,
         raw_data: serde_json::Value,
     },
     /// A webhook was received and routed to a skill.
@@ -890,7 +890,7 @@ pub enum DomainEvent {
 
     // ── Triage ──────────────────────────────────────────────────────────
     //
-    // Published by `crate::openhuman::agent::triage` when an external
+    // Published by `crate::agent::triage` when an external
     // trigger (Composio webhook today, cron / webhook / other sources
     // later) has been classified by the trigger-triage agent. The
     // `source` field is a short slug like `"composio"` / `"cron"` so the
@@ -1271,7 +1271,7 @@ pub enum DomainEvent {
     ///
     /// `workspace_dir` is for in-process consumers. Anything crossing to a
     /// client sends
-    /// [`workspace_handle`](crate::openhuman::config::workspace_handle)
+    /// [`workspace_handle`](crate::config::workspace_handle)
     /// instead, since the path is under the user's home directory.
     ActiveWorkspaceChanged {
         workspace_dir: std::path::PathBuf,
@@ -1838,7 +1838,7 @@ impl DomainEvent {
     /// The value is an absolute path under the user's home directory. It is
     /// for in-process comparison only — anything that reaches a client or an
     /// export sends
-    /// [`workspace_handle`](crate::openhuman::config::workspace_handle)
+    /// [`workspace_handle`](crate::config::workspace_handle)
     /// instead.
     #[must_use]
     pub fn workspace_dir(&self) -> Option<&std::path::Path> {

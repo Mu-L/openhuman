@@ -15,7 +15,7 @@ use anyhow::Result;
 use std::io::Read;
 use std::path::PathBuf;
 
-use crate::openhuman::memory::api::types::NamespaceDocumentInput;
+use crate::memory::api::types::NamespaceDocumentInput;
 
 /// Entry point for `openhuman memory <subcommand>`.
 pub fn run_memory_command(args: &[String]) -> Result<()> {
@@ -169,7 +169,7 @@ fn run_ingest(args: &[String]) -> Result<()> {
             category: "core".to_string(),
             session_id: None,
             document_id: None,
-            taint: crate::openhuman::memory::MemoryTaint::Internal,
+            taint: crate::memory::MemoryTaint::Internal,
         };
 
         documents
@@ -499,7 +499,7 @@ fn read_input(path: &str) -> Result<String> {
 /// Resolve the bound memory driver for a subcommand, refusing first when it
 /// does not advertise the family the subcommand needs.
 ///
-/// Returns the whole [`MemoryBinding`](crate::openhuman::memory::binding::MemoryBinding)
+/// Returns the whole [`MemoryBinding`](crate::memory::binding::MemoryBinding)
 /// rather than the provider alone, so a missing family can be refused by name
 /// *and* by driver id — the same shape as the capability diagnostic, and the
 /// only way an operator can tell "this driver has no documents tier" from "this
@@ -519,8 +519,8 @@ fn read_input(path: &str) -> Result<String> {
 /// a driver has actually answered `capabilities()`.
 async fn create_memory_binding(
     subcommand: &str,
-) -> Result<std::sync::Arc<crate::openhuman::memory::binding::MemoryBinding>> {
-    let config = crate::openhuman::config::Config::load_or_init()
+) -> Result<std::sync::Arc<crate::memory::binding::MemoryBinding>> {
+    let config = crate::config::Config::load_or_init()
         .await
         .unwrap_or_default();
 
@@ -554,21 +554,18 @@ async fn create_memory_binding(
     // two that did not, `ingest` and `query`, resolved an in-process client
     // and no longer exist. The sink is a `tinymemory-api` seam, not an engine
     // one, and stays for the reason spelled out in `runtime::context`.
-    crate::openhuman::memory::host::install_memory_event_sink();
+    crate::memory::host::install_memory_event_sink();
     #[cfg(feature = "modules")]
-    crate::openhuman::modules::memory::set_modules_policy(std::sync::Arc::new(config.clone()));
+    crate::modules::memory::set_modules_policy(std::sync::Arc::new(config.clone()));
 
-    crate::openhuman::memory::binding::for_workspace(
-        &config.workspace_dir,
-        &config.subsystems.memory,
-    )
-    .map_err(|error| anyhow::anyhow!(error))
+    crate::memory::binding::for_workspace(&config.workspace_dir, &config.subsystems.memory)
+        .map_err(|error| anyhow::anyhow!(error))
 }
 
 /// The documents family on a bound driver, or a refusal naming the driver.
 fn documents_family(
-    binding: &crate::openhuman::memory::binding::MemoryBinding,
-) -> Result<&dyn crate::openhuman::memory::api::provider::MemoryDocuments> {
+    binding: &crate::memory::binding::MemoryBinding,
+) -> Result<&dyn crate::memory::api::provider::MemoryDocuments> {
     binding.provider().as_documents().ok_or_else(|| {
         anyhow::anyhow!(
             "memory driver `{}` does not support the documents family",
