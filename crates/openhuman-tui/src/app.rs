@@ -24,7 +24,7 @@ use tokio::sync::broadcast;
 
 use openhuman_core::core::runtime::CoreRuntime;
 use openhuman_core::core::socketio::WebChannelEvent;
-use openhuman_core::openhuman::web_chat;
+use openhuman_core::web_chat;
 
 use super::cockpit::{
     array_at, row_from_value, Overlay, OverlayKind, OverlayRow, PendingApproval, PendingPlanReview,

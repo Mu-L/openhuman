@@ -14,10 +14,11 @@ Architecture: [overview](gitbooks/developing/architecture.md),
 | --- | --- |
 | `app/src/` | Vite and React frontend |
 | `crates/openhuman-app/` | Thin desktop host |
-| `crates/openhuman-core/` | Core package wrappers, transport, dispatch, auth, and runtime composition |
-| `crates/openhuman-embed/` | Stable library facade for embedding the core in another product |
+| `crates/openhuman-core/` | Business domains, transport, dispatch, auth, RPC, and runtime composition |
+| `crates/openhuman-embed/` | Typed library facade for embedding the core in another product |
+| `crates/openhuman-rpc/` | Shared RPC contracts, response decoding, and HTTP client used by app and TUI |
 | `crates/openhuman-tui/` | Standalone terminal frontend |
-| `src/openhuman/` | Business domains |
+| `crates/openhuman-core/src/` | Business domains, server dispatch, and runtime composition |
 | `crates/openhuman-core/src/main.rs` | `openhuman-core` CLI |
 | `tests/` | Rust integration and JSON-RPC tests |
 | `gitbooks/` | Public product and contributor documentation |
@@ -117,7 +118,7 @@ Shared mock backend:
 - Frontend environment access is centralized in `app/src/utils/config.ts`.
   Do not read `import.meta.env` elsewhere.
 - Rust configuration is defined under
-  `src/openhuman/config/schema/` and loaded through its config operations.
+  `crates/openhuman-core/src/config/schema/` and loaded through its config operations.
 
 The autonomy policy is security-sensitive:
 
@@ -149,7 +150,7 @@ generated documentation blocks.
   `fetchCoreAppSnapshot()`.
 - Routes are defined in `AppRoutes.tsx`. Check that file before adding links
   or redirects.
-- Bundled agent prompts live under `src/openhuman/agent/prompts/`, not in the
+- Bundled agent prompts live under `crates/openhuman-core/src/agent/prompts/`, not in the
   frontend.
 
 Analytics:
@@ -184,8 +185,8 @@ iMessage scanner remains separate because it reads `chat.db` directly.
 
 ## Rust domain structure
 
-Business logic belongs under `src/openhuman/<domain>/`. Do not add flat
-`src/openhuman/*.rs` domain files or business logic to
+Business logic belongs under `crates/openhuman-core/src/<domain>/`. Do not add flat
+`crates/openhuman-core/src/*.rs` domain files or business logic to
 `crates/openhuman-core/src/core/`.
 
 Preferred module shape:
@@ -208,11 +209,11 @@ Additional rules:
 - RPC namespace strings are wire contracts and do not follow directory
   renames.
 - Domain tools live with their domain and are re-exported through
-  `src/openhuman/tools/mod.rs`. Keep only cross-cutting tools in
+  `crates/openhuman-core/src/tools/mod.rs`. Keep only cross-cutting tools in
   `tools/impl/`.
 - Stable memory collection scope belongs in `metadata.path_scope`; item IDs
   are deduplication keys.
-- Update `src/openhuman/platform/about_app/` when user-visible capabilities
+- Update `crates/openhuman-core/src/platform/about_app/` when user-visible capabilities
   change.
 
 ## Tool, harness, and runtime boundaries
@@ -225,7 +226,7 @@ progress events.
 - Use the `tinytools` copy vendored through `vendor/tinyagents/`; a second path
   creates incompatible Rust types.
 - Keep conversions mechanical. Policy decisions belong in OpenHuman.
-- `openhuman_core::Harness` is the public prompt-to-reply API. Calls go through
+- `openhuman_embed::Harness` is the public prompt-to-reply API. Calls go through
   `CoreRuntime::invoke`, not directly to domain operations.
 - Set `config_path` with `workspace_dir`, and set a turn origin with its access
   tier. `Access::full()` configures both access fields.

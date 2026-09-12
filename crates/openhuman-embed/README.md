@@ -2,8 +2,7 @@
 
 `openhuman-embed` is the host-facing library package for products that run the
 OpenHuman core in-process, including Medulla and OpenCompany. It re-exports the
-typed embedding facade and runtime builder while keeping the implementation in
-`openhuman-core`.
+runtime builder from `openhuman-core` and owns the typed embedding facade.
 
 Use the default contributor feature set:
 
@@ -50,4 +49,4 @@ if let Some(identity) = ProductIdentity::new("opencompany") {
 
 Use `Core::raw()` only as a temporary escape hatch when the typed facade does
 not yet model a required call. A repeated raw call is a candidate for a typed
-embedding method in `openhuman-core`.
+embedding method in `openhuman-embed`.

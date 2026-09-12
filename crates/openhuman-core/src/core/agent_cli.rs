@@ -24,11 +24,11 @@
 use anyhow::{anyhow, Result};
 use std::path::PathBuf;
 
-use crate::openhuman::agent::debug::prompt_size::{render_text, PromptSizeReport};
-use crate::openhuman::agent::debug::{
+use crate::agent::debug::prompt_size::{render_text, PromptSizeReport};
+use crate::agent::debug::{
     dump_agent_prompt, dump_all_agent_prompts, write_prompt_dumps, DumpPromptOptions, DumpedPrompt,
 };
-use crate::openhuman::agent::harness::definition::AgentDefinitionRegistry;
+use crate::agent::harness::definition::AgentDefinitionRegistry;
 
 /// Entry point for `openhuman agent <subcommand>`.
 pub fn run_agent_command(args: &[String]) -> Result<()> {
@@ -501,10 +501,7 @@ fn run_dump_prompt(args: &[String]) -> Result<()> {
         // and splitting the header onto stderr the way `print_human` does
         // would make `> turn.txt` drop the byte counts that give the payload
         // its meaning.
-        print!(
-            "{}",
-            crate::openhuman::agent::debug::render_wire_dump(&dumped)
-        );
+        print!("{}", crate::agent::debug::render_wire_dump(&dumped));
     } else if flags.json {
         print_json(&dumped, flags.with_tools)?;
     } else {

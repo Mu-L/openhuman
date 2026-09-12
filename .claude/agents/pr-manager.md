@@ -78,7 +78,7 @@ Classify each comment:
 
 Also do a standards pass against `CLAUDE.md` on the full diff, as a safety net for anything reviewers missed:
 
-- New Rust functionality lives in a subdirectory under `src/openhuman/`, not root-level `.rs` files.
+- New Rust functionality lives in a subdirectory under `crates/openhuman-core/src/openhuman/`, not root-level `.rs` files.
 - Controllers exposed via `schemas.rs` + registry, not ad-hoc branches in `core/cli.rs` / `core/jsonrpc.rs`.
 - No dynamic `import()` in production `app/src` code.
 - Frontend reads `VITE_*` via `app/src/utils/config.ts`, not `import.meta.env` directly.

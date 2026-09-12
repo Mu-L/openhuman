@@ -23,7 +23,7 @@
 //! This module wraps the pattern in an RAII [`MockBusGuard`]. The generic
 //! [`mock_bus_stub`] helper installs a typed stub for any method name, and
 //! domain-specific conveniences (such as
-//! [`crate::openhuman::agent::bus::mock_agent_run_turn`]) compose on top of
+//! [`crate::agent::bus::mock_agent_run_turn`]) compose on top of
 //! it by providing a method name + a restore closure that re-registers the
 //! production handler.
 //!
@@ -64,7 +64,7 @@ use super::bus::BUS;
 ///
 /// Acquired by [`mock_bus_stub`] for the lifetime of the returned
 /// [`MockBusGuard`], and also by helpers such as
-/// [`crate::openhuman::agent::bus::use_real_agent_handler`] that need the
+/// [`crate::agent::bus::use_real_agent_handler`] that need the
 /// real agent handler installed without racing against a stub-installing
 /// test. Any test that touches global native-bus registration state
 /// should acquire this lock first.
@@ -113,7 +113,7 @@ impl Drop for MockBusGuard {
 /// This is the workhorse for every test that needs to intercept a native
 /// bus request/response pair across module boundaries. Domain-specific
 /// conveniences (e.g.
-/// [`crate::openhuman::agent::bus::mock_agent_run_turn`]) should compose
+/// [`crate::agent::bus::mock_agent_run_turn`]) should compose
 /// on top of this helper by supplying the right method name and a
 /// `restore` closure that calls the domain's production registration
 /// function.

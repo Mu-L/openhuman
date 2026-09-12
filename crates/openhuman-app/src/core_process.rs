@@ -370,8 +370,8 @@ impl CoreProcessHandle {
                                     .to_string())
                             }
                             Ok(Err(err)) => {
-                                if let Some(openhuman_core::openhuman::platform::connectivity::rpc::PickListenPortError::WouldTakeOver { preferred, .. }) = err
-                                    .downcast_ref::<openhuman_core::openhuman::platform::connectivity::rpc::PickListenPortError>()
+                                if let Some(openhuman_core::platform::connectivity::rpc::PickListenPortError::WouldTakeOver { preferred, .. }) = err
+                                    .downcast_ref::<openhuman_core::platform::connectivity::rpc::PickListenPortError>()
                                 {
                                     if startup_attempt == 0 {
                                         log::warn!(
@@ -710,7 +710,7 @@ impl CoreProcessHandle {
     /// is only what a wedged store or daemon may cost.
     async fn drain_task_briefly(&self) {
         const AFTER_MEMORY: Duration = Duration::from_millis(2_500);
-        let budget = openhuman_core::openhuman::memory::exit::EXIT_BUDGET + AFTER_MEMORY;
+        let budget = openhuman_core::memory::exit::EXIT_BUDGET + AFTER_MEMORY;
         let mut task_guard = self.task.lock().await;
         let Some(task) = task_guard.as_mut() else {
             return;

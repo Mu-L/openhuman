@@ -27,8 +27,8 @@ use openhuman_core::core::types::HostKind;
 ///   * `-v` / `--verbose` — debug-level file logging.
 pub fn run_from_cli(args: &[String]) -> anyhow::Result<()> {
     openhuman_core::core::cli::load_dotenv_for_cli()?;
-    openhuman_core::openhuman::platform::service::apply_startup_restart_delay_from_env();
-    openhuman_core::openhuman::security::keyring::init_master_key();
+    openhuman_core::platform::service::apply_startup_restart_delay_from_env();
+    openhuman_core::security::keyring::init_master_key();
 
     let mut thread_id: Option<String> = None;
     let mut force_new = false;
@@ -180,15 +180,15 @@ async fn async_main(
     // ServiceSet::none intentionally skips channel startup. The TUI is itself
     // an interactive surface, so bridge approval, plan-review, artifact, and
     // agent progress events onto the same in-process web-channel stream.
-    openhuman_core::openhuman::web_chat::register_approval_surface_subscriber();
-    openhuman_core::openhuman::web_chat::register_artifact_surface_subscriber();
+    openhuman_core::web_chat::register_approval_surface_subscriber();
+    openhuman_core::web_chat::register_artifact_surface_subscriber();
 
     let client_id = format!("tui-{}", short_hex());
     let thread_id = resolve_thread(&runtime, thread_flag, force_new, prefer_existing).await?;
     log::info!("[tui] resolved thread={thread_id} client_id={client_id}");
 
     // Subscribe BEFORE the first turn so no streamed event is missed.
-    let web_rx = openhuman_core::openhuman::web_chat::subscribe_web_channel_events();
+    let web_rx = openhuman_core::web_chat::subscribe_web_channel_events();
 
     super::app::run(runtime, client_id, thread_id, web_rx, options).await
 }
@@ -255,7 +255,7 @@ fn resolve_data_dir() -> PathBuf {
             return PathBuf::from(workspace);
         }
     }
-    openhuman_core::openhuman::config::default_root_openhuman_dir()
+    openhuman_core::config::default_root_openhuman_dir()
         .unwrap_or_else(|_| std::env::temp_dir().join("openhuman"))
 }
 

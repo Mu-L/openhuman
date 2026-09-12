@@ -39,7 +39,7 @@ use tempfile::TempDir;
 
 use openhuman_core::core::auth::{init_rpc_token, CORE_TOKEN_ENV_VAR};
 use openhuman_core::core::jsonrpc::build_core_http_router;
-use openhuman_core::openhuman::config::Config;
+use openhuman_core::config::Config;
 
 /// Preferred bearer. Only the real one if this module wins the process-global
 /// `OnceLock` race — send [`rpc_bearer`], never this.
@@ -106,7 +106,7 @@ fn ensure_memory_seams() {
             .spawn(|| {
                 let config = Arc::new(shared_config_at(memory_workspace()));
                 #[cfg(feature = "modules")]
-                openhuman_core::openhuman::modules::memory::set_modules_policy(config);
+                openhuman_core::modules::memory::set_modules_policy(config);
             })
             .expect("spawn memory goals/people seam installer")
             .join()

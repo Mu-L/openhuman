@@ -2,6 +2,8 @@
 
 use serde_json::Value;
 
+pub use openhuman_rpc::unwrap_rpc;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum OverlayKind {
     Help,
@@ -88,16 +90,6 @@ pub struct PendingPlanReview {
     pub request_id: String,
     pub summary: String,
     pub steps: Vec<String>,
-}
-
-pub fn unwrap_rpc(mut value: &Value) -> &Value {
-    loop {
-        if let Some(next) = value.get("result").or_else(|| value.get("data")) {
-            value = next;
-        } else {
-            return value;
-        }
-    }
 }
 
 pub fn array_at<'a>(value: &'a Value, keys: &[&str]) -> &'a [Value] {

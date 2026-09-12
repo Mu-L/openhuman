@@ -242,7 +242,7 @@ fn voice_and_audio_controllers_absent_when_feature_off() {
 #[test]
 #[cfg(feature = "inference")]
 fn inference_engine_compiled_in_when_feature_on() {
-    assert!(crate::openhuman::inference::INFERENCE_COMPILED_IN);
+    assert!(crate::inference::INFERENCE_COMPILED_IN);
 }
 
 /// With the `inference` feature off, the marker flips and `cpal` leaves the
@@ -253,8 +253,8 @@ fn inference_engine_compiled_in_when_feature_on() {
 #[test]
 #[cfg(not(feature = "inference"))]
 fn inference_engine_compiled_out_when_feature_off() {
-    use crate::openhuman::desktop::accessibility::{detect_microphone_permission, PermissionState};
-    assert!(!crate::openhuman::inference::INFERENCE_COMPILED_IN);
+    use crate::desktop::accessibility::{detect_microphone_permission, PermissionState};
+    assert!(!crate::inference::INFERENCE_COMPILED_IN);
     assert_eq!(
         detect_microphone_permission(),
         PermissionState::Unknown,
@@ -318,7 +318,7 @@ fn wallet_web3_x402_controllers_registered_when_feature_on() {
         "x402 controllers must be registered when the `web3` feature is on"
     );
     assert!(
-        !crate::openhuman::web3::all_web3_agent_tools().is_empty(),
+        !crate::web3::all_web3_agent_tools().is_empty(),
         "web3 agent tools must be present when the `web3` feature is on"
     );
 }
@@ -339,7 +339,7 @@ fn wallet_web3_x402_controllers_absent_when_feature_off() {
         "wallet/web3/x402 controllers must be compiled out when the `web3` feature is off"
     );
     assert!(
-        crate::openhuman::web3::all_web3_agent_tools().is_empty(),
+        crate::web3::all_web3_agent_tools().is_empty(),
         "web3 agent tools must be gone when the `web3` feature is off"
     );
 }
@@ -1245,7 +1245,7 @@ fn medulla_controllers_absent_when_feature_off() {
 }
 
 // ---- DomainGroup ↔ family-directory realignment ----------------------------
-// The reorg (#5328) made `src/openhuman/` one directory per family, so the
+// The reorg (#5328) made `crates/openhuman-core/src/` one directory per family, so the
 // runtime axis can finally name each one instead of sweeping half the surface
 // into `Platform`. These pin that alignment in both directions.
 
@@ -1569,11 +1569,10 @@ fn memory_controllers_form_one_contiguous_run_in_aggregator_order() {
     );
 
     let registered: Vec<&'static str> = positions.iter().map(|&i| all[i].schema.function).collect();
-    let aggregator: Vec<&'static str> =
-        crate::openhuman::memory::all_memory_registered_controllers()
-            .iter()
-            .map(|c| c.schema.function)
-            .collect();
+    let aggregator: Vec<&'static str> = crate::memory::all_memory_registered_controllers()
+        .iter()
+        .map(|c| c.schema.function)
+        .collect();
     assert_eq!(
         registered, aggregator,
         "registry order for memory.* diverges from the memory schemas aggregator"
@@ -1613,8 +1612,8 @@ fn caps_ws(name: &str) -> std::path::PathBuf {
 /// optional family is OFF at once. The OFF half of each pair below therefore
 /// reads "absent under a driver that advertises nothing optional", not "absent
 /// with only this one family missing".
-fn null_driver_cfg() -> crate::openhuman::config::schema::MemorySubsystemConfig {
-    crate::openhuman::config::schema::MemorySubsystemConfig {
+fn null_driver_cfg() -> crate::config::schema::MemorySubsystemConfig {
+    crate::config::schema::MemorySubsystemConfig {
         driver: "null".into(),
         ..Default::default()
     }
@@ -1941,7 +1940,7 @@ async fn narrowed_capabilities_do_not_narrow_the_domain_set() {
 /// Namespaces + `memory.*` functions visible under the given memory config.
 async fn visible_under(
     ws: &str,
-    cfg: Option<crate::openhuman::config::schema::MemorySubsystemConfig>,
+    cfg: Option<crate::config::schema::MemorySubsystemConfig>,
 ) -> (
     std::collections::BTreeSet<&'static str>,
     std::collections::BTreeSet<&'static str>,
@@ -2191,7 +2190,7 @@ async fn rpc_method_from_parts_stays_unfiltered_by_capability() {
 //
 // The agent-tool half of the DoD is pinned next to the tool machinery that owns
 // the full tool list, by `optional_family_memory_tools_absent_under_the_null_driver`
-// in `src/openhuman/tools/ops_tests.rs` (`memory_tree` is in its absent list).
+// in `crates/openhuman-core/src/tools/ops_tests.rs` (`memory_tree` is in its absent list).
 // Same split the channels gate uses; not duplicated here.
 
 /// `memory_tree*` is unknown-method under a driver that never advertised

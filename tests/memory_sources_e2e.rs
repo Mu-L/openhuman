@@ -47,9 +47,9 @@ fn ensure_memory_seams() {
             .name("memory-sources-e2e-seams".to_string())
             .stack_size(8 * 1024 * 1024)
             .spawn(|| {
-                let config = Arc::new(openhuman_core::openhuman::config::Config::default());
+                let config = Arc::new(openhuman_core::config::Config::default());
                 #[cfg(feature = "modules")]
-                openhuman_core::openhuman::modules::memory::set_modules_policy(config);
+                openhuman_core::modules::memory::set_modules_policy(config);
             })
             .expect("spawn memory sources seam installer")
             .join()

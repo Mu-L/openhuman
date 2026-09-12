@@ -13,10 +13,10 @@
 //! This is a parser-level E2E; the real driver / process spawn is mocked
 //! in `tests/claude_code_driver_smoke.rs`.
 
-use openhuman_core::openhuman::inference::provider::claude_code::{
+use openhuman_core::inference::provider::claude_code::{
     event_mapper::EventMapper, stream_parser::StreamJsonParser,
 };
-use openhuman_core::openhuman::inference::provider::types::ProviderDelta;
+use openhuman_core::inference::provider::types::ProviderDelta;
 
 const TRANSCRIPT: &str = r#"{"type":"system","subtype":"init","session_id":"f47ac10b-58cc-4372-a567-0e02b2c3d479","schema_version":"2.0"}
 {"type":"stream_event","event":{"type":"content_block_start","index":0,"content_block":{"type":"text"}}}

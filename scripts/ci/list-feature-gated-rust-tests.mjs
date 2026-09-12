@@ -3,7 +3,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-const SOURCE_ROOTS = ["src", "crates/openhuman-core/src"];
+const SOURCE_ROOTS = ["crates/openhuman-core/src"];
 const FEATURE_GATE =
   /#\[cfg\((?:not\()?feature = "(?:voice|media|web3|meet|mcp|skills|flows|channels|contacts)"|#\[cfg\((?:not\()?all\([^\]]*feature = "contacts"/;
 const TEST_MARKER = /#\[test\]|#\[tokio::test\]|fn .*_test/;

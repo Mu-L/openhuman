@@ -1,22 +1,22 @@
 use anyhow::Result;
 use async_trait::async_trait;
 use chrono::{TimeZone, Utc};
-use openhuman_core::openhuman::agent::context::prompt::{
+use openhuman_core::agent::context::prompt::{
     render_ambient_environment, render_safety, render_subagent_system_prompt_with_format,
     render_tools, ConnectedIntegration, CuratedMemoryPromptSnapshot, LearnedContextData,
     NamespaceSummary as PromptNamespaceSummary, PersonalityRosterEntry, PersonalityRosterSection,
     PromptContext, PromptTool, SubagentRenderOptions, SystemPromptBuilder, ToolCallFormat,
     UserIdentity,
 };
-use openhuman_core::openhuman::agent::debug::{dump_agent_prompt, DumpPromptOptions};
-use openhuman_core::openhuman::agent::dispatcher::NativeToolDispatcher;
-use openhuman_core::openhuman::agent::Agent;
-use openhuman_core::openhuman::config::AgentConfig;
-use openhuman_core::openhuman::memory::{
+use openhuman_core::agent::debug::{dump_agent_prompt, DumpPromptOptions};
+use openhuman_core::agent::dispatcher::NativeToolDispatcher;
+use openhuman_core::agent::Agent;
+use openhuman_core::config::AgentConfig;
+use openhuman_core::memory::{
     Memory, MemoryCategory, MemoryEntry, NamespaceSummary, RecallOpts,
 };
-use openhuman_core::openhuman::skills::ops_types::Workflow;
-use openhuman_core::openhuman::tools::{PermissionLevel, Tool, ToolResult};
+use openhuman_core::skills::ops_types::Workflow;
+use openhuman_core::tools::{PermissionLevel, Tool, ToolResult};
 use parking_lot::Mutex;
 use serde_json::json;
 use std::collections::{HashSet, VecDeque};

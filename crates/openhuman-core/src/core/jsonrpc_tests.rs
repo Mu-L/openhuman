@@ -221,7 +221,7 @@ async fn tool_timeout_seeds_on_channelless_core_boot() {
     // Distinctive, in-range (1..=3600) value so the assertion can only pass on a
     // real seed, never on the default. Channel-less: `channels_config` stays empty,
     // which is exactly the config for which `start_channels` is skipped.
-    let mut config = crate::openhuman::config::Config::default();
+    let mut config = crate::config::Config::default();
     config.agent.agent_timeout_secs = 1234;
     assert!(
         config.channels_config.active_channel.is_none(),
@@ -240,7 +240,7 @@ async fn tool_timeout_seeds_on_channelless_core_boot() {
     );
 
     assert_eq!(
-        crate::openhuman::tools::timeout::tool_execution_timeout_secs(),
+        crate::tools::timeout::tool_execution_timeout_secs(),
         1234,
         "channel-less core boot must seed the tool-execution timeout from [agent].agent_timeout_secs"
     );
@@ -253,7 +253,7 @@ struct EnvVarGuard {
 
 impl EnvVarGuard {
     fn set_many(vars: Vec<(&'static str, OsString)>) -> Self {
-        let lock = crate::openhuman::config::TEST_ENV_LOCK
+        let lock = crate::config::TEST_ENV_LOCK
             .lock()
             .expect("test env lock poisoned");
         let mut old_values = Vec::with_capacity(vars.len());
@@ -272,7 +272,7 @@ impl EnvVarGuard {
     /// lifetime, restoring each on `Drop`. Mirrors [`set_many`] for tests that
     /// need an env var *absent* rather than set to a fixed value.
     fn remove_many(keys: Vec<&'static str>) -> Self {
-        let lock = crate::openhuman::config::TEST_ENV_LOCK
+        let lock = crate::config::TEST_ENV_LOCK
             .lock()
             .expect("test env lock poisoned");
         let mut old_values = Vec::with_capacity(keys.len());
@@ -357,8 +357,7 @@ async fn wait_until_port_released(port: u16) {
 #[tokio::test]
 #[ignore = "calls full server bootstrap; leaks process-global state into sibling tests (#1552). Re-cover via integration test."]
 async fn shutdown_token_stops_axum_listener_within_timeout() {
-    let _signed_out_restore =
-        crate::openhuman::cron::scheduler_gate::SignedOutTestGuard::set(false);
+    let _signed_out_restore = crate::cron::scheduler_gate::SignedOutTestGuard::set(false);
 
     let workspace = tempfile::tempdir().expect("workspace tempdir");
 
@@ -1828,7 +1827,7 @@ fn is_wallet_not_configured_error_matches_wallet_constant() {
     // The classifier keys off the wallet layer's exact "not configured"
     // message so wallet-backed RPCs stay out of Sentry.
     assert!(is_wallet_not_configured_error(
-        crate::openhuman::web3::wallet::WALLET_NOT_CONFIGURED_MESSAGE
+        crate::web3::wallet::WALLET_NOT_CONFIGURED_MESSAGE
     ));
 }
 
@@ -1839,7 +1838,7 @@ fn is_wallet_not_configured_error_is_coupled_to_the_wallet_constant() {
     // constant the classifier matches, this fails — preventing the noise from
     // silently returning to Sentry. Mirrors the param-validation prefix locks.
     assert_eq!(
-        crate::openhuman::web3::wallet::WALLET_NOT_CONFIGURED_MESSAGE,
+        crate::web3::wallet::WALLET_NOT_CONFIGURED_MESSAGE,
         "wallet is not configured; run wallet setup first"
     );
 }

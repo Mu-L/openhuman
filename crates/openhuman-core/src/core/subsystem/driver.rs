@@ -66,7 +66,7 @@ impl DriverClass {
     ///
     /// These are exactly the values documented for
     /// `MemoryDriverConfig::class` in
-    /// `src/openhuman/config/schema/subsystems.rs`. The serde derive is pinned
+    /// `crates/openhuman-core/src/config/schema/subsystems.rs`. The serde derive is pinned
     /// against this function by a test.
     pub fn as_str(self) -> &'static str {
         match self {

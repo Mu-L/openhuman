@@ -385,7 +385,7 @@ fn default_build_leaves_the_generic_namespace_path_unchanged() {
 /// the family. Assert through the entry point or this regresses silently.
 #[test]
 fn generic_namespace_path_reports_the_config_fact_under_a_driver_without_the_family() {
-    let _env_lock = crate::openhuman::config::TEST_ENV_LOCK
+    let _env_lock = crate::config::TEST_ENV_LOCK
         .lock()
         .unwrap_or_else(|poisoned| poisoned.into_inner());
     let workspace = tempdir().expect("temp workspace");
@@ -421,7 +421,7 @@ fn generic_namespace_path_reports_the_config_fact_under_a_driver_without_the_fam
 
 #[test]
 fn raw_call_path_rejects_a_method_the_bound_driver_does_not_advertise() {
-    let _env_lock = crate::openhuman::config::TEST_ENV_LOCK
+    let _env_lock = crate::config::TEST_ENV_LOCK
         .lock()
         .unwrap_or_else(|poisoned| poisoned.into_inner());
     let workspace = tempdir().expect("temp workspace");

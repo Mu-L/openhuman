@@ -21,21 +21,19 @@
 //! `cargo build --release --features rss-bench --bin rss-bench`.
 //!
 //! The pure sampling/aggregation logic lives in
-//! [`openhuman_core::openhuman::platform::proc_metrics`]; this binary is the fixture +
+//! [`openhuman_core::platform::proc_metrics`]; this binary is the fixture +
 //! process driver.
 
 use anyhow::{Context, Result};
 use async_trait::async_trait;
-use openhuman_core::openhuman::agent::dispatcher::NativeToolDispatcher;
-use openhuman_core::openhuman::agent::Agent;
-use openhuman_core::openhuman::memory::{
-    Memory, MemoryCategory, MemoryEntry, NamespaceSummary, RecallOpts,
-};
-use openhuman_core::openhuman::platform::proc_metrics::{
+use openhuman_core::agent::dispatcher::NativeToolDispatcher;
+use openhuman_core::agent::Agent;
+use openhuman_core::memory::{Memory, MemoryCategory, MemoryEntry, NamespaceSummary, RecallOpts};
+use openhuman_core::platform::proc_metrics::{
     self, BenchReport, ProcSample, RosterResult, REPORT_SCHEMA_VERSION, RSS_BUDGET_KIB,
     RSS_HARD_CAP_KIB,
 };
-use openhuman_core::openhuman::tools::{Tool, ToolResult};
+use openhuman_core::tools::{Tool, ToolResult};
 use std::path::PathBuf;
 use std::process::Stdio;
 use std::sync::Arc;

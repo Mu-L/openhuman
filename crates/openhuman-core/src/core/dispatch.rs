@@ -282,7 +282,7 @@ mod tests {
 
     impl WorkspaceEnvGuard {
         fn set(path: &std::path::Path) -> Self {
-            let lock = crate::openhuman::config::TEST_ENV_LOCK
+            let lock = crate::config::TEST_ENV_LOCK
                 .lock()
                 .unwrap_or_else(|poisoned| poisoned.into_inner());
             let previous = std::env::var_os("OPENHUMAN_WORKSPACE");

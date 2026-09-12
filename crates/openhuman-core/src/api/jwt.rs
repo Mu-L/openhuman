@@ -12,10 +12,8 @@ use chrono::{DateTime, Utc};
 
 pub use tinyhumans_sdk::jwt::{bearer_authorization_value, decode_jwt_payload};
 
-pub use crate::openhuman::security::credentials::session_support::get_session_token;
-pub use crate::openhuman::security::credentials::{
-    APP_SESSION_PROVIDER, DEFAULT_AUTH_PROFILE_NAME,
-};
+pub use crate::security::credentials::session_support::get_session_token;
+pub use crate::security::credentials::{APP_SESSION_PROVIDER, DEFAULT_AUTH_PROFILE_NAME};
 
 /// Best-effort decode of a JWT's `exp` (expiry) claim into a UTC timestamp.
 ///

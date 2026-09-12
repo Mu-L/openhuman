@@ -43,7 +43,7 @@ honestly as Tauri host + embedded Rust core.
 CEF renderer, GPU, utility, and other helper processes are separate and are
 reported independently. On macOS, the tool also parses the recursive stack
 counts from cpu-stacks.txt and groups OpenHuman symbols by Rust domain, such as
-openhuman_core::openhuman::agent or openhuman::core_process.
+openhuman_core::agent or openhuman::core_process.
 
 CPU percentages are percentages of one logical CPU and may exceed 100 when a
 component uses multiple cores. RAM is resident memory reported by sysinfo.

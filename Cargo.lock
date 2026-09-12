@@ -4139,6 +4139,7 @@ dependencies = [
  "motosan-ai-oauth",
  "nu-ansi-term 0.46.0",
  "once_cell",
+ "openhuman-rpc",
  "parking_lot",
  "proptest",
  "rand 0.10.2",
@@ -4216,7 +4217,29 @@ dependencies = [
 name = "openhuman-embed"
 version = "0.63.25"
 dependencies = [
+ "anyhow",
+ "env_logger",
+ "log",
  "openhuman",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror 2.0.20",
+ "tokio",
+ "url",
+ "uuid",
+ "wiremock",
+]
+
+[[package]]
+name = "openhuman-rpc"
+version = "0.63.25"
+dependencies = [
+ "log",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "url",
 ]
 
 [[package]]
@@ -4230,6 +4253,7 @@ dependencies = [
  "dotenvy",
  "log",
  "openhuman",
+ "openhuman-rpc",
  "ratatui",
  "sentry",
  "serde_json",

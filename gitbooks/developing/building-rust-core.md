@@ -40,10 +40,9 @@ git clone https://github.com/tinyhumansai/openhuman.git
 cd openhuman
 ```
 
-That is enough for the Rust workspace. Core wrapper sources and the package
-manifest live under `crates/openhuman-core/`; the authoritative domain
-implementation intentionally remains under the repository-root
-`src/openhuman/` tree. The stable host-facing library facade is the sibling
+That is enough for the Rust workspace. Core sources, the package manifest, and
+the authoritative domain implementation live under `crates/openhuman-core/`.
+The stable host-facing library facade is the sibling
 `crates/openhuman-embed/` package, while the terminal frontend is
 `crates/openhuman-tui/`.
 

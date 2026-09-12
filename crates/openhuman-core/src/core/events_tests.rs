@@ -270,7 +270,7 @@ fn all_variants_have_correct_domain() {
         // Webhook
         (
             DomainEvent::WebhookIncomingRequest {
-                request: crate::openhuman::skills::webhooks::WebhookRequest {
+                request: crate::skills::webhooks::WebhookRequest {
                     correlation_id: "c".into(),
                     tunnel_id: "t".into(),
                     tunnel_uuid: "u".into(),

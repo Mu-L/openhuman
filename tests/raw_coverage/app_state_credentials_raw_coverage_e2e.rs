@@ -5,16 +5,16 @@ use std::sync::{Arc, Mutex, OnceLock};
 use std::time::Duration;
 
 use chrono::Utc;
-use openhuman_core::openhuman::desktop::app_state::{
+use openhuman_core::desktop::app_state::{
     peek_cached_current_user_identity, snapshot, update_local_state, StoredAppStatePatch,
     StoredOnboardingTasks,
 };
-use openhuman_core::openhuman::config::rpc as config_rpc;
-use openhuman_core::openhuman::security::credentials::ops::store_session;
-use openhuman_core::openhuman::security::credentials::profiles::{
+use openhuman_core::config::rpc as config_rpc;
+use openhuman_core::security::credentials::ops::store_session;
+use openhuman_core::security::credentials::profiles::{
     AuthProfile, AuthProfileKind, AuthProfilesStore, TokenSet,
 };
-use openhuman_core::openhuman::security::credentials::{
+use openhuman_core::security::credentials::{
     list_provider_credentials_by_prefix, AuthService, APP_SESSION_PROVIDER,
     DEFAULT_AUTH_PROFILE_NAME,
 };
@@ -65,7 +65,7 @@ struct Harness {
 }
 
 impl Harness {
-    async fn config(&self) -> openhuman_core::openhuman::config::Config {
+    async fn config(&self) -> openhuman_core::config::Config {
         config_rpc::load_config_with_timeout()
             .await
             .expect("isolated config should load")
@@ -126,7 +126,7 @@ embedding_strict = false
 "#
     );
     std::fs::write(root.join("config.toml"), &cfg).expect("write config.toml");
-    let _: openhuman_core::openhuman::config::Config =
+    let _: openhuman_core::config::Config =
         toml::from_str(&cfg).expect("round14 config must match schema");
 }
 
@@ -170,9 +170,9 @@ fn setup_default_paths(api_url: &str) -> Harness {
         EnvGuard::set("OPENHUMAN_MEMORY_EMBED_ENDPOINT", ""),
         EnvGuard::set("OPENHUMAN_MEMORY_EMBED_MODEL", ""),
     ];
-    let default_root = openhuman_core::openhuman::config::default_root_openhuman_dir()
+    let default_root = openhuman_core::config::default_root_openhuman_dir()
         .expect("default openhuman root");
-    let root = openhuman_core::openhuman::config::pre_login_user_dir(&default_root);
+    let root = openhuman_core::config::pre_login_user_dir(&default_root);
     write_min_config(&root, api_url);
 
     Harness {
@@ -570,7 +570,7 @@ async fn snapshot_clears_pending_backend_validation_after_successful_revalidatio
     .await;
     let harness = setup(&api_url);
     let config = harness.config().await;
-    let active_user_root = openhuman_core::openhuman::config::default_root_openhuman_dir()
+    let active_user_root = openhuman_core::config::default_root_openhuman_dir()
         .expect("default openhuman root");
 
     let mut metadata = HashMap::new();
@@ -640,7 +640,7 @@ async fn snapshot_clears_pending_backend_validation_after_successful_revalidatio
         "successful revalidation must clear persisted pendingBackendValidation"
     );
     assert_eq!(
-        openhuman_core::openhuman::config::read_active_user_id(&active_user_root).as_deref(),
+        openhuman_core::config::read_active_user_id(&active_user_root).as_deref(),
         None,
         "env-scoped revalidation must not move auth state into default active_user.toml"
     );
@@ -745,10 +745,10 @@ async fn snapshot_activates_user_dir_after_pending_revalidation_without_initial_
     .await;
     let harness = setup_default_paths(&api_url);
     let config = harness.config().await;
-    let active_user_root = openhuman_core::openhuman::config::default_root_openhuman_dir()
+    let active_user_root = openhuman_core::config::default_root_openhuman_dir()
         .expect("default openhuman root");
     assert_eq!(
-        openhuman_core::openhuman::config::read_active_user_id(&active_user_root),
+        openhuman_core::config::read_active_user_id(&active_user_root),
         None,
         "test must start without active_user.toml"
     );
@@ -759,7 +759,7 @@ async fn snapshot_activates_user_dir_after_pending_revalidation_without_initial_
     })
     .await
     .expect("seed pre-login local state");
-    let activated_user_dir = openhuman_core::openhuman::config::user_openhuman_dir(
+    let activated_user_dir = openhuman_core::config::user_openhuman_dir(
         &active_user_root,
         "fresh-activated-user",
     );
@@ -812,7 +812,7 @@ async fn snapshot_activates_user_dir_after_pending_revalidation_without_initial_
         "activated snapshot user must not keep pendingBackendValidation"
     );
     assert_eq!(
-        openhuman_core::openhuman::config::read_active_user_id(&active_user_root).as_deref(),
+        openhuman_core::config::read_active_user_id(&active_user_root).as_deref(),
         Some("fresh-activated-user"),
         "successful pending revalidation must activate the backend user"
     );
@@ -822,7 +822,7 @@ async fn snapshot_activates_user_dir_after_pending_revalidation_without_initial_
         "first successful activation snapshot must reload the activated user's local state"
     );
 
-    let active_config = openhuman_core::openhuman::config::Config::load_from_default_paths()
+    let active_config = openhuman_core::config::Config::load_from_default_paths()
         .await
         .expect("load activated user config");
     let active_profile = AuthService::from_config(&active_config)
@@ -869,10 +869,10 @@ async fn snapshot_errors_without_clearing_pending_session_when_active_user_marke
     .await;
     let harness = setup_default_paths(&api_url);
     let config = harness.config().await;
-    let active_user_root = openhuman_core::openhuman::config::default_root_openhuman_dir()
+    let active_user_root = openhuman_core::config::default_root_openhuman_dir()
         .expect("default openhuman root");
     assert_eq!(
-        openhuman_core::openhuman::config::read_active_user_id(&active_user_root),
+        openhuman_core::config::read_active_user_id(&active_user_root),
         None,
         "test must start without active_user.toml"
     );
@@ -1000,9 +1000,9 @@ async fn snapshot_preserves_default_active_user_when_env_scoped_revalidation_is_
     let (api_url, server_task, shutdown_tx) = auth_me_rejected_server().await;
     let harness = setup(&api_url);
     let config = harness.config().await;
-    let active_user_root = openhuman_core::openhuman::config::default_root_openhuman_dir()
+    let active_user_root = openhuman_core::config::default_root_openhuman_dir()
         .expect("default openhuman root");
-    openhuman_core::openhuman::config::write_active_user_id(&active_user_root, "desktop-user")
+    openhuman_core::config::write_active_user_id(&active_user_root, "desktop-user")
         .expect("seed default active user");
 
     let mut metadata = HashMap::new();
@@ -1045,7 +1045,7 @@ async fn snapshot_preserves_default_active_user_when_env_scoped_revalidation_is_
         "rejected env-scoped pending session profile must be cleared"
     );
     assert_eq!(
-        openhuman_core::openhuman::config::read_active_user_id(&active_user_root).as_deref(),
+        openhuman_core::config::read_active_user_id(&active_user_root).as_deref(),
         Some("desktop-user"),
         "env-scoped rejection cleanup must not clear the default active user"
     );
@@ -1123,9 +1123,9 @@ async fn snapshot_clears_supplied_user_pending_session_after_revalidation_reject
     let harness = setup(&api_url);
     let config = harness.config().await;
     let user_id = "callback-user";
-    let active_user_root = openhuman_core::openhuman::config::default_root_openhuman_dir()
+    let active_user_root = openhuman_core::config::default_root_openhuman_dir()
         .expect("default openhuman root");
-    openhuman_core::openhuman::config::write_active_user_id(&active_user_root, user_id)
+    openhuman_core::config::write_active_user_id(&active_user_root, user_id)
         .expect("seed active user marker for supplied pending session");
 
     let mut metadata = HashMap::new();
@@ -1150,7 +1150,7 @@ async fn snapshot_clears_supplied_user_pending_session_after_revalidation_reject
         )
         .expect("seed supplied pending app session");
     assert_eq!(
-        openhuman_core::openhuman::config::read_active_user_id(&active_user_root).as_deref(),
+        openhuman_core::config::read_active_user_id(&active_user_root).as_deref(),
         Some(user_id),
         "test must start with active_user.toml pointing at the supplied pending user"
     );
@@ -1189,7 +1189,7 @@ async fn snapshot_clears_supplied_user_pending_session_after_revalidation_reject
     assert!(snap.current_user.is_none());
     assert!(snap.session_token.is_none());
     assert_eq!(
-        openhuman_core::openhuman::config::read_active_user_id(&active_user_root),
+        openhuman_core::config::read_active_user_id(&active_user_root),
         None,
         "rejected supplied-user pending session must clear active_user.toml"
     );
@@ -1467,20 +1467,20 @@ async fn round14_credentials_prefix_listing_and_composio_direct_edges() {
     let config = harness.config().await;
 
     let empty =
-        openhuman_core::openhuman::security::credentials::store_composio_api_key(&config, "   ").await;
+        openhuman_core::security::credentials::store_composio_api_key(&config, "   ").await;
     assert_eq!(
         empty.expect_err("empty composio key rejected"),
         "composio api_key must not be empty"
     );
 
-    openhuman_core::openhuman::security::credentials::store_composio_api_key(
+    openhuman_core::security::credentials::store_composio_api_key(
         &config,
         "  composio-round14-key  ",
     )
     .await
     .expect("store composio key");
     assert_eq!(
-        openhuman_core::openhuman::security::credentials::get_composio_api_key(&config)
+        openhuman_core::security::credentials::get_composio_api_key(&config)
             .expect("get composio key")
             .as_deref(),
         Some("composio-round14-key")
@@ -1521,16 +1521,16 @@ async fn round14_credentials_prefix_listing_and_composio_direct_edges() {
         .iter()
         .any(|profile| profile.metadata_keys == vec!["chat_id"]));
 
-    let cleared = openhuman_core::openhuman::security::credentials::clear_composio_api_key(&config)
+    let cleared = openhuman_core::security::credentials::clear_composio_api_key(&config)
         .await
         .expect("clear composio key");
     assert_eq!(cleared.value["removed"], true);
     assert_eq!(
-        openhuman_core::openhuman::security::credentials::get_composio_api_key(&config)
+        openhuman_core::security::credentials::get_composio_api_key(&config)
             .expect("get cleared composio key"),
         None
     );
-    let cleared_again = openhuman_core::openhuman::security::credentials::clear_composio_api_key(&config)
+    let cleared_again = openhuman_core::security::credentials::clear_composio_api_key(&config)
         .await
         .expect("clear composio key idempotent");
     assert_eq!(cleared_again.value["removed"], false);

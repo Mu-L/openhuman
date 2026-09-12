@@ -9,8 +9,8 @@ use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 use anyhow::{Context, Result};
-use openhuman_core::openhuman::config::Config;
-use openhuman_core::openhuman::platform::proc_metrics::{self, ProcSample, TreeSample};
+use openhuman_core::config::Config;
+use openhuman_core::platform::proc_metrics::{self, ProcSample, TreeSample};
 use serde::Serialize;
 
 /// One sampled point inside a measured workload. `delta_kib` is the RSS change

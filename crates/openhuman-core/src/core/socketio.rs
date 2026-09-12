@@ -559,9 +559,9 @@ pub fn attach_socketio() -> (socketioxide::layer::SocketIoLayer, SocketIo) {
                 let socket = socket.clone();
                 let client_id = client_id.clone();
                 tokio::spawn(async move {
-                    match crate::openhuman::config::active_workspace_snapshot().await {
+                    match crate::config::active_workspace_snapshot().await {
                         Ok((dir, revision)) => {
-                            let handle = crate::openhuman::config::workspace_handle(&dir);
+                            let handle = crate::config::workspace_handle(&dir);
                             // One snapshot, not two reads: resolved
                             // separately, a switch between them would pair
                             // this workspace with the *next* one's revision,
@@ -644,7 +644,7 @@ pub fn attach_socketio() -> (socketioxide::layer::SocketIoLayer, SocketIo) {
                 );
 
                     // Trigger the web channel's chat logic.
-                    match crate::openhuman::web_chat::start_chat(
+                    match crate::web_chat::start_chat(
                         &client_id,
                         &payload.thread_id,
                         &payload.message,
@@ -653,7 +653,7 @@ pub fn attach_socketio() -> (socketioxide::layer::SocketIoLayer, SocketIo) {
                         payload.profile_id,
                         payload.locale,
                         payload.queue_mode,
-                        crate::openhuman::web_chat::ChatRequestMetadata::default(),
+                        crate::web_chat::ChatRequestMetadata::default(),
                     )
                     .await
                     {
@@ -695,7 +695,7 @@ pub fn attach_socketio() -> (socketioxide::layer::SocketIoLayer, SocketIo) {
                         client_id,
                         payload.thread_id
                     );
-                    let _ = crate::openhuman::web_chat::cancel_chat_scoped(
+                    let _ = crate::web_chat::cancel_chat_scoped(
                         &client_id,
                         &payload.thread_id,
                         payload.request_id.as_deref(),
@@ -771,7 +771,7 @@ pub fn spawn_web_channel_bridge(io: SocketIo) {
     // 1. Web channel events → per-client rooms.
     let io_web = io.clone();
     tokio::spawn(async move {
-        let mut rx = crate::openhuman::web_chat::subscribe_web_channel_events();
+        let mut rx = crate::web_chat::subscribe_web_channel_events();
         loop {
             let event = match rx.recv().await {
                 Ok(event) => event,
@@ -799,7 +799,7 @@ pub fn spawn_web_channel_bridge(io: SocketIo) {
 
     // 2. Dictation hotkey events → broadcast to all connected clients.
     tokio::spawn(async move {
-        let mut rx = crate::openhuman::voice::dictation_listener::subscribe_dictation_events();
+        let mut rx = crate::voice::dictation_listener::subscribe_dictation_events();
         loop {
             let event = match rx.recv().await {
                 Ok(event) => event,
@@ -849,7 +849,7 @@ pub fn spawn_web_channel_bridge(io: SocketIo) {
 
     // 3. Overlay attention events → broadcast to all clients.
     tokio::spawn(async move {
-        let mut rx = crate::openhuman::desktop::overlay::subscribe_attention_events();
+        let mut rx = crate::desktop::overlay::subscribe_attention_events();
         loop {
             let event = match rx.recv().await {
                 Ok(event) => event,
@@ -877,7 +877,7 @@ pub fn spawn_web_channel_bridge(io: SocketIo) {
     //    chat session is active. Pattern mirrors the overlay attention
     //    bridge above — fire-and-forget, no per-client routing.
     tokio::spawn(async move {
-        let mut rx = crate::openhuman::desktop::notifications::subscribe_core_notifications();
+        let mut rx = crate::desktop::notifications::subscribe_core_notifications();
         loop {
             let event = match rx.recv().await {
                 Ok(event) => event,
@@ -1000,7 +1000,7 @@ pub fn spawn_web_channel_bridge(io: SocketIo) {
                 revision,
             } = event
             {
-                let handle = crate::openhuman::config::workspace_handle(&workspace_dir);
+                let handle = crate::config::workspace_handle(&workspace_dir);
                 log::info!(
                     "[socketio] broadcast workspace_changed workspace={handle} revision={revision}"
                 );
@@ -1067,7 +1067,7 @@ pub fn spawn_web_channel_bridge(io: SocketIo) {
 
     // 5. Transcription results → broadcast to all connected clients.
     tokio::spawn(async move {
-        let mut rx = crate::openhuman::voice::dictation_listener::subscribe_transcription_results();
+        let mut rx = crate::voice::dictation_listener::subscribe_transcription_results();
         loop {
             let text = match rx.recv().await {
                 Ok(text) => text,
@@ -1560,14 +1560,14 @@ fn event_alias(name: &str) -> Option<String> {
 /// re-renders the same one.
 #[cfg(feature = "http-server")]
 fn replay_parked_approval(socket: &SocketRef, thread_id: &str) {
-    let Some(gate) = crate::openhuman::security::approval::ApprovalGate::try_global() else {
+    let Some(gate) = crate::security::approval::ApprovalGate::try_global() else {
         return;
     };
     let Some(row) = gate.parked_request_for_thread(thread_id) else {
         return;
     };
     let client_id = socket.id.to_string();
-    let event = crate::openhuman::web_chat::approval_request_event(
+    let event = crate::web_chat::approval_request_event(
         &row.request_id,
         &row.tool_name,
         &row.action_summary,

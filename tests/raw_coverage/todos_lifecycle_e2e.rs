@@ -165,7 +165,7 @@ async fn setup(extra: Vec<EnvVarGuard>) -> Harness {
     std::fs::write(openhuman_home.join("config.toml"), MIN_CONFIG).expect("write config.toml");
     // Parsed here so a schema drift fails as a config error rather than as a
     // baffling handler error three calls later.
-    let _: openhuman_core::openhuman::config::Config =
+    let _: openhuman_core::config::Config =
         toml::from_str(MIN_CONFIG).expect("test config must match the config schema");
 
     let workspace = home.join("workspace");
