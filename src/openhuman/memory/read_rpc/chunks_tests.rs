@@ -21,19 +21,20 @@ use super::{
     chunk_query_from_filter, chunk_row_from_list_row, list_chunks_rpc, list_sources_rpc,
     pair_leaves_with_rows, search_rpc,
 };
-use chrono::TimeZone;
 use async_trait::async_trait;
+use chrono::TimeZone;
 
 use crate::openhuman::config::Config;
 use crate::openhuman::memory::api::provider::{
     ChunkListRow, ChunkQuery, MemoryChunks, MemoryProvider,
 };
-use crate::openhuman::memory::api::provider::MemoryError;
 use crate::openhuman::memory::binding;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tempfile::TempDir;
 use tinymemory_api::chunks::{Chunk, Metadata, SourceKind, SourceRef};
+use tinymemory_api::chunks::{ChunkDetail, ChunkEmbedding};
+use tinymemory_api::error::MemoryError;
 use tinymemory_api::null::NullMemoryProvider;
 
 use super::super::types::{ChunkFilter, ChunkRow, PREVIEW_MAX_CHARS};
@@ -213,6 +214,37 @@ struct TokenRows {
 
 #[async_trait]
 impl MemoryChunks for TokenRows {
+    async fn list_chunks(
+        &self,
+        _query: &ChunkQuery,
+        _scope: Option<&tinymemory_api::provider::types::SourceScope>,
+    ) -> Result<Vec<tinymemory_api::chunks::Chunk>, MemoryError> {
+        Ok(Vec::new())
+    }
+
+    async fn get_chunk(
+        &self,
+        _chunk_id: &str,
+    ) -> Result<Option<tinymemory_api::chunks::Chunk>, MemoryError> {
+        Ok(None)
+    }
+
+    async fn chunk_detail(&self, _chunk_id: &str) -> Result<Option<ChunkDetail>, MemoryError> {
+        Ok(None)
+    }
+
+    async fn storage_kinds(&self) -> Result<Vec<String>, MemoryError> {
+        Ok(Vec::new())
+    }
+
+    async fn chunk_embeddings(
+        &self,
+        _chunk_ids: &[String],
+        _model_signature: &str,
+    ) -> Result<Vec<ChunkEmbedding>, MemoryError> {
+        Ok(Vec::new())
+    }
+
     async fn list_chunk_details(
         &self,
         query: &ChunkQuery,
@@ -241,7 +273,10 @@ async fn token_and_intersects_complete_sets_in_first_token_order() {
             ),
             (
                 "beta".into(),
-                vec![sample_row("last", "alpha beta"), sample_row("first", "alpha beta")],
+                vec![
+                    sample_row("last", "alpha beta"),
+                    sample_row("first", "alpha beta"),
+                ],
             ),
         ]),
         seen_queries: std::sync::Mutex::new(Vec::new()),
@@ -252,17 +287,22 @@ async fn token_and_intersects_complete_sets_in_first_token_order() {
         ..ChunkQuery::default()
     };
 
-    let rows = super::token_and_details(&provider, &query, &["alpha".into(), "beta".into()], "test")
-        .await
-        .expect("token intersection succeeds");
+    let rows =
+        super::token_and_details(&provider, &query, &["alpha".into(), "beta".into()], "test")
+            .await
+            .expect("token intersection succeeds");
 
     assert_eq!(
-        rows.iter().map(|row| row.chunk.id.as_str()).collect::<Vec<_>>(),
+        rows.iter()
+            .map(|row| row.chunk.id.as_str())
+            .collect::<Vec<_>>(),
         vec!["first", "last"]
     );
     let seen = provider.seen_queries.lock().unwrap();
     assert_eq!(seen.len(), 2);
-    assert!(seen.iter().all(|query| query.limit.is_none() && query.offset.is_none()));
+    assert!(seen
+        .iter()
+        .all(|query| query.limit.is_none() && query.offset.is_none()));
 }
 
 // ── the wire shape ───────────────────────────────────────────────────────
