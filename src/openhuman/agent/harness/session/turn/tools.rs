@@ -387,7 +387,9 @@ impl Agent {
             profile_skills_root.as_deref(),
         );
         #[cfg(feature = "flows")]
-        latest.extend(crate::openhuman::flows::catalogue::flow_entries(&self.config));
+        if let Some(config) = self.runtime_config.as_deref() {
+            latest.extend(crate::openhuman::flows::catalogue::flow_entries(config));
+        }
         log::debug!(
             "[agent_loop] refreshed installed-skills metadata (trigger={trigger}, profile_local_skills_active={profile_local_skills_active}, workflow_count={})",
             latest.len()
