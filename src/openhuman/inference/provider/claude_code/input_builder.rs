@@ -118,6 +118,8 @@ fn content_blocks(raw: &str) -> Vec<Value> {
     while let Some(relative) = raw[cursor..].find("[IMAGE:") {
         let start = cursor + relative;
         let Some(end_relative) = raw[start..].find(']') else {
+            blocks.push(json!({"type": "text", "text": &raw[start..]}));
+            cursor = raw.len();
             break;
         };
         let end = start + end_relative + 1;

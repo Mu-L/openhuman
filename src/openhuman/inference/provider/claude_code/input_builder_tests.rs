@@ -156,3 +156,18 @@ fn literal_file_marker_is_not_read() {
     assert!(!s.contains("\"type\":\"image\""), "{s}");
     assert!(s.contains("could not be read"), "{s}");
 }
+
+#[test]
+fn unterminated_image_marker_preserves_trailing_text() {
+    let s = String::from_utf8(build_stdin(
+        &[ChatMessage::user(
+            "before [IMAGE:data:image/png;base64,QUJD after",
+        )],
+        true,
+    ))
+    .unwrap();
+    assert!(
+        s.contains("before [IMAGE:data:image/png;base64,QUJD after"),
+        "{s}"
+    );
+}
