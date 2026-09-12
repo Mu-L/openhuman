@@ -1158,23 +1158,12 @@ async fn subagent_clarification_flow_inner() {
         serde_json::to_string_pretty(&requests).unwrap_or_default()
     );
 
-    // ── request[1] (scheduler_agent first iter) must differ from request[0] (orchestrator) ──
-    // Proves a genuinely separate scheduler_agent context ran, not the orchestrator re-called.
-    let req0_sys = requests
-        .first()
-        .and_then(|r| r.pointer("/body/messages/0/content"))
-        .and_then(Value::as_str)
-        .unwrap_or("");
-    let req1_sys = requests
-        .get(1)
-        .and_then(|r| r.pointer("/body/messages/0/content"))
-        .and_then(Value::as_str)
-        .unwrap_or("");
-    assert_ne!(
-        req0_sys, req1_sys,
-        "request[0] and request[1] share identical first-message content — \
-         scheduler_agent did not build its own context; \
-         content: {req0_sys:?}"
+    // Both agents intentionally share the project-context prefix, so identify
+    // the child by its scheduler-specific prompt rather than message 0.
+    let scheduler_request = requests.get(1).map(Value::to_string).unwrap_or_default();
+    assert!(
+        scheduler_request.contains("scheduled-job store"),
+        "request[1] did not contain the scheduler_agent prompt; request: {scheduler_request}"
     );
 
     // ── Some turn-2 request's messages must contain the clarification question ──
