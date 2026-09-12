@@ -766,9 +766,10 @@ jobs:
     runs-on: ubuntu-22.04
     # 30 min was only ever enough because a stack overflow aborted the run early
     # (see RUST_MIN_STACK below). With the overflow fixed the job runs the full
-    # instrumented suite (~13.6k tests, single-threaded build) end-to-end, which
-    # needs more wall-time.
-    timeout-minutes: 50
+    # instrumented suite plus the embed/TUI and sequential integration targets
+    # end-to-end. The expanded workspace now runs past 50 minutes on a warm
+    # runner, so retain enough headroom for the integration tail to complete.
+    timeout-minutes: 90
     container:
       image: ghcr.io/tinyhumansai/openhuman_ci:latest
     env:
