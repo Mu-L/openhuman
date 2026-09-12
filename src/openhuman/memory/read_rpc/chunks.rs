@@ -160,7 +160,7 @@ fn chunk_query_from_filter(filter: &ChunkFilter, limit: u32, offset: u32) -> Opt
         }
     }
 
-    let content_contains = filter.query.as_deref().and_then(content_predicate);
+    let content_contains = query_tokens(filter.query.as_deref()).first().cloned();
 
     Some(ChunkQuery {
         source_ids: filter.source_ids.clone().unwrap_or_default(),
@@ -176,28 +176,6 @@ fn chunk_query_from_filter(filter: &ChunkFilter, limit: u32, offset: u32) -> Opt
         // dropped rows and renders their status.
         ..Default::default()
     })
-}
-
-/// The `content_contains` predicate for a caller-supplied query string, or
-/// `None` when the caller typed only whitespace.
-///
-/// One function because two call sites need the same rule and a drifted pair
-/// would show as a search that filters differently from the listing behind it.
-///
-/// Two things it deliberately does not do. It does not wrap the value in
-/// `%…%` — that is the driver's, and so is escaping any `%` or `_` the user
-/// typed, which the `format!("%{}%", q)` this replaces did not do at all: a
-/// query containing `_` silently matched any character in that position. And a
-/// blank query places no predicate rather than matching nothing, which is what
-/// the old `if !q.is_empty()` guard did and is why a cleared search box lists
-/// the newest rows instead of emptying the table.
-fn content_predicate(query: &str) -> Option<String> {
-    let trimmed = query.trim();
-    if trimmed.is_empty() {
-        None
-    } else {
-        Some(trimmed.to_string())
-    }
 }
 
 fn query_tokens(query: Option<&str>) -> Vec<String> {
@@ -398,7 +376,7 @@ pub async fn search_rpc(
     k: u32,
 ) -> Result<RpcOutcome<Vec<ChunkRow>>, String> {
     let limit = k.clamp(1, MAX_LIST_LIMIT);
-    let content_contains = content_predicate(&query);
+    let content_contains = query_tokens(Some(&query)).first().cloned();
     // Captured before `query` is shadowed by the `ChunkQuery` below. The log
     // line reports the length of the search TEXT, never of the built query, and
     // it is deliberately the length rather than the text itself — a search term
