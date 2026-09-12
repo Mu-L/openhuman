@@ -748,6 +748,7 @@ fn present_pending_plan_review(ui: &mut UiState) {
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 async fn open_rpc_overlay(
     runtime: &Arc<CoreRuntime>,
     ui: &mut UiState,
