@@ -22,6 +22,17 @@ use std::sync::Arc;
 use tinyinference::model::{ChatModel, ModelRequest, ModelResponse, ModelStream};
 use tinyinference::providers::anthropic::AnthropicModel;
 
+/// Whether an endpoint is known to speak the Anthropic Messages API.
+///
+/// Authentication style is not sufficient to select the wire protocol:
+/// existing configurations may use an Anthropic key with an OpenAI-compatible
+/// proxy. Keep those endpoints on Chat Completions unless the endpoint is the
+/// first-party Messages API.
+pub(crate) fn endpoint_is_anthropic_messages(endpoint: &str) -> bool {
+    crate::openhuman::config::schema::cloud_providers::endpoint_host(endpoint)
+        .is_some_and(|host| host == "api.anthropic.com")
+}
+
 /// The resolved config for one Anthropic Messages API provider.
 pub(crate) struct CrateAnthropicConfig<'a> {
     /// Base URL (`https://api.anthropic.com/v1` for the hosted API; a
@@ -98,9 +109,16 @@ pub(crate) fn build_crate_anthropic_model(
         config.model,
         config.temperature_override
     );
+    let model_matches_unsupported_pattern = config
+        .temperature_unsupported_models
+        .iter()
+        .any(|pattern| crate::openhuman::inference::temperature::glob_match(pattern, config.model));
+    let adapter_temperature_override = (!model_matches_unsupported_pattern)
+        .then_some(config.temperature_override)
+        .flatten();
     let model = AnthropicModel::with_base_url(config.api_key, config.endpoint)
         .with_model(config.model)
-        .with_temperature_override(config.temperature_override);
+        .with_temperature_override(adapter_temperature_override);
     let model: Arc<dyn ChatModel<()>> = Arc::new(model);
     if config.temperature_unsupported_models.is_empty() {
         model

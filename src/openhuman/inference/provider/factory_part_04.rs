@@ -399,7 +399,9 @@ fn try_create_cloud_slug_chat_model_from_string_with_native_tools(
             // places `cache_control` breakpoints. Text mode (prompt-guided
             // tools) is only implemented on the Chat Completions adapter, so
             // that rare case keeps the compat path.
-            if native_tool_calling {
+            if native_tool_calling
+                && super::crate_anthropic::endpoint_is_anthropic_messages(&endpoint)
+            {
                 crate::openhuman::security::egress::emit_external_transfer(
                     crate::openhuman::security::egress::EgressDescriptor::inference(
                         &slug,

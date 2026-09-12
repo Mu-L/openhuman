@@ -1,6 +1,17 @@
 use super::*;
 
 #[test]
+fn only_first_party_anthropic_endpoint_selects_messages_api() {
+    assert!(endpoint_is_anthropic_messages(
+        "https://api.anthropic.com/v1"
+    ));
+    assert!(!endpoint_is_anthropic_messages(
+        "https://anthropic-proxy.example/v1"
+    ));
+    assert!(!endpoint_is_anthropic_messages("https://api.openai.com/v1"));
+}
+
+#[test]
 fn builds_a_native_anthropic_model_with_the_configured_profile() {
     let model = build_crate_anthropic_model(CrateAnthropicConfig {
         endpoint: "https://api.anthropic.com/v1",
