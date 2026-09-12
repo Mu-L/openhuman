@@ -189,7 +189,6 @@ fn to_transcript_entry(message: &ConversationMessage) -> TranscriptEntry {
                 .map(|result| ToolResultEntry {
                     tool_call_id: result.tool_call_id.clone(),
                     content: result.content.clone(),
-                    trusted_verbatim: result.trusted_verbatim,
                 })
                 .collect(),
         ),
