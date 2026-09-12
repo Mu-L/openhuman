@@ -29,7 +29,7 @@ pub async fn spawn_installed_servers(config: &Config) {
 
 pub(crate) async fn spawn_servers_concurrently<F, Fut>(servers: Vec<InstalledServer>, connect_fn: F)
 where
-    F: Fn(InstalledServer) -> Fut,
+    F: Fn(&InstalledServer) -> Fut,
     Fut: std::future::Future<Output = anyhow::Result<usize>>,
 {
     futures::stream::iter(servers.into_iter().filter(|server| {
@@ -43,7 +43,7 @@ where
         let qualified = server.qualified_name.clone();
         let connect_fn = &connect_fn;
         async move {
-            match connect_fn(server).await {
+            match connect_fn(&server).await {
                 Ok(tool_count) => tracing::info!("[mcp-registry] boot: connected server_id={} qualified={} tools={}", server_id, qualified, tool_count),
                 Err(error) => tracing::warn!("[mcp-registry] boot: connect failed server_id={} qualified={} err={error}", server_id, qualified),
             }

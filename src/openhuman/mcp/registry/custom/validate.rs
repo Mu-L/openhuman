@@ -168,14 +168,13 @@ fn lookup_stored<'a>(
 /// Where a stored credential is authorised to go. Two edits share a scope only
 /// if the credential still means the same thing afterwards.
 ///
-/// - stdio: the credentials are subprocess env vars; the process is spawned from
-///   the launch command, but env is not command-specific, so all stdio shares
-///   one scope. (A command change is not a credential re-scope.)
+/// - stdio: the credentials are subprocess env vars and are delivered to the
+///   selected launcher, so changing the launcher requires re-entry.
 /// - http_remote: the credentials are request headers and, for OAuth, a refresh
 ///   bundle minted against a *specific* endpoint. The scope is the endpoint's
 ///   **origin** (scheme + host + port). A different origin is a different service.
 pub(super) enum CredentialScope {
-    Stdio,
+    Stdio(String),
     HttpOrigin(String),
     /// The URL didn't parse. `build_custom_transport` rejects such URLs before a
     /// `Transport` is built, so this is unreachable via the real callers — but it
@@ -191,16 +190,16 @@ pub(super) enum CredentialScope {
 impl PartialEq for CredentialScope {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
-            (Self::Stdio, Self::Stdio) => true,
+            (Self::Stdio(a), Self::Stdio(b)) => a == b,
             (Self::HttpOrigin(a), Self::HttpOrigin(b)) => a == b,
             _ => false,
         }
     }
 }
 
-pub(super) fn credential_scope(transport: &Transport) -> CredentialScope {
+pub(super) fn credential_scope(transport: &Transport, command: Option<&str>) -> CredentialScope {
     match transport {
-        Transport::Stdio => CredentialScope::Stdio,
+        Transport::Stdio => CredentialScope::Stdio(command.unwrap_or_default().to_string()),
         Transport::HttpRemote { url } => match url::Url::parse(url) {
             Ok(u) => CredentialScope::HttpOrigin(u.origin().ascii_serialization()),
             Err(_) => CredentialScope::Unparseable,
@@ -235,10 +234,12 @@ pub(super) fn resolve_env_for_transport(
     stored: &HashMap<String, String>,
     previous: &Transport,
     next: &Transport,
+    previous_command: Option<&str>,
+    next_command: Option<&str>,
 ) -> HashMap<String, String> {
     // The submitted keys are interpreted under the *new* transport.
     let is_http_remote = next.is_http_remote();
-    if credential_scope(previous) != credential_scope(next) {
+    if credential_scope(previous, previous_command) != credential_scope(next, next_command) {
         return resolve_env(submitted, &HashMap::new(), is_http_remote);
     }
     resolve_env(submitted, stored, is_http_remote)

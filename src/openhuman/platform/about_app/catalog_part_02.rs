@@ -513,7 +513,7 @@ Capability {
         category: CapabilityCategory::Channels,
         description: "Add and manage user-entered MCP servers using local commands or remote HTTP endpoints. Credentials are stored locally and excluded from responses.",
         status: CapabilityStatus::Beta,
-        privacy: LOCAL_CREDENTIALS,
+        privacy: CUSTOM_MCP_CREDENTIALS,
     },
     Capability {
         id: "channels.mcp_connection_alerts",

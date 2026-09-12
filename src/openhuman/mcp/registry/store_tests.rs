@@ -571,4 +571,7 @@
             err.to_string()
                 .contains("Failed to add bogus column to mcp_servers"),
             "unexpected error: {err}"
+        );
+    }
+}
 use super::*;

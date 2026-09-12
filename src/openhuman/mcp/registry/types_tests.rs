@@ -359,5 +359,6 @@
         let v = serde_json::to_value(&s).unwrap();
         assert_eq!(v["status"], json!("connected"));
         // `auth_hint` is omitted from the wire when absent (skip_serializing_if).
-use super::*;
-use serde_json::json;
+        assert!(v.get("auth_hint").is_none());
+    }
+}

@@ -192,12 +192,15 @@ pub async fn mcp_clients_update_custom(
                 )));
             }
             let scope_changed =
-                credential_scope(&current.transport) != credential_scope(&transport);
+                credential_scope(&current.transport, Some(&current.command))
+                    != credential_scope(&transport, Some(&command));
             let env = resolve_env_for_transport(
                 &input.env,
                 &stored_env.into_iter().collect::<HashMap<String, String>>(),
                 &current.transport,
                 &transport,
+                Some(&current.command),
+                Some(&command),
             );
             tracing::debug!(
                 "[mcp-custom] update server_id={} transport={}{} env_keys={:?}",

@@ -197,6 +197,8 @@ fn transport_change_drops_stored_env() {
         &Transport::HttpRemote {
             url: "https://x.io/mcp".to_string(),
         },
+        None,
+        None,
     );
 
     assert!(
@@ -222,6 +224,8 @@ fn transport_change_drops_the_oauth_bundle() {
             url: "https://x.io/mcp".to_string(),
         },
         &Transport::Stdio,
+        None,
+        None,
     );
 
     assert!(
@@ -241,7 +245,14 @@ fn same_transport_keeps_stored_env() {
     let submitted = HashMap::from([("API_KEY".to_string(), String::new())]);
 
     let resolved =
-        resolve_env_for_transport(&submitted, &stored, &Transport::Stdio, &Transport::Stdio);
+        resolve_env_for_transport(
+            &submitted,
+            &stored,
+            &Transport::Stdio,
+            &Transport::Stdio,
+            None,
+            None,
+        );
 
     assert_eq!(resolved.get("API_KEY"), Some(&"secret".to_string()));
     assert_eq!(resolved.get("__oauth__"), Some(&"{}".to_string()));
@@ -263,6 +274,8 @@ fn same_origin_url_change_keeps_stored_env() {
         &Transport::HttpRemote {
             url: "https://svc.io/mcp/v2".to_string(),
         },
+        None,
+        None,
     );
 
     assert_eq!(resolved.get("Authorization"), Some(&"Bearer t".to_string()));
@@ -292,6 +305,8 @@ fn cross_origin_url_change_drops_stored_env() {
         &Transport::HttpRemote {
             url: "https://b.com/mcp".to_string(),
         },
+        None,
+        None,
     );
 
     assert!(
@@ -313,6 +328,8 @@ fn port_change_drops_stored_env() {
         &Transport::HttpRemote {
             url: "https://svc.io:9443/mcp".to_string(),
         },
+        None,
+        None,
     );
     assert!(
         resolved.is_empty(),
