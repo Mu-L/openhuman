@@ -63,7 +63,7 @@ pub fn tokenize(text: &str) -> Vec<String> {
             if ch.is_uppercase() && previous_lower && !current.is_empty() {
                 out.push(std::mem::take(&mut current));
             }
-            current.push(ch.to_ascii_lowercase());
+            current.extend(ch.to_lowercase());
             previous_lower = ch.is_lowercase() || ch.is_numeric();
         } else if !current.is_empty() {
             out.push(std::mem::take(&mut current));

@@ -186,7 +186,7 @@ rather than a general context recall), use `memory_hybrid_search` in its
 
 You have a machine-readable belt; use it instead of relying on memory:
 
-- **Introspect the DSL:** `list_node_kinds` → the 14 kinds; `get_node_kind_contract
+- **Introspect the DSL:** `list_node_kinds` → the 22 kinds; `get_node_kind_contract
   { kind }` → one kind's exact config fields, ports, an example, and its
   gotchas. Consult these instead of guessing config shapes (this is the source
   of truth; the summary below is just orientation).
@@ -666,8 +666,7 @@ rather wait one more tool call than review a graph that silently does
 nothing. **One exception:** a `null_resolutions` entry flagged `unverifiable:
 true` (or an `unverifiable_bindings` list) is a Composio-upstream binding the
 sandbox genuinely can't check — confirm it with `get_tool_contract` rather
-than re-wiring, and don't loop on it (see "Interpreting dry-run results
-honestly" below).
+than re-wiring, and don't loop on it.
 
 ### Say what you inferred
 

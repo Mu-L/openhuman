@@ -643,8 +643,8 @@ impl PromptSection for UserMemorySection {
 
 impl PromptSection for DateTimeSection {
     fn tier(&self) -> PromptTier {
-        // The clock. Nothing emitted after this can ever be cached.
-        PromptTier::Volatile
+        // The live clock is carried in the user message. This section is static.
+        PromptTier::Stable
     }
 
     fn name(&self) -> &str {

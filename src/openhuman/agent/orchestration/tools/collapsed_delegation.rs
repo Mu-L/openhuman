@@ -133,15 +133,26 @@ fn build_description(targets: &[DelegateTarget]) -> String {
     );
     for target in targets {
         buf.push_str("\n- `");
-        buf.push_str(&target.tool_name);
+        buf.push_str(&prompt_safe(&target.tool_name));
         buf.push('`');
         let trimmed = target.description.trim();
         if !trimmed.is_empty() {
             buf.push_str(": ");
-            buf.push_str(trimmed);
+            buf.push_str(&prompt_safe(trimmed));
         }
     }
     buf
+}
+
+fn prompt_safe(value: &str) -> String {
+    value
+        .chars()
+        .map(|ch| match ch {
+            '`' => '\'',
+            ch if ch.is_control() => ' ',
+            ch => ch,
+        })
+        .collect()
 }
 
 #[async_trait]

@@ -983,6 +983,11 @@ impl Agent {
                             .retain(|name| !definition_disallows_tool(&def.disallowed_tools, name));
                     }
                 }
+                // Disallowing every tool must remain a zero-tool scope. An
+                // empty visible set means "no filter" to the harness.
+                if visible.is_empty() {
+                    visible.insert(NO_TOOLS_SENTINEL.to_string());
+                }
             }
         }
 
