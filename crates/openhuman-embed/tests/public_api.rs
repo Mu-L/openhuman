@@ -3,7 +3,7 @@ use std::sync::Arc;
 use openhuman_embed::{
     set_product_identity, Access, AgentTurnOrigin, Core, CoreBuilder, CoreRuntime, DomainSet,
     GroupMode, Harness, HostKind, ProductIdentity, Provider, ServiceSet, ToolGroups, TrustedAccess,
-    TrustedAutomationSource, Workspace,
+    TrustedAutomationSource, RuntimeConfig, Workspace,
 };
 
 #[test]
@@ -33,6 +33,9 @@ fn exposes_the_host_facing_embedding_contract() {
     let _ = DomainSet::embedded;
     let _ = ServiceSet::none;
     let _ = HostKind::Library;
+    let runtime_config = RuntimeConfig::default();
+    let _ = CoreBuilder::new(HostKind::Library).config(runtime_config.clone());
+    let _ = Harness::builder().config(runtime_config);
     let _ = ToolGroups::none().with("documents", GroupMode::Advertised);
     let automation = AgentTurnOrigin::TrustedAutomation {
         job_id: "embed-public-api".to_string(),
