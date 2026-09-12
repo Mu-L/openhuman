@@ -174,7 +174,8 @@ pub async fn dump_all_agent_prompts(
     config_path_override: Option<PathBuf>,
     model_override: Option<String>,
 ) -> Result<Vec<DumpedPrompt>> {
-    let config = load_dump_config(workspace_dir_override, config_path_override, model_override).await?;
+    let config =
+        load_dump_config(workspace_dir_override, config_path_override, model_override).await?;
 
     AgentDefinitionRegistry::init_global(&config.workspace_dir)
         .context("initialising AgentDefinitionRegistry for prompt dump")?;
@@ -226,10 +227,16 @@ async fn load_dump_config(
     model_override: Option<String>,
 ) -> Result<Config> {
     let mut config = if let Some(path) = config_path_override {
-        let workspace = workspace_dir_override.as_deref().ok_or_else(|| anyhow!("config path override requires workspace override"))?;
-        Config::load_from_config_path(&path, workspace).await.context("loading hermetic Config for prompt dump")?
+        let workspace = workspace_dir_override
+            .as_deref()
+            .ok_or_else(|| anyhow!("config path override requires workspace override"))?;
+        Config::load_from_config_path(&path, workspace)
+            .await
+            .context("loading hermetic Config for prompt dump")?
     } else {
-        Config::load_or_init().await.context("loading Config for prompt dump")?
+        Config::load_or_init()
+            .await
+            .context("loading Config for prompt dump")?
     };
     config.apply_env_overrides();
     if let Some(override_dir) = workspace_dir_override {
