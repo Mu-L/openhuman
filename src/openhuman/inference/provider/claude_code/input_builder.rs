@@ -171,7 +171,24 @@ fn image_block(reference: &str) -> Option<Value> {
         if !is_managed_attachment_path(reference) {
             return None;
         }
-        let bytes = std::fs::read(reference).ok()?;
+        let attachment_id = std::path::Path::new(reference)
+            .file_name()
+            .and_then(|name| name.to_str())
+            .and_then(|name| name.split('.').next())
+            .filter(|id| !id.is_empty())
+            .unwrap_or("unknown");
+        let bytes = match std::fs::read(reference) {
+            Ok(bytes) => bytes,
+            Err(error) => {
+                tracing::warn!(
+                    target: "claude_code",
+                    attachment_id,
+                    error_kind = ?error.kind(),
+                    "[claude-code][input] managed attachment read failed"
+                );
+                return None;
+            }
+        };
         (
             media_type_from_path(reference),
             base64::engine::general_purpose::STANDARD.encode(bytes),
