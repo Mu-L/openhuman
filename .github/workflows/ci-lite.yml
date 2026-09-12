@@ -667,6 +667,7 @@ jobs:
           openhuman/agent/harness/mod.rs
           openhuman/agent/harness/session/builder/factory.rs
           openhuman/agent/harness/session/session_tests_part_01_tests.rs
+          openhuman/agent/harness/session/turn/tools.rs
           openhuman/agent/harness/subagent_runner/tool_prep_tests.rs
           openhuman/agent/registry/agents/loader.rs
           openhuman/agent/registry/agents/loader_tests_part_01_tests.rs
