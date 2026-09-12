@@ -25,7 +25,7 @@ const DISABLED_MSG: &str = "mcp feature disabled at compile time";
 /// Fails with a build-fact diagnostic instead of serving MCP over stdio.
 ///
 /// This is deliberately a stub rather than a `#[cfg]` on the `"mcp"` match arm
-/// in `src/core/cli.rs`. Deleting the arm is the naive move and is WRONG: the
+/// in `crates/openhuman-core/src/core/cli.rs`. Deleting the arm is the naive move and is WRONG: the
 /// `mcp` token would fall through to generic namespace resolution and die with
 /// `unknown namespace: mcp`, which reads like the user typo'd a command rather
 /// than like a deliberate property of this build. Keeping the arm and failing

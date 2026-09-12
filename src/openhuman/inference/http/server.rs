@@ -3,7 +3,7 @@
 //! ## Mounting
 //!
 //! The router returned by [`router()`] is merged into the core axum server
-//! in `src/core/jsonrpc.rs` via `.nest("/v1", inference::http::router())`.
+//! in `crates/openhuman-core/src/core/jsonrpc.rs` via `.nest("/v1", inference::http::router())`.
 //! It reuses the same bearer-token auth middleware that guards `/rpc`.
 //!
 //! ## Authentication

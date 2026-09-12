@@ -94,7 +94,7 @@ fn every_dispatch_site_scopes_an_origin() {
         ("src/openhuman/agent/schemas.rs", "local"),
     ];
 
-    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
+    let root = std::path::Path::new(env!("OPENHUMAN_REPOSITORY_ROOT"));
     let mut found: Vec<String> = Vec::new();
     let mut stack = vec![root.join("src")];
     while let Some(dir) = stack.pop() {

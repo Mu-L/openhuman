@@ -6,7 +6,7 @@
 //! lives inside code gated by the *same* feature — the `run_workflow` agent
 //! tool, the `openhuman.skills_*` handlers, and this domain's own tests — so
 //! those vanish together and the stub owes only what always-on code reaches:
-//! the controller aggregators (`src/core/all.rs`) and the `tools` module glob
+//! the controller aggregators (`crates/openhuman-core/src/core/all.rs`) and the `tools` module glob
 //! (`src/openhuman/tools/mod.rs`).
 //!
 //! The signatures here MUST match the real ones exactly. The disabled build

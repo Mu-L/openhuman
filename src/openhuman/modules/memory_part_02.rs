@@ -629,7 +629,7 @@ impl ModuleMemoryProvider {
 /// module binding (`memory`, `tree-summarizer`, the raw `call` dispatcher) is
 /// its own process and must do the same before its first driver call, or that
 /// call fails with "the module host policy was never published". One helper so
-/// the sequence lives in the openhuman layer — `src/core/` is transport and
+/// the sequence lives in the openhuman layer — `crates/openhuman-core/src/core/` is transport and
 /// carries a one-line call, not the business of loading config and installing
 /// sinks (review finding on #5932).
 pub async fn publish_cli_boot_policy() -> Result<Config, String> {

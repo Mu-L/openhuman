@@ -69,7 +69,7 @@ No own store. It writes imported entries through the **target memory backend** o
 
 ## Used by
 
-- `src/core/all.rs` — registers `all_migration_registered_controllers()` (line ~165) and `all_migration_controller_schemas()` (line ~319) into the global controller/schema registry, exposing both methods over CLI and JSON-RPC.
+- `crates/openhuman-core/src/core/all.rs` — registers `all_migration_registered_controllers()` (line ~165) and `all_migration_controller_schemas()` (line ~319) into the global controller/schema registry, exposing both methods over CLI and JSON-RPC.
 
 ## Notes / gotchas
 

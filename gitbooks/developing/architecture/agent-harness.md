@@ -522,7 +522,7 @@ Each agent folder under `src/openhuman/agent/registry/agents/<name>/` (and the f
 
 Most agents reuse `blueprint::canonical_turn(id)` (the standard tool-calling loop); one-pass agents use `single_shot`, the orchestrator uses the delegation chain, and the planner uses `plan_execute_review`.
 
-**RPC surface** (`schemas.rs` + `ops.rs`, registered in `src/core/all.rs`): `openhuman.agent_graph_definition_list`, `_run`, `_run_list`, `_run_get`, `_checkpoint_list`, `_resume`.
+**RPC surface** (`schemas.rs` + `ops.rs`, registered in `crates/openhuman-core/src/core/all.rs`): `openhuman.agent_graph_definition_list`, `_run`, `_run_list`, `_run_get`, `_checkpoint_list`, `_resume`.
 
 > **Status (issue #4249, superseded by the published `tinyagents` crate):** the in-house `agent_graph` engine described in this section **no longer exists**. openhuman's agent engine + orchestration now run on the published [`tinyagents`](https://crates.io/crates/tinyagents) **2.1** crate (the same LangGraph-style harness + durable graph runtime), via the adapter seam in `src/openhuman/agent/tinyagents/`. The sections above are retained as design history; the subsection below describes the live architecture.
 

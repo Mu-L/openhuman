@@ -2,7 +2,7 @@
 //!
 //! Surface is intentionally minimal — a single `connectivity_diag` read-only
 //! controller. Restart / mutate operations live in the Tauri shell (see
-//! `restart_core_process` in `app/src-tauri/src/lib.rs`) because they touch
+//! `restart_core_process` in `crates/openhuman-app/src/lib.rs`) because they touch
 //! the host process tree and can't be answered from inside the sidecar
 //! itself.
 

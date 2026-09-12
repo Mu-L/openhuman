@@ -73,6 +73,12 @@ llvm_cov() {
   bash scripts/ci-cancel-aware.sh cargo llvm-cov --features "${PRODUCT_FEATURES}" "$@"
 }
 
+# Workspace facade packages have no copy of the core's product feature
+# vocabulary. Their dependency on openhuman-core uses the contributor defaults.
+llvm_cov_package() {
+  bash scripts/ci-cancel-aware.sh cargo llvm-cov "$@"
+}
+
 # Total libtest cases executed across every scoped/full run in this invocation.
 # `run_counted` tees libtest output so the count can be read without changing
 # what the log looks like. `${PIPESTATUS[0]}` — not `$?` — carries the cargo
@@ -141,10 +147,10 @@ raw_coverage_modules() {
     sort
 }
 
-# `required-features` of each `[[test]]` target in Cargo.toml, as
+# `required-features` of each `[[test]]` target in the core package manifest, as
 # "<name><TAB><comma-separated gates>". Targets without the key are omitted.
 #
-# Parsed from Cargo.toml rather than `cargo metadata` so this stays a
+# Parsed from the package manifest rather than `cargo metadata` so this stays a
 # dependency-free awk/bash script (no jq, no python) on bash 3.2 and 5.x alike.
 test_target_required_features() {
   awk '
@@ -159,7 +165,7 @@ test_target_required_features() {
       gsub(/[" ]/, "", line); req=line; next
     }
     END { if (name != "" && req != "") print name "\t" req }
-  ' Cargo.toml
+  ' crates/openhuman-core/Cargo.toml
 }
 
 TEST_TARGET_REQS="$(test_target_required_features)"
@@ -242,8 +248,24 @@ compile_raw_coverage_target() {
 run_full() {
   log "running FULL instrumented suite (reason: $1)"
   llvm_cov clean --workspace
-  llvm_cov --no-report --no-fail-fast -p openhuman --lib
-  llvm_cov --no-report --no-fail-fast -p openhuman --bins
+  # Keep the aggregate unit-test process aligned with the canonical
+  # `test-rust-with-mock.sh` runner. A number of fixtures intentionally mutate
+  # process-global provider/config state, so libtest's default parallelism can
+  # make unrelated tests observe each other's temporary overrides. The five
+  # build-only reaper test installs process globals and therefore runs in a
+  # fresh process below, exactly as it does in the canonical runner.
+  llvm_cov --no-report --no-fail-fast -p openhuman --lib --bins -- \
+    --test-threads=1 \
+    --skip a_build_only_runtime_is_swept_before_it_can_be_invoked
+  # This test deliberately boots a real harness-only CoreBuilder. Doing so
+  # installs one-shot process globals (including DEFAULT_CONTEXT), which would
+  # narrow every later registry lookup in the aggregate unit-test process.
+  log "running isolated build-only reaper test"
+  llvm_cov --no-report --no-fail-fast -p openhuman --lib \
+    -- "openhuman::agent::tinyagents::reaper::tests::a_build_only_runtime_is_swept_before_it_can_be_invoked" \
+    --exact --test-threads=1
+  llvm_cov_package --no-report --no-fail-fast -p openhuman-embed --all-targets
+  llvm_cov_package --no-report --no-fail-fast -p openhuman-tui --all-targets
   while IFS= read -r target; do
     [ -n "${target}" ] || continue
     log "running full-suite integration target: ${target}"
@@ -299,6 +321,31 @@ for f in "${files[@]}"; do
     log "ignoring deleted rust-relevant path: ${f}"
     continue
   fi
+  original_f="${f}"
+  case "${f}" in
+    crates/openhuman-embed/src/* | crates/openhuman-embed/tests/*)
+      lib_filters_raw="${lib_filters_raw}__openhuman_embed__
+"
+      log "${original_f} → openhuman-embed test suite"
+      continue
+      ;;
+    crates/openhuman-core/src/*)
+      src_changed=true
+      f="src/${f#crates/openhuman-core/src/}"
+      ;;
+    crates/openhuman-tui/src/*)
+      lib_filters_raw="${lib_filters_raw}__openhuman_tui__
+"
+      log "${original_f} → openhuman-tui unit suite"
+      continue
+      ;;
+    crates/openhuman-tui/tests/*)
+      lib_filters_raw="${lib_filters_raw}__openhuman_tui__
+"
+      log "${original_f} → openhuman-tui test suite"
+      continue
+      ;;
+  esac
   case "${f}" in
     src/lib.rs | src/main.rs)
       run_full "root module ${f} changed — whole-crate scope"
@@ -323,7 +370,7 @@ for f in "${files[@]}"; do
       fi
       lib_filters_raw="${lib_filters_raw}${key}
 "
-      log "${f} → libtest filter '${key}'"
+      log "${original_f} → libtest filter '${key}'"
       while IFS= read -r extra_target; do
         [ -n "${extra_target}" ] || continue
         test_targets_raw="${test_targets_raw}${extra_target}
@@ -344,7 +391,7 @@ for f in "${files[@]}"; do
       fi
       lib_filters_raw="${lib_filters_raw}${key}
 "
-      log "${f} → libtest filter '${key}' (embedded asset)"
+      log "${original_f} → libtest filter '${key}' (embedded asset)"
       while IFS= read -r extra_target; do
         [ -n "${extra_target}" ] || continue
         test_targets_raw="${test_targets_raw}${extra_target}
@@ -405,9 +452,29 @@ fi
 llvm_cov clean --workspace
 
 if [ "${#lib_filters[@]}" -gt 0 ]; then
-  log "running scoped lib unit tests with filters: ${lib_filters[*]}"
-  # libtest ORs multiple positional filters — one run covers all domains.
-  run_counted llvm_cov --no-report --no-fail-fast -p openhuman --lib -- "${lib_filters[@]}"
+  declare -a core_filters=()
+  run_embed=false
+  run_tui=false
+  for filter in "${lib_filters[@]}"; do
+    case "${filter}" in
+      __openhuman_embed__) run_embed=true ;;
+      __openhuman_tui__) run_tui=true ;;
+      *) core_filters+=("${filter}") ;;
+    esac
+  done
+  if [ "${#core_filters[@]}" -gt 0 ]; then
+    log "running scoped lib unit tests with filters: ${core_filters[*]}"
+    # libtest ORs multiple positional filters — one run covers all domains.
+    run_counted llvm_cov --no-report --no-fail-fast -p openhuman --lib -- "${core_filters[@]}"
+  fi
+  if [ "${run_embed}" = true ]; then
+    log "running openhuman-embed tests"
+    run_counted llvm_cov_package --no-report --no-fail-fast -p openhuman-embed --all-targets
+  fi
+  if [ "${run_tui}" = true ]; then
+    log "running openhuman-tui tests"
+    run_counted llvm_cov_package --no-report --no-fail-fast -p openhuman-tui --all-targets
+  fi
 fi
 
 if [ "${#test_targets[@]}" -gt 0 ]; then

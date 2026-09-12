@@ -13,7 +13,7 @@
 //! to it": the whole `test_support` module — its one `test`-namespaced reset
 //! method plus the five read-only `test_support_*` introspection methods — is
 //! registered behind `#[cfg(feature = "e2e-test-support")]` at
-//! `src/core/all.rs:875`. That gate is in neither `[features] default` nor
+//! `crates/openhuman-core/src/core/all.rs:875`. That gate is in neither `[features] default` nor
 //! `scripts/ci/product-features.txt`; only `app/scripts/e2e-build.sh` turns it
 //! on. Dispatching the reset under the product feature string this wave
 //! mandates returns `unknown method`, which is the core's uniform "suppressed"

@@ -65,7 +65,7 @@ Namespace `wallet` (method form `openhuman.wallet_<function>`), 12 controllers r
 | `tx_receipt` | Fetch a transaction receipt (success, fee, block) by hash. |
 | `lookup_tx` | Look up the raw transaction payload by hash. |
 
-Wired into the registry in `src/core/all.rs` (controllers + schemas + capability description).
+Wired into the registry in `crates/openhuman-core/src/core/all.rs` (controllers + schemas + capability description).
 
 ## Agent tools
 
@@ -104,7 +104,7 @@ None. The module publishes/subscribes no `DomainEvent`s and has no `bus.rs`. Cha
 
 - `src/openhuman/tools/mod.rs` & `src/openhuman/tools/ops.rs` — register the three wallet agent tools.
 - `src/openhuman/agent/agents/loader.rs` — references the wallet tools when assembling agent toolsets.
-- `src/core/all.rs` — wires controllers/schemas/capability description.
+- `crates/openhuman-core/src/core/all.rs` — wires controllers/schemas/capability description.
 - `src/openhuman/test_support/introspect.rs` — introspection in tests.
 
 ## Notes / gotchas

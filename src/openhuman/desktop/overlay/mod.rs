@@ -1,7 +1,7 @@
 //! Overlay domain — signals pushed to the desktop overlay window.
 //!
 //! The Tauri desktop shell hosts a separate `overlay` window (see
-//! `app/src-tauri/tauri.conf.json`) that renders `OverlayApp.tsx`. Because
+//! `crates/openhuman-app/tauri.conf.json`) that renders `OverlayApp.tsx`. Because
 //! the overlay runs in its own WebView with its own JS runtime, it cannot
 //! share Redux state with the main window. Instead it subscribes to a
 //! dedicated Socket.IO connection against the core process (same pattern
@@ -17,7 +17,7 @@
 //!      broadcast to the overlay window as `overlay:attention`.
 //!
 //! Keep this module light: it is export-focused and owns one broadcast
-//! bus. The Socket.IO bridge lives in `src/core/socketio.rs`.
+//! bus. The Socket.IO bridge lives in `crates/openhuman-core/src/core/socketio.rs`.
 
 pub mod bus;
 pub mod types;

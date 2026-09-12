@@ -51,7 +51,7 @@ jobs:
         with:
           workspaces: |
             . -> target
-            app/src-tauri -> target
+            crates/openhuman-app -> target
           cache-on-failure: true
           key: e2e-playwright-linux
 

@@ -34,7 +34,7 @@ Aggregate, operator-facing views over local config. Today it owns a single read-
 `ModelHealthEntry`: `id`, `provider`, `cost_per_1m_output` (f64), `vision` (bool), `quality_score` (`f64?`, placeholder), `hallucination_rate` (`f64?`, placeholder), `agents_using` (u64, placeholder 0), `tasks_evaluated` (u64, placeholder 0).
 `ModelHealthConfigView`: `hallucination_threshold` (f64), `min_tasks_for_rating` (u64), `evaluation_window_tasks` (u64).
 
-The handler loads config via `crate::openhuman::config::rpc::load_config_with_timeout()` and returns CLI-compatible JSON through `RpcOutcome::into_cli_compatible_json()`. Wired into the registry in `src/core/all.rs` (both `all_dashboard_registered_controllers` and `all_dashboard_controller_schemas`).
+The handler loads config via `crate::openhuman::config::rpc::load_config_with_timeout()` and returns CLI-compatible JSON through `RpcOutcome::into_cli_compatible_json()`. Wired into the registry in `crates/openhuman-core/src/core/all.rs` (both `all_dashboard_registered_controllers` and `all_dashboard_controller_schemas`).
 
 ## Persistence
 
@@ -49,7 +49,7 @@ None. The module reads from in-memory `Config`; it stores no state.
 
 ## Used by
 
-- `src/core/all.rs` — registers the controller and its schema into the global RPC/CLI registry (lines ~119 and ~297).
+- `crates/openhuman-core/src/core/all.rs` — registers the controller and its schema into the global RPC/CLI registry (lines ~119 and ~297).
 
 ## Notes / gotchas
 

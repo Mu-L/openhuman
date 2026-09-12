@@ -94,12 +94,12 @@ None. This module owns no agent tools (`tools.rs` does not exist).
 
 ## Used by
 
-Many domains consume `AuthService` / session helpers / Composio-direct key, including: `src/core/{all,auth,jsonrpc}.rs` (controller wiring + auth gate), `src/api/jwt.rs`, `app_state/ops.rs` (session snapshot), `channels/*` (managed credentials), `composio/{client,ops}.rs` (BYO key), `config/schema/*`, `embeddings/cloud.rs`, `encryption/ops.rs`, `http_host/auth.rs`, `inference/*` (provider auth, OpenAI OAuth), `migrations/unify_ai_provider_settings.rs`, `referral/ops.rs`, `subconscious/engine.rs`, and `webhooks`.
+Many domains consume `AuthService` / session helpers / Composio-direct key, including: `crates/openhuman-core/src/core/{all,auth,jsonrpc}.rs` (controller wiring + auth gate), `crates/openhuman-core/src/api/jwt.rs`, `app_state/ops.rs` (session snapshot), `channels/*` (managed credentials), `composio/{client,ops}.rs` (BYO key), `config/schema/*`, `embeddings/cloud.rs`, `encryption/ops.rs`, `http_host/auth.rs`, `inference/*` (provider auth, OpenAI OAuth), `migrations/unify_ai_provider_settings.rs`, `referral/ops.rs`, `subconscious/engine.rs`, and `webhooks`.
 
 ## Notes / gotchas
 
 - `mod.rs` re-exports `ops` both as `ops::*` and as `pub use ops as rpc` — call sites use `credentials::rpc::*`; this is the documented `rpc.rs`-equivalent exception (no separate `rpc.rs` file exists).
-- Doc comments in `responses.rs` / `session_support.rs` reference `crate::core_server` / `crate::core_server::types`; those paths are historical — the actual transport crate is `src/core/`.
+- Doc comments in `responses.rs` / `session_support.rs` reference `crate::core_server` / `crate::core_server::types`; those paths are historical — the actual transport crate is `crates/openhuman-core/src/core/`.
 - `store_session` does heavy orchestration beyond just storing a token (directory activation, thread purge, service startup). Treat it as the login funnel, not a thin setter.
 - Local offline sessions are detected purely by the JWT signature segment being literally `local` (`is_local_session_token`); they skip backend validation and are never treated as expired.
 - Secrets are never logged — debug lines record only lengths/markers, honoring the CLAUDE.md redaction rule.

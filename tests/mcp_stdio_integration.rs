@@ -21,7 +21,7 @@ async fn stdio_client_talks_to_openhuman_mcp_server() {
         env!("CARGO_BIN_EXE_openhuman-core").to_string(),
         vec!["mcp".into()],
         Vec::new(),
-        Some(PathBuf::from(env!("CARGO_MANIFEST_DIR"))),
+        Some(PathBuf::from(env!("OPENHUMAN_REPOSITORY_ROOT"))),
         // The identity is the contract's now; the client takes it by
         // reference rather than consuming one.
         &McpClientIdentityConfig::default(),

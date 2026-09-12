@@ -32,7 +32,7 @@ From `mod.rs` re-exports:
 
 ## RPC / controllers
 
-Two controllers in the `referral` namespace, registered into the global registry via `src/core/all.rs`:
+Two controllers in the `referral` namespace, registered into the global registry via `crates/openhuman-core/src/core/all.rs`:
 
 | Method | Inputs | Output | Backend call |
 | --- | --- | --- | --- |
@@ -57,7 +57,7 @@ None of its own. The domain is stateless — it reads the backend session token 
 
 ## Used by
 
-- `src/core/all.rs` — registers `all_referral_registered_controllers()` into the controller registry (line ~213) and `all_referral_controller_schemas()` into the schema list (line ~345), exposing both methods to CLI and JSON-RPC.
+- `crates/openhuman-core/src/core/all.rs` — registers `all_referral_registered_controllers()` into the controller registry (line ~213) and `all_referral_controller_schemas()` into the schema list (line ~345), exposing both methods to CLI and JSON-RPC.
 
 ## Notes / gotchas
 

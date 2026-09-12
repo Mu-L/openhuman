@@ -22,7 +22,7 @@ use crate::openhuman::agent::context::prompt::ConnectedIntegrationTool;
 fn load_real_toolkit(toolkit: &str) -> Vec<ConnectedIntegrationTool> {
     let path = format!(
         "{}/tests/fixtures/composio_{}.json",
-        env!("CARGO_MANIFEST_DIR"),
+        env!("OPENHUMAN_REPOSITORY_ROOT"),
         toolkit
     );
     let raw = std::fs::read_to_string(&path)

@@ -51,7 +51,7 @@ Skipping this step produces shallow reviews that miss architectural/consistency 
 - Controllers exposed via `schemas.rs` + registry, not ad-hoc branches in `core/cli.rs` / `core/jsonrpc.rs`.
 - No dynamic `import()` in production `app/src` code.
 - Frontend reads `VITE_*` via `app/src/utils/config.ts`, not `import.meta.env` directly.
-- `app/src-tauri` is desktop-only; no Android/iOS branches there.
+- `crates/openhuman-app` is desktop-only; no Android/iOS branches there.
 - Domain `mod.rs` is export-focused; operational code in `ops.rs` / `store.rs` / `types.rs`.
 - Event bus via `publish_global` / `subscribe_global` / `register_native_global` / `request_native_global` — never construct `EventBus` / `NativeRegistry` directly.
 - Files under ~500 lines preferred.
@@ -190,10 +190,10 @@ cd app && pnpm lint
 cd app && pnpm format       # auto-fix
 cd app && pnpm test:unit
 
-# Rust (if src/ or app/src-tauri changed)
+# Rust (if src/ or crates/openhuman-app changed)
 cargo fmt --manifest-path Cargo.toml
 cargo check --manifest-path Cargo.toml
-cargo check --manifest-path app/src-tauri/Cargo.toml
+cargo check --manifest-path crates/openhuman-app/Cargo.toml
 cargo test --manifest-path Cargo.toml
 ```
 

@@ -69,7 +69,7 @@ Does not use the typed `DomainEvent` bus. Instead `dictation_listener` owns two 
 - `DictationEvent` (`pressed`/`released`) — `publish_dictation_event` / `subscribe_dictation_events`.
 - transcription text — `publish_transcription` / `subscribe_transcription_results`.
 
-`src/core/socketio.rs` subscribes to both and forwards them to Socket.IO clients (so dictation hotkeys and results reach the frontend without Tauri-side shortcut registration).
+`crates/openhuman-core/src/core/socketio.rs` subscribes to both and forwards them to Socket.IO clients (so dictation hotkeys and results reach the frontend without Tauri-side shortcut registration).
 
 ## Persistence
 
@@ -86,9 +86,9 @@ No dedicated `store.rs`. State is persisted into the shared TOML `Config` via th
 
 ## Used by
 
-- `src/core/all.rs` — registers the voice controllers.
-- `src/core/socketio.rs` — subscribes to the dictation/transcription broadcast buses; `streaming::handle_dictation_ws`.
-- `src/core/jsonrpc.rs` — wiring.
+- `crates/openhuman-core/src/core/all.rs` — registers the voice controllers.
+- `crates/openhuman-core/src/core/socketio.rs` — subscribes to the dictation/transcription broadcast buses; `streaming::handle_dictation_ws`.
+- `crates/openhuman-core/src/core/jsonrpc.rs` — wiring.
 - `src/openhuman/desktop_companion/pipeline.rs`, `src/openhuman/meet/agent/brain.rs`, `src/openhuman/voice/audio_toolkit/ops.rs`, `src/openhuman/security/credentials/ops.rs` — call factory / TTS / transcription helpers.
 - `src/openhuman/inference/local/install_piper.rs` — references voice constants/presets.
 

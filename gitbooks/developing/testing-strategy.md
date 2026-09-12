@@ -105,7 +105,7 @@ cargo clippy --manifest-path Cargo.toml -- -D warnings
 cargo test --manifest-path Cargo.toml
 
 # Tauri shell
-cargo check --manifest-path app/src-tauri/Cargo.toml
+cargo check --manifest-path crates/openhuman-app/Cargo.toml
 
 # Frontend
 pnpm typecheck

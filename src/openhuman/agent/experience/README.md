@@ -36,7 +36,7 @@ From `mod.rs` re-exports:
 
 ## RPC / controllers
 
-Namespace `agent_experience` (registered into `src/core/all.rs`):
+Namespace `agent_experience` (registered into `crates/openhuman-core/src/core/all.rs`):
 
 | Method | Inputs | Output |
 | --- | --- | --- |
@@ -79,7 +79,7 @@ Records are stored through the shared `Memory` abstraction (no dedicated DB):
 
 ## Used by
 
-- `src/core/all.rs` — registers controllers/schemas and the namespace description.
+- `crates/openhuman-core/src/core/all.rs` — registers controllers/schemas and the namespace description.
 - `src/openhuman/agent/harness/session/builder.rs` — constructs `AgentExperienceCaptureHook::new(...)` and registers it for the learning/capture flow.
 - `src/openhuman/agent/harness/session/turn.rs` — imports from this module and `inject_agent_experience_context` to retrieve + prepend the experience block into the enriched user message before a turn runs.
 - `src/openhuman/mod.rs` — declares the module.

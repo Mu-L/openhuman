@@ -40,7 +40,7 @@ Namespace `workspace`; three controllers (defined in `schemas.rs`, all return th
 | `openhuman.workspace_file_write` | `filename`, `contents` | Overwrite an editable persona file (size-capped server-side). |
 | `openhuman.workspace_file_reset` | `filename` | Restore an editable persona file to its bundled default. |
 
-Handlers resolve `workspace_dir` from config (`config_rpc::load_config_with_timeout`), trim the filename, delegate to `rpc.rs`, and serialize via `RpcOutcome::into_cli_compatible_json`. Unknown function names yield an `unknown` schema. Wired into the global registry in `src/core/all.rs`.
+Handlers resolve `workspace_dir` from config (`config_rpc::load_config_with_timeout`), trim the filename, delegate to `rpc.rs`, and serialize via `RpcOutcome::into_cli_compatible_json`. Unknown function names yield an `unknown` schema. Wired into the global registry in `crates/openhuman-core/src/core/all.rs`.
 
 ## Persistence
 
@@ -62,7 +62,7 @@ The editable surface is restricted to the `BOOTSTRAP_FILES` allowlist (`SOUL.md`
 
 ## Used by
 
-- `src/core/all.rs` — extends the global controller + schema registries with the workspace controllers (the only external consumer found in-tree). The CLI/JSON-RPC surface reaches `init_workspace` and the persona RPCs through that registry rather than direct calls.
+- `crates/openhuman-core/src/core/all.rs` — extends the global controller + schema registries with the workspace controllers (the only external consumer found in-tree). The CLI/JSON-RPC surface reaches `init_workspace` and the persona RPCs through that registry rather than direct calls.
 
 ## Notes / gotchas
 

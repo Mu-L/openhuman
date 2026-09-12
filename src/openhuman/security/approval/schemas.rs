@@ -1,7 +1,7 @@
 //! Controller schemas + handlers for the `approval` namespace.
 //!
 //! Wires `approval_list_pending` and `approval_decide` into the
-//! global registry consumed by `src/core/all.rs`.
+//! global registry consumed by `crates/openhuman-core/src/core/all.rs`.
 
 use serde_json::{Map, Value};
 

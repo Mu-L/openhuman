@@ -30,7 +30,7 @@ Persistent, Rust-native Socket.IO client to the OpenHuman backend. The `socket` 
 
 - `SocketManager` — the connection handle. Key methods: `new`, `connect(url, token)`, `connect_with_provider(url, provider)`, `disconnect`, `emit(event, data)`, `emit_with_ack(event, data, timeout)`, `get_state() -> SocketState`, `is_connected`, `set_webhook_router` / `webhook_router`.
 - `global_socket_manager() -> Option<&'static Arc<SocketManager>>` and `set_global_socket_manager(Arc<SocketManager>)` — the process-global singleton (set once at bootstrap).
-- `all_socket_controller_schemas` / `all_socket_registered_controllers` — controller-registry exports wired into `src/core/all.rs`.
+- `all_socket_controller_schemas` / `all_socket_registered_controllers` — controller-registry exports wired into `crates/openhuman-core/src/core/all.rs`.
 
 Internal-only (`pub(crate)` / `pub(super)`): `TokenProvider` and its builders, `SharedState`, `ConnectionOutcome`, `WsStream`, the `ws_loop` and event-handler helpers.
 
@@ -83,8 +83,8 @@ None of its own. State (`status`, `socket_id`, `error`, attached `WebhookRouter`
 
 ## Used by
 
-- `src/core/all.rs` — registers the socket controllers.
-- `src/core/jsonrpc.rs`, `src/core/observability.rs` — reference the socket namespace/state.
+- `crates/openhuman-core/src/core/all.rs` — registers the socket controllers.
+- `crates/openhuman-core/src/core/jsonrpc.rs`, `crates/openhuman-core/src/core/observability.rs` — reference the socket namespace/state.
 - `src/openhuman/platform/connectivity/rpc.rs` — connectivity/status surfacing.
 - `src/openhuman/skills/webhooks/{ops.rs,bus.rs}` — emit webhook responses back through the global manager.
 - `src/openhuman/security/devices/tunnel_client.rs` — emits tunnel frames/registration over the socket.

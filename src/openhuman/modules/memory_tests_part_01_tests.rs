@@ -168,7 +168,10 @@ fn every_operation_label_is_classified_and_no_mutation_is_a_read() {
     // Discovered, not enumerated. A hard-coded `memory_part_01..04` would keep
     // passing after the file is split differently — scanning fewer sources,
     // finding fewer labels, and quietly checking less than it claims to.
-    let modules_dir = format!("{}/src/openhuman/modules", env!("CARGO_MANIFEST_DIR"));
+    let modules_dir = format!(
+        "{}/src/openhuman/modules",
+        env!("OPENHUMAN_REPOSITORY_ROOT")
+    );
     let mut parts: Vec<std::path::PathBuf> = std::fs::read_dir(&modules_dir)
         .unwrap_or_else(|error| panic!("read {modules_dir}: {error}"))
         .filter_map(Result::ok)

@@ -385,7 +385,7 @@ export interface ChatSubagentDoneEvent {
  * `subagent_tool_call`, `subagent_tool_result`).
  *
  * Matches the Rust `SubagentProgressDetail` struct in
- * `src/core/socketio.rs` — every field is optional so older cores that
+ * `crates/openhuman-core/src/core/socketio.rs` — every field is optional so older cores that
  * don't emit it stay parseable.
  */
 export interface SubagentProgressDetail {

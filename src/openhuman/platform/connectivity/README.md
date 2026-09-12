@@ -33,7 +33,7 @@ Diagnostics for the local core's reachability and the live backend Socket.IO sta
 
 - **`openhuman.connectivity_diag`** (namespace `connectivity`, function `diag`) — read-only, no inputs. Returns a single output field `diag` (JSON) containing the `ConnectivityDiagResponse` snapshot. Described as cheap and safe to poll. Registered via `all_registered_controllers` → `handle_diag` → `rpc::diag()`.
 
-Restart/mutate operations are intentionally **not** here — they live in the Tauri shell (`restart_core_process` in `app/src-tauri/src/lib.rs`) because they touch the host process tree and can't be answered from inside the core itself.
+Restart/mutate operations are intentionally **not** here — they live in the Tauri shell (`restart_core_process` in `crates/openhuman-app/src/lib.rs`) because they touch the host process tree and can't be answered from inside the core itself.
 
 ## Persistence
 
@@ -49,8 +49,8 @@ None — the module holds no state. The diag snapshot reads only the environment
 
 ## Used by
 
-- `src/core/all.rs` — registers the controller (`all_connectivity_registered_controllers`) and schema (`all_connectivity_controller_schemas`), and routes the `"connectivity"` namespace.
-- `src/core/jsonrpc.rs` — calls `connectivity::rpc::pick_listen_port_for_host(...)` during core bind to select the embedded HTTP listener port; afterward syncs `OPENHUMAN_CORE_RPC_URL` to the actual bound port so `resolve_listen_port()` (and thus `connectivity_diag`) reports the live listener after a fallback.
+- `crates/openhuman-core/src/core/all.rs` — registers the controller (`all_connectivity_registered_controllers`) and schema (`all_connectivity_controller_schemas`), and routes the `"connectivity"` namespace.
+- `crates/openhuman-core/src/core/jsonrpc.rs` — calls `connectivity::rpc::pick_listen_port_for_host(...)` during core bind to select the embedded HTTP listener port; afterward syncs `OPENHUMAN_CORE_RPC_URL` to the actual bound port so `resolve_listen_port()` (and thus `connectivity_diag`) reports the live listener after a fallback.
 - `src/openhuman/mod.rs` — declares the module.
 
 ## Notes / gotchas

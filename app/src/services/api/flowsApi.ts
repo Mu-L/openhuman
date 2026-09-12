@@ -14,7 +14,7 @@
  * Wire shape note: every `src/openhuman/flows/ops.rs` handler returns its
  * value via `RpcOutcome::single_log(value, "...")`, which
  * `into_cli_compatible_json` ALWAYS wraps as `{ result: value, logs: [...] }`
- * (see `src/rpc/mod.rs`) because a log message is always attached. `callCoreRpc`
+ * (see `crates/openhuman-core/src/rpc/mod.rs`) because a log message is always attached. `callCoreRpc`
  * already unwraps the outer JSON-RPC envelope, so the value this client
  * receives is that `{ result, logs }` object — {@link unwrapCliEnvelope} peels
  * it back to the actual payload. This mirrors the private helper of the same

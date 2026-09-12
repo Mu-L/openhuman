@@ -235,10 +235,7 @@ pub fn is_current_materialization(dir: &Path, skill: &BundledSkill) -> bool {
     let Ok(dir_meta) = std::fs::symlink_metadata(dir) else {
         return false;
     };
-    if skill.validate().is_err()
-        || !dir_meta.is_dir()
-        || dir_meta.file_type().is_symlink()
-    {
+    if skill.validate().is_err() || !dir_meta.is_dir() || dir_meta.file_type().is_symlink() {
         return false;
     }
     let expected: std::collections::HashSet<&str> = skill.files.iter().map(|f| f.path).collect();
@@ -266,7 +263,8 @@ pub fn is_current_materialization(dir: &Path, skill: &BundledSkill) -> bool {
             let Ok(meta) = std::fs::symlink_metadata(entry.path()) else {
                 return false;
             };
-            let Ok(relative) = entry.path().strip_prefix(dir) else {
+            let entry_path = entry.path();
+            let Ok(relative) = entry_path.strip_prefix(dir) else {
                 return false;
             };
             let relative = relative.to_string_lossy().replace('\\', "/");

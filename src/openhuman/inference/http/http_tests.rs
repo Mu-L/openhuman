@@ -26,7 +26,7 @@ const TEST_RPC_TOKEN: &str = "inference-http-tests-token";
 /// Returns the bearer that is actually installed in `RPC_TOKEN` after init.
 /// This may not equal `TEST_RPC_TOKEN`: the `RPC_TOKEN` `OnceLock` is shared
 /// across the whole test binary, and a sibling test (e.g. the in-memory-seed
-/// regression in `src/core/auth.rs`) may have populated it first. Token-
+/// regression in `crates/openhuman-core/src/core/auth.rs`) may have populated it first. Token-
 /// agnostic callers should treat the return value as the source of truth.
 fn ensure_test_rpc_auth() -> String {
     static INIT: Once = Once::new();
@@ -103,7 +103,7 @@ async fn test_models_no_bearer_returns_401() {
 #[tokio::test]
 async fn test_chat_completions_with_bearer_not_rejected_as_auth_error() {
     // Read whatever token is actually installed in `RPC_TOKEN`. A sibling
-    // test in `src/core/auth.rs` may seed the `OnceLock` first with its
+    // test in `crates/openhuman-core/src/core/auth.rs` may seed the `OnceLock` first with its
     // own value, so we cannot rely on `TEST_RPC_TOKEN` matching.
     let token = ensure_test_rpc_auth();
 

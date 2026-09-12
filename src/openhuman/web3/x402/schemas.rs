@@ -1,7 +1,7 @@
 //! Controller schemas + handlers for the `x402` namespace.
 //!
 //! Wires `x402_get_summary`, `x402_list_payments`, and `x402_update_budget`
-//! into the global registry consumed by `src/core/all.rs`.
+//! into the global registry consumed by `crates/openhuman-core/src/core/all.rs`.
 
 use serde::Deserialize;
 use serde_json::{json, Map, Value};

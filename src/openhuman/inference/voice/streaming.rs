@@ -29,7 +29,7 @@
 //! ## Authentication
 //! `GET /ws/dictation` is authenticated at the upgrade boundary (C4 / issue #1924).
 //! The browser WebSocket API cannot set arbitrary request headers on upgrade, so the
-//! check lives in `dictation_ws_handler` (`src/core/jsonrpc.rs`), not here: it requires
+//! check lives in `dictation_ws_handler` (`crates/openhuman-core/src/core/jsonrpc.rs`), not here: it requires
 //! the per-process core bearer via `Authorization: Bearer <token>` (native callers) or
 //! `?token=<token>` (browser clients), plus the same origin allowlist Socket.IO enforces,
 //! and rejects the upgrade with 401/403 before this function runs. Do NOT add a

@@ -8543,7 +8543,7 @@ async fn public_paths_accessible_without_token() {
 // via either the Authorization header OR a `?token=…` query param. The
 // query-param fallback exists because browser `EventSource` cannot attach
 // custom headers (whatwg/html §10.7). See `QUERY_TOKEN_PATHS` in
-// src/core/auth.rs.
+// crates/openhuman-core/src/core/auth.rs.
 // ---------------------------------------------------------------------------
 
 /// GET /events/webhooks with neither header nor query token → 401.
@@ -14102,7 +14102,7 @@ async fn memory_flavour_agent_tool_e2e_5172() {
 /// #5839 deleted the `memory-git` feature, `src/openhuman/memory/diff/`, the
 /// `memory_diff` tool and `tests/memory_artifacts_e2e.rs`. What it left behind
 /// is a unit test over `all_controller_schemas()`
-/// (`src/core/all_tests.rs::memory_diff_controllers_are_gone_and_memory_survives`),
+/// (`crates/openhuman-core/src/core/all_tests.rs::memory_diff_controllers_are_gone_and_memory_survives`),
 /// which reads the registry as a data structure. Nothing dispatched a removed
 /// method through the live router, so nothing proved the wire surface actually
 /// went with it — a re-registration behind a different namespace, or a stale

@@ -40,7 +40,7 @@ Skipping this produces shallow reviews that miss architectural issues.
 - Controllers exposed via `schemas.rs` + registry, not ad-hoc branches in `core/cli.rs` / `core/jsonrpc.rs`.
 - No dynamic `import()` in production `app/src` code.
 - Frontend reads `VITE_*` via `app/src/utils/config.ts`, not `import.meta.env` directly.
-- `app/src-tauri` is desktop-only; no Android/iOS branches there.
+- `crates/openhuman-app` is desktop-only; no Android/iOS branches there.
 - Domain `mod.rs` is export-focused; operational code in `ops.rs` / `store.rs` / `types.rs`.
 - Event bus via `publish_global` / `subscribe_global` / `register_native_global` / `request_native_global` — never construct `EventBus` / `NativeRegistry` directly.
 - CEF webviews must not grow new JS injection (see `CLAUDE.md` for details).

@@ -76,7 +76,7 @@ Internal openhuman/core modules: **none** — the keyring module's own files onl
 
 Discovered consumers (`crate::openhuman::security::keyring::*`):
 
-- `src/lib.rs` and `src/core/jsonrpc.rs` — call `init_master_key()` at startup.
+- `src/lib.rs` and `crates/openhuman-core/src/core/jsonrpc.rs` — call `init_master_key()` at startup.
 - `src/openhuman/security/secrets.rs`, `src/openhuman/security/mod.rs` — secret handling.
 - `src/openhuman/config/schema/load.rs` — `SecretStore::new` / `is_encrypted` to encrypt/decrypt config fields on load.
 - `src/openhuman/security/credentials/profiles.rs`, `credentials/ops.rs` — `SecretStore`, `is_available`, `get`/`set`/`delete` for per-profile credential storage.

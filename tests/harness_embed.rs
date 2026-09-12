@@ -42,7 +42,7 @@ fn chat_completion(content: &str) -> serde_json::Value {
 }
 
 /// A config that keeps the turn offline: no local runtimes, no spaCy, no
-/// embeddings endpoint. Mirrors `src/bin/library_profile/harness.rs::fixture()`,
+/// embeddings endpoint. Mirrors `crates/openhuman-core/src/bin/library_profile/harness.rs::fixture()`,
 /// which is the recipe already proven against real turns.
 fn offline_config() -> Config {
     let mut config = Config::default();
@@ -52,6 +52,18 @@ fn offline_config() -> Config {
     config.memory_tree.embedding_endpoint = None;
     config.memory_tree.embedding_model = None;
     config.memory_tree.embedding_strict = false;
+    // User-message memory autosave is intentionally fire-and-forget. It can
+    // still be writing after a turn returns, which is useful in the product but
+    // unrelated to this test's provider/session/concurrency contract and would
+    // race the final ephemeral-workspace cleanup assertion.
+    config.memory.auto_save = false;
+    // Session-store dual writes and shadow reads are also deliberately
+    // fire-and-forget. This test already verifies the authoritative session
+    // database; leaving the migration mirrors enabled makes their detached
+    // filesystem work race the harness's synchronous ephemeral cleanup after
+    // the 100-turn stress case.
+    config.agent.session_dual_write = false;
+    config.agent.session_shadow_reads = false;
     config.default_temperature = 0.0;
     config
 }

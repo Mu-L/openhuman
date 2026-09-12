@@ -10,7 +10,7 @@
 //!
 //! Unlike the rest of `medulla`, these types stay compiled whether or not the
 //! `medulla` feature is on. They are inert serde/std definitions with no
-//! coupling to their gated siblings, and `src/embed/` names them in public
+//! coupling to their gated siblings, and `crates/openhuman-core/src/embed/` names them in public
 //! signatures — gating them would take the facade down with them.
 //!
 //! This follows the rule `AGENTS.md` draws from the `skills` / `mcp`

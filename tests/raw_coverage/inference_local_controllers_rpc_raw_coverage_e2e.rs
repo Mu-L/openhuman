@@ -15,7 +15,7 @@
 //!    frontend actually dispatches ("openhuman.inference_tts"). A namespace or
 //!    function rename would therefore break every JS caller and every embedder
 //!    that spells the method out, while the whole Rust suite stayed green.
-//!    `rpc_method_name()` (`src/core/all.rs:1069`) is the contract; this is the
+//!    `rpc_method_name()` (`crates/openhuman-core/src/core/all.rs:1069`) is the contract; this is the
 //!    only place it is pinned.
 //!
 //! 2. **The controller boundary itself for the five that had none**:

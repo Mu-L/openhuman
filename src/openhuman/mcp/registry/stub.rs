@@ -31,7 +31,7 @@ const DISABLED_MSG: &str = "mcp feature disabled at compile time";
 /// build, so every `openhuman.mcp_clients_*` method is an unknown method over
 /// `/rpc` and absent from `/schema`.
 ///
-/// `src/core/all.rs` pushes this straight into its controller vec with no
+/// `crates/openhuman-core/src/core/all.rs` pushes this straight into its controller vec with no
 /// `#[cfg]` of its own — the empty vec is what keeps that (very hot,
 /// multi-agent) file untouched by this gate.
 pub fn all_mcp_registry_registered_controllers() -> Vec<crate::core::all::RegisteredController> {

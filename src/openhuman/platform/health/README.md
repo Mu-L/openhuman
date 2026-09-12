@@ -74,8 +74,8 @@ None on disk. State lives in a process-global `OnceLock<HealthRegistry>` (lazy-i
 
 ## Used by
 
-- `src/core/all.rs` — registers `all_health_*` controllers into the registry.
-- `src/core/jsonrpc.rs` — references health (snapshot/system_info surface).
+- `crates/openhuman-core/src/core/all.rs` — registers `all_health_*` controllers into the registry.
+- `crates/openhuman-core/src/core/jsonrpc.rs` — references health (snapshot/system_info surface).
 - `src/openhuman/channels/runtime/{startup,supervision}.rs` and `src/openhuman/channels/tests/health.rs` — channel runtime updates component health.
 - `src/openhuman/cron/scheduler.rs`, `src/openhuman/platform/update/scheduler.rs` — emit/consume health signals.
 

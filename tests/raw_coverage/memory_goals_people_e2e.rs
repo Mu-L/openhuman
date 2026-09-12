@@ -477,7 +477,7 @@ async fn memory_goals_refuse_pii_secrets_blank_text_and_unknown_ids() {
 
     // The type contract. This is `core::all::validate_params`' wording, not the
     // handler's: every dispatch is schema-validated for required-presence and
-    // declared types before the handler body runs (`src/core/all.rs:1334`), so
+    // declared types before the handler body runs (`crates/openhuman-core/src/core/all.rs:1334`), so
     // `parse_value`'s own "invalid params: …" is unreachable over RPC.
     let missing_text = rpc(
         &harness.rpc_base,

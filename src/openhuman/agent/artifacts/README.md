@@ -67,7 +67,7 @@ None. No `bus.rs`; the module publishes/subscribes to no `DomainEvent`s.
 
 ## Used by
 
-- `src/core/all.rs` — registers `all_artifacts_registered_controllers()` (line ~141) and `all_artifacts_controller_schemas()` (line ~307) into the global controller/schema registries. No other in-crate consumer of `save_artifact_meta` was found, so artifact creation is not yet wired from a producer domain.
+- `crates/openhuman-core/src/core/all.rs` — registers `all_artifacts_registered_controllers()` (line ~141) and `all_artifacts_controller_schemas()` (line ~307) into the global controller/schema registries. No other in-crate consumer of `save_artifact_meta` was found, so artifact creation is not yet wired from a producer domain.
 
 ## Notes / gotchas
 
