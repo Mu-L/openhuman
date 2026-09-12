@@ -297,23 +297,7 @@ impl CoreContext {
 
         // Register the process default context (first build wins). Dispatch
         // resolves to this when no per-call context is scoped.
-        //
-        // Not under `cfg(test)`: the lib test binary runs every unit test in
-        // one process, and a `OnceLock` cannot be unset. A single test that
-        // builds a core (`reaper_tests::a_build_only_runtime_is_swept_…`, with
-        // `DomainSet::harness()` and a tmp workspace) would otherwise install
-        // that narrowed context as the fallback for every test that runs after
-        // it — `all_tools` drops the acting tool groups, memory-binding and
-        // origin-label tests see a workspace they never set up — which is
-        // exactly the order-dependent failure CI's full `--test-threads=1`
-        // lane hit. Unit tests that need an ambient context scope one
-        // explicitly via `CoreContext::scope` / `for_test`; the builder still
-        // hands the built context back directly. Integration tests compile the
-        // lib without `cfg(test)`, so the desktop/CLI path is unchanged.
-        #[cfg(not(test))]
-        {
-            let _ = DEFAULT_CONTEXT.set(ctx.clone());
-        }
+        let _ = DEFAULT_CONTEXT.set(ctx.clone());
 
         Ok((ctx, has_operator_token, runtime_config))
     }
