@@ -162,7 +162,15 @@ fn chunk_query_from_filter(filter: &ChunkFilter, limit: u32, offset: u32) -> Opt
         }
     }
 
-    let content_contains = query_tokens(filter.query.as_deref()).first().cloned();
+    let tokens = query_tokens(filter.query.as_deref());
+    if filter
+        .query
+        .as_deref()
+        .is_some_and(|query| !query.trim().is_empty() && tokens.is_empty())
+    {
+        return None;
+    }
+    let content_contains = tokens.first().cloned();
 
     Some(ChunkQuery {
         source_ids: filter.source_ids.clone().unwrap_or_default(),
@@ -384,6 +392,12 @@ pub async fn search_rpc(
 ) -> Result<RpcOutcome<Vec<ChunkRow>>, String> {
     let limit = k.clamp(1, MAX_LIST_LIMIT);
     let tokens = query_tokens(Some(&query));
+    if !query.trim().is_empty() && tokens.is_empty() {
+        return Ok(RpcOutcome::single_log(
+            Vec::new(),
+            format!("memory_tree::read: search query_len={} n=0", query.len()),
+        ));
+    }
     let content_contains = if tokens.len() > 1 {
         None
     } else {

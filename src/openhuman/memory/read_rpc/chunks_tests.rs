@@ -193,6 +193,15 @@ fn single_token_filter_uses_normalized_token() {
     assert_eq!(query.content_contains.as_deref(), Some("phoenix"));
 }
 
+#[test]
+fn symbol_only_filter_matches_nothing() {
+    let filter = ChunkFilter {
+        query: Some("++".into()),
+        ..ChunkFilter::default()
+    };
+    assert!(chunk_query_from_filter(&filter, 10, 0).is_none());
+}
+
 // ── the wire shape ───────────────────────────────────────────────────────
 
 /// `ChunkListRow` carries no body, and nothing is lost: the preview has always
