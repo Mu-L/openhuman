@@ -163,6 +163,7 @@ fn to_outcomes(results: &[ToolExecutionResult]) -> Vec<ToolOutcome> {
             output: result.output.clone(),
             success: result.success,
             tool_call_id: result.tool_call_id.clone(),
+            trusted_verbatim: false,
         })
         .collect()
 }
@@ -188,6 +189,7 @@ fn to_transcript_entry(message: &ConversationMessage) -> TranscriptEntry {
                 .map(|result| ToolResultEntry {
                     tool_call_id: result.tool_call_id.clone(),
                     content: result.content.clone(),
+                    trusted_verbatim: result.trusted_verbatim,
                 })
                 .collect(),
         ),
@@ -291,7 +293,12 @@ fn dispatch_format_results(
     dialect: &dyn ToolDialect,
     results: &[ToolExecutionResult],
 ) -> ConversationMessage {
-    from_transcript_entry(dialect.format_results(&to_outcomes(results)))
+    dialect
+        .format_results(&to_outcomes(results))
+        .into_iter()
+        .map(from_transcript_entry)
+        .next()
+        .unwrap_or_else(|| ConversationMessage::ToolResults(Vec::new()))
 }
 
 fn dispatch_provider_messages(
