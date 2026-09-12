@@ -18,8 +18,8 @@
 //!    they were asked, unlike the destructive handlers in `admin_tests.rs`.
 
 use super::{
-    chunk_query_from_filter, chunk_row_from_list_row, content_predicate, list_chunks_rpc,
-    list_sources_rpc, pair_leaves_with_rows, search_rpc,
+    chunk_query_from_filter, chunk_row_from_list_row, list_chunks_rpc, list_sources_rpc,
+    pair_leaves_with_rows, search_rpc,
 };
 use chrono::TimeZone;
 
@@ -172,16 +172,15 @@ fn the_page_bounds_and_predicates_ride_one_query() {
     assert!(!query.exclude_dropped);
 }
 
-/// The substring travels bare. Wrapping it in `%…%` host-side would double the
-/// driver's own wrapping and match nothing.
+/// Queries are split on punctuation so punctuation in either the stored
+/// content or the query cannot prevent a token match.
 #[test]
-fn the_content_predicate_is_trimmed_and_unwrapped() {
-    assert_eq!(content_predicate("  phoenix  ").as_deref(), Some("phoenix"));
-    assert_eq!(content_predicate("   "), None);
-    assert_eq!(content_predicate(""), None);
-    // `%` and `_` are the user's text; escaping them is the driver's job, so
-    // they must arrive intact rather than pre-mangled here.
-    assert_eq!(content_predicate("50%_off").as_deref(), Some("50%_off"));
+fn query_tokens_ignore_punctuation() {
+    assert_eq!(
+        super::query_tokens(Some("  phoenix, migration! ")),
+        ["phoenix", "migration"]
+    );
+    assert!(super::query_tokens(Some("   ")).is_empty());
 }
 
 // ── the wire shape ───────────────────────────────────────────────────────

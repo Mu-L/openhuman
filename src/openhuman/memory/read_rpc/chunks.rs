@@ -92,9 +92,10 @@ async fn list_chunks_page(
     let (rows, total) = if tokens.len() > 1 {
         let mut unpaged = query.clone();
         unpaged.content_contains = None;
-        unpaged.limit = None;
+        // Keep every provider scan bounded before intersecting the results.
+        unpaged.limit = Some(limit as usize);
         unpaged.offset = None;
-        let rows = token_and_details(chunks, &unpaged, &tokens).await?;
+        let rows = token_and_details(chunks, &unpaged, &tokens, "list_chunks").await?;
         let total = rows.len() as u64;
         let page = rows
             .into_iter()
@@ -191,7 +192,12 @@ async fn token_and_details(
     chunks: &dyn MemoryChunks,
     query: &ChunkQuery,
     tokens: &[String],
+    operation: &str,
 ) -> Result<Vec<ChunkListRow>, String> {
+    log::debug!(
+        "[memory_tree::read] {operation}: token-and provider calls={}",
+        tokens.len()
+    );
     let mut matches: Option<Vec<ChunkListRow>> = None;
     for token in tokens {
         let mut token_query = query.clone();
@@ -401,10 +407,10 @@ pub async fn search_rpc(
     let tokens = query_tokens(Some(&query));
     let rows = if tokens.len() > 1 {
         let query = ChunkQuery {
-            limit: None,
+            limit: Some(limit as usize),
             ..Default::default()
         };
-        token_and_details(chunks, &query, &tokens)
+        token_and_details(chunks, &query, &tokens, "search")
             .await?
             .into_iter()
             .take(limit as usize)

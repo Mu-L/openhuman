@@ -72,15 +72,14 @@ pub fn base_tool_specs() -> Vec<McpToolSpec> {
             name: "memory.search",
             title: "Search Memory",
             description: "Keyword-search OpenHuman's local memory tree and return matching chunks \
-                          ordered by recency. Every whitespace-separated token in the query must \
-                          appear in a chunk (case-insensitive, any order); punctuation between \
-                          tokens does not matter. Zero hits means those tokens are absent — try \
-                          fewer/shorter tokens or `memory.recall` (semantic) before concluding \
-                          content is missing.",
+                          ordered by recency. Every token in the query must appear in the stored \
+                          chunk preview (case-insensitive, any order); punctuation between tokens \
+                          does not matter. Results are preview-based, so zero hits do not prove that \
+                          content is absent; try fewer/shorter tokens or `memory.recall` (semantic).",
             rpc_method: Some("openhuman.memory_tree_search"),
             input_schema: query_schema(
-                "Space-separated keywords; each must appear in the chunk (any order). Prefer a few \
-                 short, distinctive tokens over long exact phrases.",
+                "Keywords; each must appear in the stored chunk preview (any order). Prefer a few \
+                 short, distinctive tokens over long exact phrases; zero hits do not prove absence.",
             ),
             annotations: read_only_local_annotations(),
         },
@@ -115,8 +114,8 @@ pub fn base_tool_specs() -> Vec<McpToolSpec> {
             title: "Browse Memory",
             description: "Paginated listing of memory-tree chunks in reverse-chronological order, \
                           with optional filters by source kind, source id, entity id, time window, \
-                          and token-AND keyword. Every whitespace-separated token must appear in the \
-                          chunk (case-insensitive, any order; punctuation does not matter). Use this \
+                          and token-AND keyword. Every token must appear in the stored chunk preview \
+                          (case-insensitive, any order; punctuation does not matter). Use this \
                           when the user wants to enumerate (\"what's \
                           recent in my Gmail\", \"show me everything from last week about Alice\") \
                           rather than search by query. Returns chunks plus a total match count for \
@@ -319,7 +318,7 @@ fn tree_browse_schema() -> Value {
             "query": {
                 "type": "string",
                 "minLength": 1,
-                "description": "Space-separated keywords; every token must appear in the chunk (case-insensitive, any order; punctuation does not matter)."
+                "description": "Keywords matched against the stored chunk preview; every token must appear (case-insensitive, any order; punctuation does not matter). Zero hits do not prove absence."
             },
             "k": {
                 "type": "integer",
