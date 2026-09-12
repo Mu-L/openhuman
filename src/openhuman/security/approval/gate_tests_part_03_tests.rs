@@ -387,6 +387,7 @@ async fn flow_tool_trust_auto_allows_before_parking() {
     // The second half of this test *does* wait a park out, so it needs the
     // short window even though it never inspects the "timed out" reason.
     let (gate, _dir, env) = expiry_gate();
+    let gate = Arc::new(gate);
     store::insert_flow_trust(&gate.config, "flow-trusted", "composio").unwrap();
 
     let outcome = turn_origin::with_origin(
@@ -425,7 +426,7 @@ async fn flow_tool_trust_auto_allows_before_parking() {
         .await
     });
     let mut tries = 0;
-    while gate.list_pending().unwrap().is_empty() {
+    while parked_request_id(&gate).is_none() {
         tries += 1;
         assert!(
             tries < 50,
