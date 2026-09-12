@@ -328,3 +328,4 @@ pub fn bind_tool_search_index(tools: &[Box<dyn Tool>], deferred: Vec<ToolSpec>) 
         }
     }
 
+}
