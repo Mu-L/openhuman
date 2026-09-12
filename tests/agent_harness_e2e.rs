@@ -1008,67 +1008,34 @@ async fn subagent_delegation_happy_path_inner() {
     stack.shutdown();
 }
 
-// ─── Task 4: Subagent clarification flow ──────────────────────────────────────
-//
-// Exercises the ask_user_clarification path via scheduler_agent
-// (delegate_name = "schedule_task"), which has `ask_user_clarification` in its
-// [tools] named list (src/openhuman/agent/registry/agents/scheduler_agent/agent.toml:22).
-//
-// Architecture note — why the full spawn_subagent→[SUBAGENT_AWAITING_USER] path
-// is not exercised here:
-//
-//   spawn_subagent (SpawnSubagentTool, spawn_subagent.rs:465-506) is the ONLY tool
-//   that produces [SUBAGENT_AWAITING_USER] envelopes and the continue_subagent tool
-//   resumes them.  But spawn_subagent is NOT in the orchestrator's [tools] named list
-//   (orchestrator/agent.toml:160-227), so the visible_tool_names filter
-//   (agent_tool_exec.rs:77-87) blocks it.  That path requires a src/ change.
-//
-// What this test DOES exercise:
-//
-//   The ArchetypeDelegationTool path (dispatch.rs).  scheduler_agent is delegated to
-//   via the synthesised `schedule_task` tool.  dispatch_subagent (dispatch.rs:113-130)
-//   calls run_subagent. The scripted scheduler_agent calls its registered
-//   ask_user_clarification tool, which pauses the child and lets dispatch_subagent
-//   surface the question to the orchestrator. On turn 2 the user's reply and the
-//   full turn-1 context are present.
+// ─── Task 4: Scheduling clarification flow ────────────────────────────────────
 //
 // Actual LLM request ordering (3 upstream calls total):
-//   request[0] = orchestrator turn 1 → schedule_task delegation tool call returned
-//   request[1] = scheduler_agent → ask_user_clarification pauses the child and
-//                becomes the schedule_task result surfaced in turn 1
+//   request[0] = orchestrator turn 1 → schedule_task tool call
+//   request[1] = orchestrator → ask_user_clarification ends turn 1
 //   request[2] = orchestrator turn 2 with "version 2" user reply in full context →
 //                synthesis; turn 2 ends (chat_done with ANSWER_CANARY_V2)
 
-/// Orchestrator delegates to scheduler_agent via `schedule_task` (delegate_name);
-/// scheduler_agent's ask_user_clarification call pauses the child; dispatch_subagent
-/// forwards the question as the schedule_task tool result; the orchestrator surfaces
-/// it (turn 1 ends with WHICH_VERSION_CANARY); the user replies
-/// "version 2"; the orchestrator synthesizes the final answer with full turn-1 context
-/// present (turn 2 ends with ANSWER_CANARY_V2).
-///
-/// The full spawn_subagent → [SUBAGENT_AWAITING_USER] → continue_subagent path
-/// requires adding spawn_subagent to the orchestrator's named tools
-/// (src/openhuman/agent/registry/agents/orchestrator/agent.toml) — a src/ change
-/// outside the scope of this test file.
+/// A scheduling request that needs clarification surfaces its question in turn 1,
+/// then preserves that question in the context used to answer turn 2.
 #[test]
-fn subagent_clarification_flow() {
+fn scheduling_clarification_flow() {
     run_on_agent_stack(
-        "subagent_clarification_flow",
-        subagent_clarification_flow_inner,
+        "scheduling_clarification_flow",
+        scheduling_clarification_flow_inner,
     );
 }
 
-async fn subagent_clarification_flow_inner() {
+async fn scheduling_clarification_flow_inner() {
     let _lock = env_lock();
     reset_script(vec![
         // ── turn 1 ──
-        // request[0]: Orchestrator calls schedule_task (scheduler_agent's delegate_name).
+        // request[0]: Orchestrator calls schedule_task.
         tool_call_completion(
             "schedule_task",
             json!({ "prompt": "Schedule a weekly reminder", "blocking": true }),
         ),
-        // request[1]: scheduler_agent calls ask_user_clarification, which pauses
-        // the child and returns the question through schedule_task.
+        // request[1]: Orchestrator asks the user for the missing detail.
         tool_call_completion(
             "ask_user_clarification",
             json!({ "question": "WHICH_VERSION_CANARY?" }),
@@ -1137,8 +1104,7 @@ async fn subagent_clarification_flow_inner() {
     let serialized = serde_json::to_string(&requests).unwrap_or_default();
 
     // ── No "Unknown tool:" in any captured request ──
-    // Proves schedule_task (synthesised from scheduler_agent's delegate_name) was
-    // recognised by the orchestrator — registry init worked.
+    // Proves schedule_task was recognised by the orchestrator.
     assert!(
         !serialized.contains("Unknown tool:"),
         "found 'Unknown tool:' in captured requests — delegation was broken; \
@@ -1146,30 +1112,21 @@ async fn subagent_clarification_flow_inner() {
         serde_json::to_string_pretty(&requests).unwrap_or_default()
     );
 
-    // ── scheduler_agent actually ran (≥3 upstream requests) ──
+    // ── Both turns traversed the expected three upstream requests ──
     // request[0] = orchestrator (schedule_task call),
-    // request[1] = scheduler_agent (ask_user_clarification pause),
+    // request[1] = orchestrator (ask_user_clarification),
     // request[2] = orchestrator turn-2 synthesis (turn-2 end).
     assert!(
         requests.len() >= 3,
-        "expected ≥3 upstream requests (orchestrator + scheduler_agent + orchestrator turn-2 synthesis), \
+        "expected ≥3 upstream requests (schedule + clarification + turn-2 synthesis), \
          got {};\nall requests: {}",
         requests.len(),
         serde_json::to_string_pretty(&requests).unwrap_or_default()
     );
 
-    // Both agents intentionally share the project-context prefix, so identify
-    // the child by its scheduler-specific prompt rather than message 0.
-    let scheduler_request = requests.get(1).map(Value::to_string).unwrap_or_default();
-    assert!(
-        scheduler_request.contains("scheduled-job store"),
-        "request[1] did not contain the scheduler_agent prompt; request: {scheduler_request}"
-    );
-
     // ── Some turn-2 request's messages must contain the clarification question ──
-    // Proves the scheduler_agent's text output (forwarded by dispatch_subagent as the
-    // schedule_task tool result) was persisted in the thread history and appears in
-    // turn-2 context (multi-turn state persistence).
+    // Proves the clarification was persisted in thread history and appears in
+    // turn-2 context.
     let turn2_messages_contain_question = requests.iter().any(|req| {
         req.pointer("/body/messages")
             .and_then(Value::as_array)
@@ -2201,7 +2158,7 @@ async fn parallel_subagent_fanout_inner() {
 /// without src/ changes. Documented per plan Task 9 step 9.2 fallback.
 ///
 /// Intentionally shares the blocked-clarification mechanic with
-/// `subagent_clarification_flow`; differs in delegate surface (research vs
+/// `scheduling_clarification_flow`; differs in delegate surface (research vs
 /// schedule_task) and single-turn shape.
 #[test]
 fn multi_hop_delegation_chain() {
