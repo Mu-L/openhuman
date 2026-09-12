@@ -214,6 +214,7 @@ fn message_from_line(ml: MessageLine) -> ChatMessage {
         role: ml.role,
         content: ml.content,
         extra_metadata: ml.extra_metadata,
+        cache_breakpoints: Vec::new(),
     };
     if let Some(turn_usage) = turn_usage.as_ref() {
         attach_turn_usage_metadata(&mut message, turn_usage);
