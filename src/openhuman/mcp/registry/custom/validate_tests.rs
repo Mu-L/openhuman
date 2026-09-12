@@ -258,6 +258,21 @@ fn same_transport_keeps_stored_env() {
     assert_eq!(resolved.get("__oauth__"), Some(&"{}".to_string()));
 }
 
+#[test]
+fn changing_stdio_launcher_drops_stored_env() {
+    let stored = HashMap::from([("TOKEN".to_string(), "secret".to_string())]);
+    let submitted = HashMap::from([("TOKEN".to_string(), String::new())]);
+    let resolved = resolve_env_for_transport(
+        &submitted,
+        &stored,
+        &Transport::Stdio,
+        &Transport::Stdio,
+        Some("npx"),
+        Some("uvx"),
+    );
+    assert!(resolved.is_empty());
+}
+
 /// A URL edit that keeps the same origin (path/query only) keeps the env —
 /// the bearer token and OAuth bundle are still valid for that origin.
 #[test]

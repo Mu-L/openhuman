@@ -500,8 +500,12 @@ where
         HashMap<String, String>,
     ) -> Result<(InstalledServer, HashMap<String, String>)>,
 {
+    tracing::debug!("[mcp-registry-rmw] begin server_id={server_id}");
     with_connection(config, |conn| {
-        conn.execute_batch("BEGIN IMMEDIATE")?;
+        if let Err(error) = conn.execute_batch("BEGIN IMMEDIATE") {
+            tracing::warn!("[mcp-registry-rmw] lock acquisition failed server_id={server_id} error={error}");
+            return Err(error.into());
+        }
         let outcome = (|| {
             let current = get_server_conn(conn, server_id)?;
             let stored = load_env_values_conn(conn, server_id)?;
@@ -511,12 +515,20 @@ where
             Ok::<InstalledServer, anyhow::Error>(server)
         })();
         match outcome {
-            Ok(server) => {
-                conn.execute_batch("COMMIT")?;
-                Ok(server)
-            }
+            Ok(server) => match conn.execute_batch("COMMIT") {
+                Ok(()) => {
+                    tracing::debug!("[mcp-registry-rmw] commit succeeded server_id={server_id}");
+                    Ok(server)
+                }
+                Err(error) => {
+                    tracing::warn!("[mcp-registry-rmw] commit failed server_id={server_id} error={error}");
+                    Err(error.into())
+                }
+            },
             Err(e) => {
-                let _ = conn.execute_batch("ROLLBACK");
+                if let Err(rollback_error) = conn.execute_batch("ROLLBACK") {
+                    tracing::error!("[mcp-registry-rmw] rollback failed server_id={server_id} error={rollback_error}");
+                }
                 Err(e)
             }
         }
