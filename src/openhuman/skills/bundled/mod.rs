@@ -263,7 +263,8 @@ pub fn is_current_materialization(dir: &Path, skill: &BundledSkill) -> bool {
             let Ok(meta) = std::fs::symlink_metadata(entry.path()) else {
                 return false;
             };
-            let Ok(relative) = entry.path().strip_prefix(dir) else {
+            let entry_path = entry.path();
+            let Ok(relative) = entry_path.strip_prefix(dir) else {
                 return false;
             };
             let relative = relative.to_string_lossy().replace('\\', "/");
