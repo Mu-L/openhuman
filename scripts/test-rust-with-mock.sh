@@ -169,19 +169,6 @@ run_json_rpc_e2e() {
   done < <(cargo_test --test json_rpc_e2e -- --list | sed -n 's/: test$//p')
 }
 
-run_archivist_tree_tests() {
-  local test_name
-  for test_name in \
-    phase2_no_per_turn_tree_write \
-    phase2_exactly_one_tree_ingest_per_segment_close \
-    phase2_provenance_stamped_on_leaf_and_source_id_is_constant \
-    phase2_ingested_content_is_raw_prose_not_recap \
-    phase2_flush_also_triggers_tree_ingest; do
-    echo "[test-rust-with-mock] archivist tree test: ${test_name}"
-    cargo_test --lib "openhuman::agent::harness::archivist::tests::part_01_tests::${test_name}" -- --exact --test-threads=1 "$@"
-  done
-}
-
 run_build_only_reaper_test() {
   # Building the runtime installs process-global context that cannot be reset.
   # Keep this real build-path regression in a fresh process so it cannot narrow
@@ -197,13 +184,7 @@ run_full_suite() {
   # integration targets below retain their own, narrower isolation strategies.
   TINYCONNECTORS_TEST_MODULE="${TINYCONNECTORS_TEST_MODULE:-$connectors_module}" \
     cargo_test --lib --bins -- --test-threads=1 \
-    --skip phase2_no_per_turn_tree_write \
-    --skip phase2_exactly_one_tree_ingest_per_segment_close \
-    --skip phase2_provenance_stamped_on_leaf_and_source_id_is_constant \
-    --skip phase2_ingested_content_is_raw_prose_not_recap \
-    --skip phase2_flush_also_triggers_tree_ingest \
     --skip a_build_only_runtime_is_swept_before_it_can_be_invoked "$@"
-  run_archivist_tree_tests "$@"
   run_build_only_reaper_test "$@"
   cargo_test --doc -- "$@"
 
