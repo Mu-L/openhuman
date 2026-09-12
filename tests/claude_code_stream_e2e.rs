@@ -73,8 +73,7 @@ fn captures_text_tool_call_and_usage() {
     // provider deltas or aggregated calls for OpenHuman to dispatch again.
     assert!(!deltas.iter().any(|d| matches!(
         d,
-        ProviderDelta::ToolCallStart { .. }
-            | ProviderDelta::ToolCallArgsDelta { .. }
+        ProviderDelta::ToolCallStart { .. } | ProviderDelta::ToolCallArgsDelta { .. }
     )));
 
     // Aggregated response.
