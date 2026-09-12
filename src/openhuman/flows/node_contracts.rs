@@ -213,8 +213,17 @@ pub fn render_node_kinds_required() -> String {
     all_node_kind_contracts()
         .iter()
         .map(|c| {
-            let required: Vec<&str> = c.config_fields.iter().filter(|f| f.required).map(|f| f.name.as_str()).collect();
-            if required.is_empty() { c.kind.clone() } else { format!("{}(config.{})", c.kind, required.join(", config.")) }
+            let required: Vec<&str> = c
+                .config_fields
+                .iter()
+                .filter(|f| f.required)
+                .map(|f| f.name.as_str())
+                .collect();
+            if required.is_empty() {
+                c.kind.clone()
+            } else {
+                format!("{}(config.{})", c.kind, required.join(", config."))
+            }
         })
         .collect::<Vec<_>>()
         .join(", ")
