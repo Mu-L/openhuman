@@ -168,7 +168,9 @@ fn new_session_history_preserves_answered_user_images() {
     let row: Value = serde_json::from_str(s.lines().next().unwrap()).unwrap();
     let content = row["message"]["content"].as_array().unwrap();
     assert!(content.iter().any(|block| block["type"] == "image"));
-    assert!(content.iter().any(|block| block["text"] == "User: earlier "));
+    assert!(content
+        .iter()
+        .any(|block| block["text"] == "User: earlier "));
     assert!(s.contains("Assistant: old answer"));
 }
 
