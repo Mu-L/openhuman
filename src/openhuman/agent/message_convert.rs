@@ -335,7 +335,10 @@ fn native_user_content(msg: &Message) -> String {
     for block in &user.content {
         let piece = match block {
             ContentBlock::Text(text) => text.clone(),
-            ContentBlock::Image(image) => format!("[IMAGE:{}]", image.url),
+            // Use a private wire marker so provider input builders can
+            // distinguish an image block from literal text that happens to
+            // look like `[IMAGE:…]`.
+            ContentBlock::Image(image) => format!("[OH_IMAGE:{}]", image.url),
             // Json / ProviderExtension carry no user-visible text — `msg.text()`
             // drops them too, so skip them to preserve that behaviour.
             _ => continue,
