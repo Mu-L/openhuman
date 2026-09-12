@@ -244,6 +244,26 @@ pub(super) fn resolve_env_for_transport(
     next: &Transport,
     previous_command: Option<&str>,
     next_command: Option<&str>,
+) -> HashMap<String, String> {
+    resolve_env_for_transport_with_args(
+        submitted,
+        stored,
+        previous,
+        next,
+        previous_command,
+        next_command,
+        None,
+        None,
+    )
+}
+
+pub(super) fn resolve_env_for_transport_with_args(
+    submitted: &HashMap<String, String>,
+    stored: &HashMap<String, String>,
+    previous: &Transport,
+    next: &Transport,
+    previous_command: Option<&str>,
+    next_command: Option<&str>,
     previous_args: Option<&[String]>,
     next_args: Option<&[String]>,
 ) -> HashMap<String, String> {

@@ -17,7 +17,7 @@ use crate::rpc::RpcOutcome;
 
 use super::validate::{
     base_slug, build_custom_transport, clean_description, credential_scope, env_key_list,
-    resolve_env, resolve_env_for_transport, validate_env,
+    resolve_env, resolve_env_for_transport_with_args, validate_env,
 };
 use super::{CustomServerInput, CUSTOM_QUALIFIED_PREFIX, MAX_SLUG_ATTEMPTS};
 
@@ -196,7 +196,7 @@ pub async fn mcp_clients_update_custom(
                 Some(&current.command),
                 Some(&current.args),
             ) != credential_scope(&transport, Some(&command), Some(&args));
-            let env = resolve_env_for_transport(
+            let env = resolve_env_for_transport_with_args(
                 &input.env,
                 &stored_env.into_iter().collect::<HashMap<String, String>>(),
                 &current.transport,

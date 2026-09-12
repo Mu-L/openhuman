@@ -1,3 +1,4 @@
+use super::*;
 
     fn open_test_conn() -> (NamedTempFile, Connection) {
         let f = NamedTempFile::new().unwrap();
@@ -574,4 +575,3 @@
         );
     }
 }
-use super::*;
