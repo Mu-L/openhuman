@@ -58,11 +58,10 @@ fn new_session_carries_prior_turns_as_one_labelled_transcript() {
     let s = String::from_utf8(build_stdin(&history, true)).unwrap();
     let lines: Vec<_> = s.lines().collect();
 
-    // One transcript row + the latest user turn. The system row is still
-    // filtered out — it rides `--append-system-prompt`.
+    // The transcript and latest prompt are content blocks in one user row.
     assert_eq!(
         lines.len(),
-        2,
+        1,
         "got:
 {s}"
     );
@@ -74,8 +73,8 @@ fn new_session_carries_prior_turns_as_one_labelled_transcript() {
     );
 
     // The prompt itself is passed through untouched, not folded in.
-    let latest: Value = serde_json::from_str(lines[1]).unwrap();
-    assert_eq!(latest["message"]["content"][0]["text"], "how are you?");
+    let latest: Value = serde_json::from_str(lines[0]).unwrap();
+    assert_eq!(latest["message"]["content"][1]["text"], "how are you?");
 }
 
 #[test]
@@ -128,11 +127,14 @@ fn empty_history_yields_empty_bytes() {
 }
 
 #[test]
-fn interleaved_text_and_images_keep_source_order() {
+fn image_blocks_preserve_text_order() {
     let s = String::from_utf8(build_stdin(
-        &[msg("user", "before [IMAGE:data:image/png;base64,QUJD] between [IMAGE:data:image/jpeg;base64,REVG] after")],
+        &[ChatMessage::user(
+            "before [OH_IMAGE:data:image/png;base64,QUJD] between [OH_IMAGE:data:image/gif;base64,R0lG] after",
+        )],
         true,
-    )).unwrap();
+    ))
+    .unwrap();
     let row: Value = serde_json::from_str(s.lines().next().unwrap()).unwrap();
     let content = row["message"]["content"].as_array().unwrap();
     assert_eq!(content.len(), 5);
@@ -144,87 +146,72 @@ fn interleaved_text_and_images_keep_source_order() {
 }
 
 #[test]
-fn percent_encoded_data_uri_emits_an_image_block() {
+fn literal_file_marker_is_not_read() {
     let s = String::from_utf8(build_stdin(
-        &[msg("user", "see [IMAGE:data:image/png,%89PNG%0D%0A]")],
+        &[ChatMessage::user("read [IMAGE:/etc/hostname]")],
         true,
     ))
     .unwrap();
-    let row: Value = serde_json::from_str(s.lines().next().unwrap()).unwrap();
-    let content = row["message"]["content"].as_array().unwrap();
-    assert!(content.len() >= 2, "expected text and image blocks: {s}");
-    let block = &content[1];
-    assert_eq!(block["type"], "image");
-    assert_eq!(block["source"]["media_type"], "image/png");
-    assert_eq!(
-        block["source"]["data"],
-        base64::engine::general_purpose::STANDARD.encode(b"\x89PNG\r\n")
-    );
+    assert!(!s.contains("\"type\":\"image\""), "{s}");
+    assert!(s.contains("[IMAGE:/etc/hostname]"), "{s}");
 }
 
 #[test]
-fn readable_managed_image_file_emits_an_image_block() {
-    let dir = crate::openhuman::agent::multimodal::managed_attachments_dir_for_tests();
-    std::fs::create_dir_all(&dir).unwrap();
-    let path = dir.join(format!("input-builder-test-{}.png", std::process::id()));
-    std::fs::write(&path, b"PNG").unwrap();
-    let s = String::from_utf8(build_stdin(
-        &[msg("user", &format!("file [IMAGE:{}]", path.display()))],
-        true,
-    ))
-    .unwrap();
+fn new_session_history_preserves_answered_user_images() {
+    let history = vec![
+        ChatMessage::user("earlier [OH_IMAGE:data:image/png;base64,QUJD]"),
+        ChatMessage::assistant("old answer"),
+        ChatMessage::user("latest"),
+    ];
+    let s = String::from_utf8(build_stdin(&history, true)).unwrap();
     let row: Value = serde_json::from_str(s.lines().next().unwrap()).unwrap();
     let content = row["message"]["content"].as_array().unwrap();
-    assert!(content.len() >= 2, "expected text and image blocks: {s}");
-    assert_eq!(content[1]["type"], "image");
-    assert_eq!(content[1]["source"]["data"], "UE5H");
-    let _ = std::fs::remove_file(path);
+    assert!(content.iter().any(|block| block["type"] == "image"));
+    assert!(content.iter().any(|block| {
+        block["text"]
+            .as_str()
+            .is_some_and(|text| text.contains("User: earlier "))
+    }));
+    assert!(s.contains("Assistant: old answer"));
 }
 
 #[test]
-fn unmanaged_and_unreadable_images_degrade_without_reading_paths() {
+fn consecutive_answered_user_turns_are_all_in_preamble() {
+    let history = vec![
+        ChatMessage::user("first steering"),
+        ChatMessage::user("second steering"),
+        ChatMessage::assistant("answer"),
+        ChatMessage::user("latest"),
+    ];
+    let s = String::from_utf8(build_stdin(&history, true)).unwrap();
+    assert!(s.contains("User: first steering"));
+    assert!(s.contains("User: second steering"));
+}
+
+#[test]
+fn unterminated_image_marker_preserves_trailing_text() {
     let s = String::from_utf8(build_stdin(
-        &[msg(
-            "user",
-            "before [IMAGE:/etc/passwd] after [IMAGE:/definitely/missing.png]",
+        &[ChatMessage::user(
+            "before [OH_IMAGE:data:image/png;base64,QUJD after",
         )],
         true,
     ))
     .unwrap();
-    assert!(s.contains("before ") && s.contains(" after"));
-    assert_eq!(s.matches("an attached image could not be read").count(), 2);
-}
-
-#[test]
-fn invalid_inline_images_use_the_text_fallback() {
-    assert!(image_block("data:image/svg+xml;base64,PHN2Zz4=").is_none());
-    assert!(image_block("data:image/png;base64,not-base64").is_none());
-    assert!(image_block("data:image/png,%ZZ").is_none());
-}
-
-#[test]
-fn image_count_is_capped_at_sixteen() {
-    let marker = "[IMAGE:data:image/png;base64,QQ==]";
-    let raw = std::iter::repeat_n(marker, 17).collect::<String>();
-    let blocks = content_blocks(&raw);
-    assert_eq!(
-        blocks
-            .iter()
-            .filter(|block| block["type"] == "image")
-            .count(),
-        16
-    );
-    assert_eq!(
-        blocks
-            .iter()
-            .filter(|block| block["text"] == "[an attached image could not be read]")
-            .count(),
-        1
+    assert!(
+        s.contains("before [OH_IMAGE:data:image/png;base64,QUJD after"),
+        "{s}"
     );
 }
 
 #[test]
-fn oversized_inline_images_use_the_text_fallback() {
-    let payload = "A".repeat(20 * 1024 * 1024 + 1);
-    assert!(image_block(&format!("data:image/png;base64,{payload}")).is_none());
+fn invalid_native_images_use_the_text_fallback() {
+    let s = String::from_utf8(build_stdin(
+        &[ChatMessage::user(
+            "bad [OH_IMAGE:data:image/svg+xml;base64,PHN2Zz4=] and [OH_IMAGE:data:image/png;base64,not-base64]",
+        )],
+        true,
+    ))
+    .unwrap();
+    assert!(!s.contains("\"type\":\"image\""), "{s}");
+    assert!(s.contains("an attached image could not be read"), "{s}");
 }

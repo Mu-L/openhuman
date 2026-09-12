@@ -96,6 +96,6 @@ The MCP server enforces `SecurityPolicy::ToolOperation` checks; all tools except
 
 ## Limitations (v1)
 
-- Vision input is not forwarded. Set the `vision_provider` to a different provider when you need images.
+- Vision input is forwarded as native image blocks when pasted images are available to the Claude Code provider. Images that cannot be read are sent as a short text notice.
 - `agentic` runs share the same `Semaphore(4)`; under load a CC turn waits in queue rather than failing fast.
 - Cost accounting from the CLI's `result.total_cost_usd` is captured in the mapper but not yet wired into OpenHuman's billing layer ([`src/openhuman/platform/cost/`](../../../src/openhuman/platform/cost/)).
