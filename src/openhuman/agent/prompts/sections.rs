@@ -738,11 +738,7 @@ impl PromptSection for UserIdentitySection {
     }
 }
 
-/// Collapse newlines and runs of whitespace in a user-identity field so
-/// it fits on a single markdown bullet without breaking the prompt
-/// structure. Values come from `auth_get_me` (server-controlled), but
-/// defence-in-depth: a name with embedded newlines could split the
-/// `- name:` bullet and reshape the `## User` block.
+/// Collapse whitespace in a user-identity field for a single markdown bullet.
 fn sanitize_identity_field(s: &str) -> String {
     s.chars()
         .map(|c| if c == '\n' || c == '\r' { ' ' } else { c })
