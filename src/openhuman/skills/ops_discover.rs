@@ -746,6 +746,5 @@ fn resolve_workflow_for_resource(
         (None, None) => Err(format!("skill '{skill_id}' not found")),
     }
 }
-
 #[cfg(test)] #[path = "ops_discover_include_skills_tests_tests.rs"] mod include_skills_tests;
 #[cfg(test)] #[path = "ops_discover_profile_scope_tests_tests.rs"] mod profile_scope_tests;
