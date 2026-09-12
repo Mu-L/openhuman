@@ -211,6 +211,8 @@ async fn token_and_details(
     for token in tokens {
         let mut token_query = query.clone();
         token_query.content_contains = Some(token.clone());
+        token_query.limit = None;
+        token_query.offset = None;
         let rows = chunks
             .list_chunk_details(&token_query, None)
             .await

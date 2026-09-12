@@ -22,9 +22,13 @@ use super::{
     pair_leaves_with_rows, search_rpc,
 };
 use chrono::TimeZone;
+use async_trait::async_trait;
 
 use crate::openhuman::config::Config;
-use crate::openhuman::memory::api::provider::{ChunkListRow, MemoryProvider};
+use crate::openhuman::memory::api::provider::{
+    ChunkListRow, ChunkQuery, MemoryChunks, MemoryProvider,
+};
+use crate::openhuman::memory::api::provider::MemoryError;
 use crate::openhuman::memory::binding;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -200,6 +204,65 @@ fn symbol_only_filter_matches_nothing() {
         ..ChunkFilter::default()
     };
     assert!(chunk_query_from_filter(&filter, 10, 0).is_none());
+}
+
+struct TokenRows {
+    rows: HashMap<String, Vec<ChunkListRow>>,
+    seen_queries: std::sync::Mutex<Vec<ChunkQuery>>,
+}
+
+#[async_trait]
+impl MemoryChunks for TokenRows {
+    async fn list_chunk_details(
+        &self,
+        query: &ChunkQuery,
+        _scope: Option<&tinymemory_api::provider::types::SourceScope>,
+    ) -> Result<Vec<ChunkListRow>, MemoryError> {
+        self.seen_queries.lock().unwrap().push(query.clone());
+        Ok(self
+            .rows
+            .get(query.content_contains.as_deref().unwrap())
+            .cloned()
+            .unwrap_or_default())
+    }
+}
+
+#[tokio::test]
+async fn token_and_intersects_complete_sets_in_first_token_order() {
+    let provider = TokenRows {
+        rows: HashMap::from([
+            (
+                "alpha".into(),
+                vec![
+                    sample_row("first", "alpha beta"),
+                    sample_row("middle", "alpha beta"),
+                    sample_row("last", "alpha beta"),
+                ],
+            ),
+            (
+                "beta".into(),
+                vec![sample_row("last", "alpha beta"), sample_row("first", "alpha beta")],
+            ),
+        ]),
+        seen_queries: std::sync::Mutex::new(Vec::new()),
+    };
+    let query = ChunkQuery {
+        limit: Some(1),
+        offset: Some(1),
+        ..ChunkQuery::default()
+    };
+
+    let rows = super::token_and_details(&provider, &query, &["alpha".into(), "beta".into()], "test")
+        .await
+        .expect("token intersection succeeds");
+
+    assert_eq!(
+        rows.iter().map(|row| row.chunk.id.as_str()).collect::<Vec<_>>(),
+        vec!["first", "last"]
+    );
+    let seen = provider.seen_queries.lock().unwrap();
+    assert_eq!(seen.len(), 2);
+    assert!(seen.iter().all(|query| query.limit.is_none() && query.offset.is_none()));
 }
 
 // ── the wire shape ───────────────────────────────────────────────────────
