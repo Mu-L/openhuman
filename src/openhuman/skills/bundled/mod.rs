@@ -269,7 +269,7 @@ pub fn is_current_materialization(dir: &Path, skill: &BundledSkill) -> bool {
             }
             if meta.is_dir() {
                 stack.push(entry.path());
-            } else if !expected.contains(relative.as_str()) {
+            } else if relative != DIGEST_FILE && !expected.contains(relative.as_str()) {
                 return false;
             }
         }
