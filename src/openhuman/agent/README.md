@@ -23,7 +23,7 @@ Multi-agent orchestration domain. Owns the LLM tool-calling loop, sub-agent disp
 - `src/openhuman/agent/context/` — prompt sections, tool-call format selection.
 - `src/openhuman/inference/local/` — `agent_chat` / `agent_chat_simple` execution backend.
 - `src/openhuman/config/` — runtime config load via `config::rpc::load_config_with_timeout`.
-- `src/core/event_bus/` — emits `DomainEvent::Agent(*)` and `Trigger*` events; subscribers in `agent/bus.rs`.
+- `crates/openhuman-core/src/core/event_bus/` — emits `DomainEvent::Agent(*)` and `Trigger*` events; subscribers in `agent/bus.rs`.
 
 ## Called by
 
@@ -34,7 +34,7 @@ Multi-agent orchestration domain. Owns the LLM tool-calling loop, sub-agent disp
 - `src/openhuman/desktop/notifications/rpc.rs` — surfaces agent runs to the UI.
 - `src/openhuman/agent/learning/{reflection,tool_tracker,user_profile}.rs` — read transcripts + tool outcomes.
 - `src/openhuman/agent/orchestration/tools/{dispatch,spawn_subagent}.rs` — `spawn_subagent` tool delegates here.
-- `src/core/all.rs` — controller registry wires `all_agent_registered_controllers`.
+- `crates/openhuman-core/src/core/all.rs` — controller registry wires `all_agent_registered_controllers`.
 
 ## Tests
 

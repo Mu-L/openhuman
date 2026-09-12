@@ -69,7 +69,7 @@ export const LEGACY_METHOD_ALIASES: Record<string, CoreRpcMethod> = {
   // #3565: old desktop clients used dotted namespace/function channel calls.
   'channels.list': CORE_RPC_METHODS.channelsList,
   // MCP clients — old method names that appeared in Sentry (CORE-RUST-DR/DS/DT/DV/DW).
-  // See src/core/legacy_aliases.rs for the Rust-side mirror of this table.
+  // See crates/openhuman-core/src/core/legacy_aliases.rs for the Rust-side mirror of this table.
   'mcp_clients.list': CORE_RPC_METHODS.mcpClientsInstalledList,
   'openhuman.channels.list': CORE_RPC_METHODS.channelsList,
   'openhuman.mcp_clients_list': CORE_RPC_METHODS.mcpClientsInstalledList,
@@ -80,7 +80,7 @@ export const LEGACY_METHOD_ALIASES: Record<string, CoreRpcMethod> = {
   // controller with the dotted `tool_registry.diagnostics` spelling before the
   // canonical `openhuman.tool_registry_diagnostics` form, so the Tool Policy
   // diagnostics panel failed with "unknown method". Keep in sync with the
-  // Rust-side mirror in src/core/legacy_aliases.rs.
+  // Rust-side mirror in crates/openhuman-core/src/core/legacy_aliases.rs.
   'tool_registry.diagnostics': CORE_RPC_METHODS.toolRegistryDiagnostics,
   'openhuman.get_analytics_settings': CORE_RPC_METHODS.configGetAnalyticsSettings,
   'openhuman.get_composio_trigger_settings': CORE_RPC_METHODS.configGetComposioTriggerSettings,
@@ -122,7 +122,7 @@ export const LEGACY_METHOD_ALIASES: Record<string, CoreRpcMethod> = {
   // Dotted / bare health probes from older clients and SDK callers (#3566,
   // Sentry CORE-2C). No distinct status/get handler exists — the snapshot
   // already carries the health verdict — so all four alias to the snapshot.
-  // Keep in sync with src/core/legacy_aliases.rs (drift guard enforces it).
+  // Keep in sync with crates/openhuman-core/src/core/legacy_aliases.rs (drift guard enforces it).
   health: CORE_RPC_METHODS.healthSnapshot,
   'health.get': CORE_RPC_METHODS.healthSnapshot,
   'health.snapshot': CORE_RPC_METHODS.healthSnapshot,

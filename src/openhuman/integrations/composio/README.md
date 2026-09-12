@@ -78,7 +78,7 @@ Namespace `composio`, exposed as `openhuman.composio_*`:
 | `composio.get_mode` | Current routing mode + whether a direct-mode key is set (never returns the key). |
 | `composio.set_api_key` / `composio.clear_api_key` | Store/clear direct-mode Composio API key (key never logged/returned). |
 
-Handlers delegate to `ops.rs`; scope handlers delegate to `providers::user_scopes`. Exports wired into `src/core/all.rs`.
+Handlers delegate to `ops.rs`; scope handlers delegate to `providers::user_scopes`. Exports wired into `crates/openhuman-core/src/core/all.rs`.
 
 ## Agent tools
 
@@ -120,7 +120,7 @@ Published from `ops.rs`: `DomainEvent::ComposioConnectionCreated` (authorize), `
 
 ## Used by
 
-- `src/core/all.rs` — registers the controllers.
+- `crates/openhuman-core/src/core/all.rs` — registers the controllers.
 - `src/openhuman/tools/{mod,ops,schemas}.rs` — wires agent tools into the tool registry.
 - `src/openhuman/agent/**` — harness/session/subagent spawning (`integrations_agent`), triage escalation, debug.
 - `src/openhuman/platform/socket/event_handlers.rs` — parses `composio:trigger` and publishes `ComposioTriggerReceived`.

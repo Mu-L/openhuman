@@ -5,7 +5,7 @@ use crate::openhuman::config::Config;
 use crate::openhuman::memory::api::provider::retrieval::{
     RetrievalNodeKind, RetrievalResponse, SourceRetrievalQuery,
 };
-use crate::openhuman::memory::api::provider::{ChunkListRow, ChunkQuery};
+use crate::openhuman::memory::api::provider::{ChunkListRow, ChunkQuery, MemoryChunks};
 use crate::rpc::RpcOutcome;
 use tinymemory_api::chunks::SourceKind;
 
@@ -88,14 +88,33 @@ async fn list_chunks_page(
     // the SQL it replaces had no allowlist clause at all. Passing the ambient
     // scope would be a new restriction on the Memory tab, not a translation of
     // one.
-    let rows = chunks
-        .list_chunk_details(&query, None)
-        .await
-        .map_err(|e| format!("list_chunk_details: {e}"))?;
-    let total = chunks
-        .count_chunks(&query, None)
-        .await
-        .map_err(|e| format!("count_chunks: {e}"))?;
+    let tokens = query_tokens(filter.query.as_deref());
+    let (rows, total) = if tokens.len() > 1 {
+        let mut unpaged = query.clone();
+        unpaged.content_contains = None;
+        // Intersect the complete match sets before applying pagination. A
+        // provider page can otherwise hide rows that match every token.
+        unpaged.limit = None;
+        unpaged.offset = None;
+        let rows = token_and_details(chunks, &unpaged, &tokens, "list_chunks").await?;
+        let total = rows.len() as u64;
+        let page = rows
+            .into_iter()
+            .skip(offset as usize)
+            .take(limit as usize)
+            .collect();
+        (page, total)
+    } else {
+        let rows = chunks
+            .list_chunk_details(&query, None)
+            .await
+            .map_err(|e| format!("list_chunk_details: {e}"))?;
+        let total = chunks
+            .count_chunks(&query, None)
+            .await
+            .map_err(|e| format!("count_chunks: {e}"))?;
+        (rows, total)
+    };
 
     log::debug!(
         "[memory_tree::read] list_chunks: limit={limit} offset={offset} rows={} total={total}",
@@ -143,7 +162,15 @@ fn chunk_query_from_filter(filter: &ChunkFilter, limit: u32, offset: u32) -> Opt
         }
     }
 
-    let content_contains = filter.query.as_deref().and_then(content_predicate);
+    let tokens = query_tokens(filter.query.as_deref());
+    if filter
+        .query
+        .as_deref()
+        .is_some_and(|query| !query.trim().is_empty() && tokens.is_empty())
+    {
+        return None;
+    }
+    let content_contains = tokens.first().cloned();
 
     Some(ChunkQuery {
         source_ids: filter.source_ids.clone().unwrap_or_default(),
@@ -161,26 +188,52 @@ fn chunk_query_from_filter(filter: &ChunkFilter, limit: u32, offset: u32) -> Opt
     })
 }
 
-/// The `content_contains` predicate for a caller-supplied query string, or
-/// `None` when the caller typed only whitespace.
-///
-/// One function because two call sites need the same rule and a drifted pair
-/// would show as a search that filters differently from the listing behind it.
-///
-/// Two things it deliberately does not do. It does not wrap the value in
-/// `%…%` — that is the driver's, and so is escaping any `%` or `_` the user
-/// typed, which the `format!("%{}%", q)` this replaces did not do at all: a
-/// query containing `_` silently matched any character in that position. And a
-/// blank query places no predicate rather than matching nothing, which is what
-/// the old `if !q.is_empty()` guard did and is why a cleared search box lists
-/// the newest rows instead of emptying the table.
-fn content_predicate(query: &str) -> Option<String> {
-    let trimmed = query.trim();
-    if trimmed.is_empty() {
-        None
-    } else {
-        Some(trimmed.to_string())
+fn query_tokens(query: Option<&str>) -> Vec<String> {
+    query
+        .unwrap_or_default()
+        .split(|c: char| !c.is_alphanumeric())
+        .filter(|token| !token.is_empty())
+        .map(str::to_string)
+        .collect()
+}
+
+async fn token_and_details(
+    chunks: &dyn MemoryChunks,
+    query: &ChunkQuery,
+    tokens: &[String],
+    operation: &str,
+) -> Result<Vec<ChunkListRow>, String> {
+    log::debug!(
+        "[memory_tree::read] {operation}: token-and provider calls={}",
+        tokens.len()
+    );
+    let mut matches: Option<Vec<ChunkListRow>> = None;
+    for token in tokens {
+        if matches.as_ref().is_some_and(Vec::is_empty) {
+            break;
+        }
+        let mut token_query = query.clone();
+        token_query.content_contains = Some(token.clone());
+        // `None` means the driver's default, which may be a page-sized cap.
+        // Ask for the largest contract-supported window so the intersection
+        // is computed from the complete per-token result set. Drivers clamp
+        // this to their own ceiling.
+        token_query.limit = Some(usize::MAX);
+        token_query.offset = None;
+        let rows = chunks
+            .list_chunk_details(&token_query, None)
+            .await
+            .map_err(|e| format!("list_chunk_details: {e}"))?;
+        let current: HashSet<_> = rows.iter().map(|row| row.chunk.id.clone()).collect();
+        matches = Some(match matches {
+            None => rows,
+            Some(previous) => previous
+                .into_iter()
+                .filter(|row| current.contains(&row.chunk.id))
+                .collect(),
+        });
     }
+    Ok(matches.unwrap_or_default())
 }
 
 /// Render one contract listing row as the wire [`ChunkRow`] the Memory tab
@@ -347,7 +400,18 @@ pub async fn search_rpc(
     k: u32,
 ) -> Result<RpcOutcome<Vec<ChunkRow>>, String> {
     let limit = k.clamp(1, MAX_LIST_LIMIT);
-    let content_contains = content_predicate(&query);
+    let tokens = query_tokens(Some(&query));
+    if !query.trim().is_empty() && tokens.is_empty() {
+        return Ok(RpcOutcome::single_log(
+            Vec::new(),
+            format!("memory_tree::read: search query_len={} n=0", query.len()),
+        ));
+    }
+    let content_contains = if tokens.len() > 1 {
+        None
+    } else {
+        tokens.first().cloned()
+    };
     // Captured before `query` is shadowed by the `ChunkQuery` below. The log
     // line reports the length of the search TEXT, never of the built query, and
     // it is deliberately the length rather than the text itself — a search term
@@ -369,15 +433,27 @@ pub async fn search_rpc(
     // `content_contains` and a limit, and nothing else: no source predicate, no
     // time window, no offset. `scope` is `None` for the same reason the listing
     // passes `None` — the SQL this replaces carried no allowlist clause.
-    let query = ChunkQuery {
-        content_contains,
-        limit: Some(limit as usize),
-        ..Default::default()
+    let rows = if tokens.len() > 1 {
+        let query = ChunkQuery {
+            limit: None,
+            ..Default::default()
+        };
+        token_and_details(chunks, &query, &tokens, "search")
+            .await?
+            .into_iter()
+            .take(limit as usize)
+            .collect()
+    } else {
+        let query = ChunkQuery {
+            content_contains,
+            limit: Some(limit as usize),
+            ..Default::default()
+        };
+        chunks
+            .list_chunk_details(&query, None)
+            .await
+            .map_err(|e| format!("list_chunk_details: {e}"))?
     };
-    let rows = chunks
-        .list_chunk_details(&query, None)
-        .await
-        .map_err(|e| format!("list_chunk_details: {e}"))?;
 
     let hits: Vec<ChunkRow> = rows.into_iter().map(chunk_row_from_list_row).collect();
     let n = hits.len();

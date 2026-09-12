@@ -118,7 +118,7 @@ pub(super) fn lookup(function: &str) -> Option<ControllerSchema> {
                 FieldSchema {
                     name: "query",
                     ty: TypeSchema::Option(Box::new(TypeSchema::String)),
-                    comment: "Substring keyword filter over chunk preview content.",
+                    comment: "Keywords matched against the stored chunk preview; every token must appear (ASCII case-insensitive, any order; punctuation does not matter). Zero hits do not prove absence.",
                     required: false,
                 },
                 FieldSchema {
@@ -194,7 +194,7 @@ pub(super) fn lookup(function: &str) -> Option<ControllerSchema> {
                 FieldSchema {
                     name: "query",
                     ty: TypeSchema::String,
-                    comment: "Substring to match against chunk content.",
+                    comment: "Keywords matched against the stored chunk preview; every token must appear (ASCII case-insensitive, any order; punctuation does not matter). Zero hits do not prove absence.",
                     required: true,
                 },
                 FieldSchema {

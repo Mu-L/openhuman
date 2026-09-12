@@ -31,6 +31,7 @@
 pub mod agents;
 pub mod builder_tools;
 pub mod bus;
+pub mod catalogue;
 pub mod discovery_tools;
 mod draft_store;
 #[cfg(test)]
@@ -41,6 +42,10 @@ pub mod memory_tools;
 pub mod node_contracts;
 pub mod ops;
 mod schemas;
+/// Skills this domain ships inside the binary. Needs BOTH gates: the pages
+/// teach flows authoring, and `BundledSkill` is part of the skills subsystem.
+#[cfg(feature = "skills")]
+pub mod skills;
 mod store;
 /// The tinyflows engine seam (formerly `openhuman::tinyflows`).
 pub mod tinyflows;
@@ -69,8 +74,8 @@ pub use schemas::{
 // lives in the sibling `tinyflows` domain and persists each finished step onto
 // the `flow_runs` row through this function as the run executes.
 pub use node_contracts::{
-    all_node_kind_contracts, node_kind_contract, render_node_kinds_line, ConfigField,
-    NodeKindContract, PortSpec, NODE_KINDS,
+    all_node_kind_contracts, node_kind_contract, render_node_kinds_line,
+    render_node_kinds_required, ConfigField, NodeKindContract, PortSpec, NODE_KINDS,
 };
 pub use store::{kv_get, kv_set, upsert_flow_run_step};
 pub use tinyflows_catalog::{

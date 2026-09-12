@@ -247,7 +247,7 @@
 #                      `SignTransaction`/`SignMessage` calls. `web3` stayed
 #                      gated out of this profile already, so the shed here is
 #                      not the wallet crate itself (never in `flows`) — it is
-#                      `app/src-tauri/Cargo.lock`'s stale cryptocurrency
+#                      `crates/openhuman-app/Cargo.lock`'s stale cryptocurrency
 #                      dependency tail that the old inlined copy had pulled in
 #                      and the delete-and-revendor removed (`chore(deps): prune
 #                      unused cryptocurrency dependencies from Cargo.lock`).
@@ -438,7 +438,7 @@
 #                      build was the reason `GGML_NATIVE=OFF` had to prefix
 #                      every macOS cargo invocation). Verified with
 #                      `cargo tree -e normal | grep -ci whisper` = 0 on both
-#                      the root crate and app/src-tauri.
+#                      the root crate and crates/openhuman-app.
 #   304/281/5  2026-08-08  tokenjuice-treesitter feature deleted entirely (AST-
 #                      aware code compression dropped; tinyjuice's non-AST
 #                      compression path is now the only mode). tinyjuice is
@@ -530,7 +530,7 @@
 #                      `scheduler-gate` (-3). Off-state = "on AC, no charge
 #                      signal", i.e. require_ac_power is not enforced.
 #   387/6  2026-08-01  M2 step 2: clap + env_logger behind default-OFF
-#                      `bin-tools`; the six src/bin/ targets declare it as a
+#                      `bin-tools`; the six crates/openhuman-core/src/bin/ targets declare it as a
 #                      required-feature (-14, a whole CLI stack).
 #   401/6  2026-08-01  M2 step 1: arboard/enigo/rdev folded into the `voice`
 #                      gate (-17). arboard alone was 11 of those — an X11/wayland

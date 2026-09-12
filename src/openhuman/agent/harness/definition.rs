@@ -26,3 +26,11 @@
 mod tests;
 include!("definition_part_01.rs");
 include!("definition_part_02.rs");
+
+/// Sentinel used to represent an explicit zero-tool scope.
+pub const NO_TOOLS_SENTINEL: &str = "__no_tools__";
+
+/// Returns whether a visible-tool set represents an explicit zero-tool scope.
+pub fn is_empty_tool_scope(visible: &std::collections::HashSet<String>) -> bool {
+    visible.is_empty() || (visible.len() == 1 && visible.contains(NO_TOOLS_SENTINEL))
+}

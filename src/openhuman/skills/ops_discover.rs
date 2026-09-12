@@ -181,13 +181,9 @@ pub(crate) fn discover_workflows_inner(
     )
 }
 
-/// Discover only *automation* bundles — those under the `workflows/` roots —
-/// for the Automations UI list (`openhuman.skills_list`).
-///
-/// Capability skills (under the `skills/` / `.agents/skills/` / legacy
-/// `<workspace>/skills/` roots) are deliberately excluded so they don't show up
-/// as task templates. They remain fully available to the agent harness and the
-/// run/describe paths via [`discover_workflows`] / [`load_workflow_metadata`].
+/// Discover only automation bundles under the `workflows/` roots.
+/// Capability skills are deliberately excluded; they remain available to the
+/// agent harness and run/describe paths.
 ///
 /// Note: bundles authored *before* the skills→workflows rename live under the
 /// `skills/` roots and will therefore not appear in this automations-only view;
@@ -228,6 +224,27 @@ fn discover_filtered(
     // Scan order matters for collision resolution: the last scope to register
     // a name wins, so we scan user first, then project, then legacy.
     let mut by_name: HashMap<String, Workflow> = HashMap::new();
+
+    // Builtin skills (`<workspace>/.openhuman/builtin-skills/`) are a skill
+    // root scanned FIRST and at the lowest precedence, so every other scope
+    // shadows them on a name collision. No trust marker is consulted: the
+    // directory is core-managed and its contents were written from constants
+    // compiled into this binary, which is a stronger provenance claim than the
+    // marker makes about a project directory. See `skills::bundled`.
+    if let Some(ws) = workspace_dir {
+        if kinds.contains(&RootKind::Skill) {
+            let root = crate::openhuman::skills::bundled::builtin_root(ws);
+            tracing::trace!(
+                root = %root.display(),
+                scope = ?WorkflowScope::Builtin,
+                "[workflows] discover:branch:builtin"
+            );
+            absorb(
+                &mut by_name,
+                scan_bundled_root(&root, WorkflowScope::Builtin),
+            );
+        }
+    }
 
     if let Some(home) = home_dir {
         for (root, kind) in user_roots(home) {
@@ -302,6 +319,19 @@ fn discover_filtered(
     let mut out: Vec<Workflow> = by_name.into_values().collect();
     out.sort_by(|a, b| a.name.cmp(&b.name));
     tracing::debug!(discovered_count = out.len(), "[workflows] discover:exit");
+    out
+}
+
+fn scan_bundled_root(root: &Path, scope: WorkflowScope) -> Vec<Workflow> {
+    let mut out = Vec::new();
+    for bundled in crate::openhuman::skills::bundled::BUNDLED {
+        let dir = root.join(bundled.dir_name);
+        if crate::openhuman::skills::bundled::is_current_materialization(&dir, bundled) {
+            if let Some(workflow) = load_skill_dir(&dir, bundled.dir_name, scope) {
+                out.push(workflow);
+            }
+        }
+    }
     out
 }
 
@@ -398,11 +428,21 @@ fn absorb(by_name: &mut HashMap<String, Workflow>, incoming: Vec<Workflow>) {
 
 fn precedence(scope: WorkflowScope) -> u8 {
     match scope {
-        WorkflowScope::Legacy => 0,
-        WorkflowScope::User => 1,
-        WorkflowScope::Project => 2,
+        // Builtin sits below everything, including Legacy: a bundle that ships
+        // with the binary must never shadow something the user installed or
+        // wrote. Adding a builtin skill is then a change that cannot take a
+        // name away from an existing workspace.
+        WorkflowScope::Builtin => 0,
+        WorkflowScope::Legacy => 1,
+        WorkflowScope::User => 2,
+        WorkflowScope::Project => 3,
         // Profile-local skills win against every global scope for their owner.
-        WorkflowScope::Profile => 3,
+        WorkflowScope::Profile => 4,
+        // Flows are never discovered by this scanner, so they never take part
+        // in a name collision resolved here. Ranked above everything so that
+        // if one ever reaches this function the answer is deterministic rather
+        // than accidental.
+        WorkflowScope::Flow => 5,
     }
 }
 
@@ -718,11 +758,9 @@ fn resolve_workflow_for_resource(
         (None, None) => Err(format!("skill '{skill_id}' not found")),
     }
 }
-
 #[cfg(test)]
 #[path = "ops_discover_include_skills_tests_tests.rs"]
 mod include_skills_tests;
-
 #[cfg(test)]
 #[path = "ops_discover_profile_scope_tests_tests.rs"]
 mod profile_scope_tests;

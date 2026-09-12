@@ -18,19 +18,24 @@
 //!    they were asked, unlike the destructive handlers in `admin_tests.rs`.
 
 use super::{
-    chunk_query_from_filter, chunk_row_from_list_row, content_predicate, list_chunks_rpc,
-    list_sources_rpc, pair_leaves_with_rows, search_rpc,
+    chunk_query_from_filter, chunk_row_from_list_row, list_chunks_rpc, list_sources_rpc,
+    pair_leaves_with_rows, search_rpc,
 };
+use async_trait::async_trait;
 use chrono::TimeZone;
 
 use crate::openhuman::config::Config;
-use crate::openhuman::memory::api::provider::{ChunkListRow, MemoryProvider};
+use crate::openhuman::memory::api::provider::{
+    ChunkListRow, ChunkQuery, MemoryChunks, MemoryProvider,
+};
 use crate::openhuman::memory::binding;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tempfile::TempDir;
 use tinymemory_api::chunks::{Chunk, Metadata, SourceKind, SourceRef};
+use tinymemory_api::error::MemoryError;
 use tinymemory_api::null::NullMemoryProvider;
+use tinymemory_api::provider::{ChunkDetail, ChunkEmbedding};
 
 use super::super::types::{ChunkFilter, ChunkRow, PREVIEW_MAX_CHARS};
 
@@ -172,16 +177,132 @@ fn the_page_bounds_and_predicates_ride_one_query() {
     assert!(!query.exclude_dropped);
 }
 
-/// The substring travels bare. Wrapping it in `%…%` host-side would double the
-/// driver's own wrapping and match nothing.
+/// Queries are split on punctuation so punctuation in either the stored
+/// content or the query cannot prevent a token match.
 #[test]
-fn the_content_predicate_is_trimmed_and_unwrapped() {
-    assert_eq!(content_predicate("  phoenix  ").as_deref(), Some("phoenix"));
-    assert_eq!(content_predicate("   "), None);
-    assert_eq!(content_predicate(""), None);
-    // `%` and `_` are the user's text; escaping them is the driver's job, so
-    // they must arrive intact rather than pre-mangled here.
-    assert_eq!(content_predicate("50%_off").as_deref(), Some("50%_off"));
+fn query_tokens_ignore_punctuation() {
+    assert_eq!(
+        super::query_tokens(Some("  phoenix, migration! ")),
+        ["phoenix", "migration"]
+    );
+    assert!(super::query_tokens(Some("   ")).is_empty());
+}
+
+#[test]
+fn single_token_filter_uses_normalized_token() {
+    let filter = ChunkFilter {
+        query: Some(" phoenix: ".into()),
+        ..ChunkFilter::default()
+    };
+    let query = chunk_query_from_filter(&filter, 10, 0).expect("a query");
+    assert_eq!(query.content_contains.as_deref(), Some("phoenix"));
+}
+
+#[test]
+fn symbol_only_filter_matches_nothing() {
+    let filter = ChunkFilter {
+        query: Some("++".into()),
+        ..ChunkFilter::default()
+    };
+    assert!(chunk_query_from_filter(&filter, 10, 0).is_none());
+}
+
+struct TokenRows {
+    rows: HashMap<String, Vec<ChunkListRow>>,
+    seen_queries: std::sync::Mutex<Vec<ChunkQuery>>,
+}
+
+#[async_trait]
+impl MemoryChunks for TokenRows {
+    async fn list_chunks(
+        &self,
+        _query: &ChunkQuery,
+        _scope: Option<&tinymemory_api::provider::types::SourceScope>,
+    ) -> Result<Vec<tinymemory_api::chunks::Chunk>, MemoryError> {
+        Ok(Vec::new())
+    }
+
+    async fn get_chunk(
+        &self,
+        _chunk_id: &str,
+    ) -> Result<Option<tinymemory_api::chunks::Chunk>, MemoryError> {
+        Ok(None)
+    }
+
+    async fn chunk_detail(&self, _chunk_id: &str) -> Result<Option<ChunkDetail>, MemoryError> {
+        Ok(None)
+    }
+
+    async fn storage_kinds(&self) -> Result<Vec<String>, MemoryError> {
+        Ok(Vec::new())
+    }
+
+    async fn chunk_embeddings(
+        &self,
+        _chunk_ids: &[String],
+        _model_signature: &str,
+    ) -> Result<Vec<ChunkEmbedding>, MemoryError> {
+        Ok(Vec::new())
+    }
+
+    async fn list_chunk_details(
+        &self,
+        query: &ChunkQuery,
+        _scope: Option<&tinymemory_api::provider::types::SourceScope>,
+    ) -> Result<Vec<ChunkListRow>, MemoryError> {
+        self.seen_queries.lock().unwrap().push(query.clone());
+        Ok(self
+            .rows
+            .get(query.content_contains.as_deref().unwrap())
+            .cloned()
+            .unwrap_or_default())
+    }
+}
+
+#[tokio::test]
+async fn token_and_intersects_complete_sets_in_first_token_order() {
+    let provider = TokenRows {
+        rows: HashMap::from([
+            (
+                "alpha".into(),
+                vec![
+                    sample_row("first", "alpha beta"),
+                    sample_row("middle", "alpha beta"),
+                    sample_row("last", "alpha beta"),
+                ],
+            ),
+            (
+                "beta".into(),
+                vec![
+                    sample_row("last", "alpha beta"),
+                    sample_row("first", "alpha beta"),
+                ],
+            ),
+        ]),
+        seen_queries: std::sync::Mutex::new(Vec::new()),
+    };
+    let query = ChunkQuery {
+        limit: Some(1),
+        offset: Some(1),
+        ..ChunkQuery::default()
+    };
+
+    let rows =
+        super::token_and_details(&provider, &query, &["alpha".into(), "beta".into()], "test")
+            .await
+            .expect("token intersection succeeds");
+
+    assert_eq!(
+        rows.iter()
+            .map(|row| row.chunk.id.as_str())
+            .collect::<Vec<_>>(),
+        vec!["first", "last"]
+    );
+    let seen = provider.seen_queries.lock().unwrap();
+    assert_eq!(seen.len(), 2);
+    assert!(seen
+        .iter()
+        .all(|query| query.limit == Some(usize::MAX) && query.offset.is_none()));
 }
 
 // ── the wire shape ───────────────────────────────────────────────────────

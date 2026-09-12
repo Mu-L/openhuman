@@ -97,13 +97,13 @@ Capability {
         domain: "tui",
         category: CapabilityCategory::Conversation,
         description: "Operate OpenHuman from a terminal through four tabs: live core logs, \
-                      orchestrator chat, safe configuration, and account settings. Bare \
-                      `openhuman` opens it on an interactive non-container host; `openhuman tui` \
-                      (alias `chat`) forces it. The chat streams replies, thinking, and tools live.",
-        how_to: "Run `openhuman`, or `openhuman tui` to force the UI. Use Tab/Shift+Tab or Alt+1-4 \
+                      orchestrator chat, safe configuration, and account settings. The standalone \
+                      `openhuman-tui` executable owns this interface. The chat streams replies, \
+                      thinking, and tools live.",
+        how_to: "Run `openhuman-tui`. Use Tab/Shift+Tab or Alt+1-4 \
                  to switch Logs, Chat, Config, and Settings. `--thread <id>` resumes a chat and \
                  `--new` starts one. Settings accepts a one-time login token and supports account \
-                 refresh and logout. Use `openhuman --no-tui` to suppress automatic launch.",
+                 refresh and logout.",
         status: CapabilityStatus::Beta,
         privacy: DERIVED_TO_BACKEND,
     },

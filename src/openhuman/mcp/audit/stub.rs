@@ -29,7 +29,7 @@ const DISABLED_MSG: &str = "mcp feature disabled at compile time";
 /// No controllers: the internal `mcp_audit` list method is unregistered, so
 /// the desktop UI/CLI sees an unknown method rather than an empty history.
 ///
-/// `src/core/all.rs` pushes this straight into its internal-controller vec
+/// `crates/openhuman-core/src/core/all.rs` pushes this straight into its internal-controller vec
 /// with no `#[cfg]` of its own — the empty vec keeps that file untouched.
 pub fn all_mcp_audit_internal_controllers() -> Vec<crate::core::all::RegisteredController> {
     log::debug!("[mcp_audit] {DISABLED_MSG} — no internal controllers registered");

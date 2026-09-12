@@ -7,7 +7,7 @@
 //! the OS to skip conhost allocation entirely.
 //!
 //! Mirrors the pattern established by #731 and #1338 for the Tauri-shell
-//! side (see `app/src-tauri/src/core_process.rs` and `process_kill.rs`).
+//! side (see `crates/openhuman-app/src/core_process.rs` and `process_kill.rs`).
 //! Without this every Ollama health-check / install attempt flashes a
 //! console on Windows; on a fresh install without Ollama present the
 //! flashes are continuous because the resolve-or-install loop retries.

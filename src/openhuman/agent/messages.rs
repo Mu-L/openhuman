@@ -16,6 +16,16 @@ pub struct ChatMessage {
     pub content: String,
     #[serde(default, skip_serializing)]
     pub extra_metadata: Option<serde_json::Value>,
+    /// Ascending byte offsets into [`Self::content`] at which the provider may
+    /// place a prompt-cache breakpoint. Only meaningful on the system message.
+    ///
+    /// `skip_serializing` like `id` and `extra_metadata` above: these are a
+    /// property of *this call*, derived from the freshly assembled prompt, and
+    /// writing them into the JSONL transcript would persist offsets that stop
+    /// matching the moment the prompt is rebuilt. `serde(default)` keeps every
+    /// record already on disk loadable.
+    #[serde(default, skip_serializing)]
+    pub cache_breakpoints: Vec<usize>,
 }
 
 impl ChatMessage {
@@ -25,6 +35,43 @@ impl ChatMessage {
             role: "system".into(),
             content: content.into(),
             extra_metadata: None,
+            cache_breakpoints: Vec::new(),
+        }
+    }
+
+    /// A system message carrying prompt-cache breakpoints.
+    ///
+    /// `breakpoints` are ends-of-tier from
+    /// [`crate::openhuman::agent::prompts::SystemPromptBuilder::build_tiered`].
+    /// Out-of-range or non-ascending offsets are dropped rather than trusted:
+    /// a bad offset would split the prompt mid-sentence and the model would
+    /// read the damage, whereas a dropped one costs only a cache miss.
+    pub fn system_tiered(content: impl Into<String>, breakpoints: Vec<usize>) -> Self {
+        let content = content.into();
+        let mut previous = 0usize;
+        let breakpoints: Vec<usize> = breakpoints
+            .into_iter()
+            .filter(|&offset| {
+                let ok =
+                    offset > previous && offset < content.len() && content.is_char_boundary(offset);
+                if ok {
+                    previous = offset;
+                } else {
+                    tracing::warn!(
+                        offset,
+                        len = content.len(),
+                        "[prompts] dropping an invalid cache breakpoint"
+                    );
+                }
+                ok
+            })
+            .collect();
+        Self {
+            id: None,
+            role: "system".into(),
+            content,
+            extra_metadata: None,
+            cache_breakpoints: breakpoints,
         }
     }
 
@@ -34,6 +81,7 @@ impl ChatMessage {
             role: "user".into(),
             content: content.into(),
             extra_metadata: None,
+            cache_breakpoints: Vec::new(),
         }
     }
 
@@ -43,6 +91,7 @@ impl ChatMessage {
             role: "assistant".into(),
             content: content.into(),
             extra_metadata: None,
+            cache_breakpoints: Vec::new(),
         }
     }
 
@@ -52,6 +101,7 @@ impl ChatMessage {
             role: "tool".into(),
             content: content.into(),
             extra_metadata: None,
+            cache_breakpoints: Vec::new(),
         }
     }
 }

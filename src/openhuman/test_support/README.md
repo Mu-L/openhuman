@@ -32,7 +32,7 @@ From `rpc` / `introspect` (used by handlers, also `pub`):
 
 ## RPC / controllers
 
-Six controllers, registered into the global registry via `src/core/all.rs`:
+Six controllers, registered into the global registry via `crates/openhuman-core/src/core/all.rs`:
 
 | Namespace.function | Inputs | Purpose |
 | --- | --- | --- |
@@ -64,7 +64,7 @@ This module owns no state of its own — it mutates/reads state owned by other d
 
 ## Used by
 
-- `src/core/all.rs` — registers this module's controllers and schemas into the global RPC registry (`all_test_support_registered_controllers` / `all_test_support_controller_schemas`).
+- `crates/openhuman-core/src/core/all.rs` — registers this module's controllers and schemas into the global RPC registry (`all_test_support_registered_controllers` / `all_test_support_controller_schemas`).
 - `src/openhuman/mod.rs` — declares `pub mod test_support`.
 - Consumed at runtime by E2E specs (WDIO) calling `openhuman.test_reset` and `openhuman.test_support_*` over JSON-RPC.
 

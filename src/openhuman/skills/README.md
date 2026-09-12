@@ -16,7 +16,7 @@ Discovery and parsing of agentskills.io-style skills (a directory containing `SK
 - `src/openhuman/config/` — workspace path resolution and trust-marker location.
 - `src/openhuman/agent/` — the `## Installed Skills` catalog rendered in `agent_registry/agents/orchestrator/prompt.rs`, fed by the skill list on `PromptContext` (`agent/harness/session/turn/context.rs`).
 - `src/openhuman/config/workspace/` — workspace-relative skill paths.
-- `src/core/event_bus/` — emits `DomainEvent::Skill(*)` on install / uninstall.
+- `crates/openhuman-core/src/core/event_bus/` — emits `DomainEvent::Skill(*)` on install / uninstall.
 
 ## Called by
 
@@ -26,7 +26,7 @@ Discovery and parsing of agentskills.io-style skills (a directory containing `SK
 - `src/openhuman/agent/harness/fork_context.rs` — fork context propagates injected skills.
 - `src/openhuman/agent/harness/session/turn.rs` — per-turn injection point.
 - `src/openhuman/agent/prompts/{mod,types}.rs` — render `## Available Skills` catalog section.
-- `src/core/all.rs` — controller registry wiring.
+- `crates/openhuman-core/src/core/all.rs` — controller registry wiring.
 
 ## Tests
 

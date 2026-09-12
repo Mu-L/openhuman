@@ -319,7 +319,7 @@ pub async fn list_configured_models_from_config(
         // `404 page not found`. The `provider returned 404` prefix is kept
         // verbatim so the `is_provider_user_state_message` classifier anchor
         // (which demotes this preventable user-state case out of Sentry)
-        // still matches — see `src/core/observability.rs`.
+        // still matches — see `crates/openhuman-core/src/core/observability.rs`.
         if status.as_u16() == 404 {
             return Err(format!(
                 "provider returned 404: {} — the configured base URL does not expose a `/models` endpoint; check the provider's base URL (it usually ends in `/v1`)",

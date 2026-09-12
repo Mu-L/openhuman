@@ -58,7 +58,7 @@ Namespace `threads` (JSON-RPC `openhuman.threads_<function>`). Schemas + handler
 | `turn_state_get` / `turn_state_list` / `turn_state_clear` | Read / list / delete persisted in-flight turn snapshots. |
 | `task_board_get` / `task_board_put` | Proxy the per-thread kanban board to `agent::task_board`. |
 
-Wired into the registry from `src/core/all.rs` (controllers + schemas extended with the `all_threads_*` pair).
+Wired into the registry from `crates/openhuman-core/src/core/all.rs` (controllers + schemas extended with the `all_threads_*` pair).
 
 ## Persistence
 
@@ -81,8 +81,8 @@ Wired into the registry from `src/core/all.rs` (controllers + schemas extended w
 
 ## Used by
 
-- `src/core/all.rs` — registers the controllers/schemas into the JSON-RPC + CLI registry.
-- `src/core/jsonrpc.rs` — references threads (transport routing).
+- `crates/openhuman-core/src/core/all.rs` — registers the controllers/schemas into the JSON-RPC + CLI registry.
+- `crates/openhuman-core/src/core/jsonrpc.rs` — references threads (transport routing).
 - `src/openhuman/web_chat/` — drives `TurnStateMirror` / turn-state store during chat turns; consumes `invalidate_thread_sessions`.
 - `src/openhuman/platform/startup/ops.rs` — invokes the welcome migration and/or turn-state startup handling.
 

@@ -975,7 +975,7 @@ async fn ai_artifacts_reject_traversal_absence_and_unregenerable_kinds() {
 /// gate is what keeps the destructive `openhuman.test_reset` out of shipped
 /// binaries. Under the product features the five methods must be absent from
 /// the schema catalog *and* unroutable, and this case fails if either the
-/// `#[cfg]` at `src/core/all.rs` or the feature list stops holding that line.
+/// `#[cfg]` at `crates/openhuman-core/src/core/all.rs` or the feature list stops holding that line.
 #[cfg(not(feature = "e2e-test-support"))]
 #[tokio::test]
 async fn test_support_controllers_are_absent_without_their_feature() {

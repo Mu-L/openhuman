@@ -38,7 +38,7 @@ Re-exported from `mod.rs`:
 
 ## RPC / controllers
 
-Namespace `approval` (registered via `all_approval_registered_controllers`, consumed by `src/core/all.rs`):
+Namespace `approval` (registered via `all_approval_registered_controllers`, consumed by `crates/openhuman-core/src/core/all.rs`):
 
 | Method | Inputs | Output |
 | --- | --- | --- |
@@ -54,7 +54,7 @@ None. This module gates other domains' tools; it owns no tools of its own (no `t
 
 ## Events
 
-Published via `publish_global` (domain `approval`, defined in `src/core/event_bus/events.rs`):
+Published via `publish_global` (domain `approval`, defined in `crates/openhuman-core/src/core/event_bus/events.rs`):
 
 - `DomainEvent::ApprovalRequested { request_id, tool_name, action_summary, args_redacted, session_id, thread_id, client_id }` — emitted when a call is parked. Bridged to the `approval_request` web-channel socket event by `ApprovalSurfaceSubscriber` (defined in `src/openhuman/web_chat/`).
 - `DomainEvent::ApprovalDecided { request_id, tool_name, decision }` — emitted when a decision is applied.
@@ -77,8 +77,8 @@ SQLite DB at `{workspace_dir}/approval/approval.db`, table `pending_approvals` (
 
 ## Used by
 
-- `src/core/jsonrpc.rs` — installs the global gate (`ApprovalGate::init_global`) at startup; wires the approval RPCs.
-- `src/core/all.rs` — registers the controller schemas.
+- `crates/openhuman-core/src/core/jsonrpc.rs` — installs the global gate (`ApprovalGate::init_global`) at startup; wires the approval RPCs.
+- `crates/openhuman-core/src/core/all.rs` — registers the controller schemas.
 - `src/openhuman/agent/tinyagents/middleware.rs` (`ApprovalSecurityMiddleware`, a `wrap_tool` middleware on every turn path) — routes external-effect tool calls through the gate before `execute()` and records the terminal audit row.
 - `src/openhuman/web_chat/` — sets `APPROVAL_CHAT_CONTEXT`, hosts `ApprovalSurfaceSubscriber`, and routes typed yes/no replies to `approval_decide`.
 - `src/openhuman/channels/proactive.rs`, `src/openhuman/agent/triage/escalation.rs`, `src/openhuman/tools/impl/system/install_tool.rs`, `src/openhuman/web3/wallet/execution.rs` — interact with the gate / approval types.
@@ -90,5 +90,5 @@ SQLite DB at `{workspace_dir}/approval/approval.db`, table `pending_approvals` (
 - **Waiter registered before persist** so a fast `approval_decide` can't mark a request approved while no waiter exists (PR #2149).
 - **Orphan rows are intentionally preserved** across launches (issue #1339); deciding one is a DB-only audit update — no side effect can fire across processes, so the security invariant holds.
 - **`approve_always_for_tool` persistence is the RPC handler's job**, not the gate's — `gate.decide` only resolves the parked future and emits the audit event; `rpc::approval_decide` appends to `autonomy.auto_approve` + reloads the live policy (best-effort; failure degrades to prompting again).
-- `OPENHUMAN_APPROVAL_GATE=0`/`false` skips installing the gate (handled in `src/core/jsonrpc.rs`), in which case `Prompt`-class calls run unprompted.
+- `OPENHUMAN_APPROVAL_GATE=0`/`false` skips installing the gate (handled in `crates/openhuman-core/src/core/jsonrpc.rs`), in which case `Prompt`-class calls run unprompted.
 - A prior list-based `ApprovalManager` was removed; the gate is now the sole control reading the `autonomy.auto_approve` allowlist.

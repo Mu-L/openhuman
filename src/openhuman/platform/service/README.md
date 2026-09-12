@@ -73,7 +73,7 @@ Subscribes (in `bus.rs`):
 - `RestartSubscriber` (`name = "service::restart"`) — on `SystemRestartRequested`, atomically claims a one-shot gate, calls `trigger_self_restart_now` to spawn a replacement process, then `process::exit(0)` after 150ms.
 - `ShutdownSubscriber` (`name = "service::shutdown"`) — on `SystemShutdownRequested`, claims its gate and `process::exit(0)` after 150ms (no respawn).
 
-Both subscribers are registered idempotently from `src/core/jsonrpc.rs` at startup via `register_restart_subscriber` / `register_shutdown_subscriber`; handles are held in process-lifetime `OnceLock`s so they are never dropped.
+Both subscribers are registered idempotently from `crates/openhuman-core/src/core/jsonrpc.rs` at startup via `register_restart_subscriber` / `register_shutdown_subscriber`; handles are held in process-lifetime `OnceLock`s so they are never dropped.
 
 ## Persistence
 
@@ -92,8 +92,8 @@ Both subscribers are registered idempotently from `src/core/jsonrpc.rs` at start
 
 ## Used by
 
-- `src/core/all.rs` — registers the service controllers (`all_service_registered_controllers`).
-- `src/core/jsonrpc.rs` — registers the restart/shutdown event-bus subscribers at startup.
+- `crates/openhuman-core/src/core/all.rs` — registers the service controllers (`all_service_registered_controllers`).
+- `crates/openhuman-core/src/core/jsonrpc.rs` — registers the restart/shutdown event-bus subscribers at startup.
 - `src/openhuman/platform/doctor/core.rs` — reads `service::daemon::state_file_path`.
 - `src/openhuman/platform/update/ops.rs`, `src/openhuman/config/ops.rs`, `src/openhuman/desktop/app_state/ops.rs` — reference `openhuman::platform::service` (status/lifecycle/restart paths).
 - `src/lib.rs` — module wiring.

@@ -20,7 +20,7 @@
 //! bound to B resolves the entry for B or falls back, and can never be handed
 //! A's driver. Pinned by
 //! `failed_bind_never_returns_previous_workspace_binding` in
-//! `src/core/runtime/context.rs`.
+//! `crates/openhuman-core/src/core/runtime/context.rs`.
 //!
 //! ## Two vocabularies meet here, on purpose
 //!

@@ -430,6 +430,7 @@ fn parse_legacy_messages(raw: &str) -> Result<Vec<ChatMessage>> {
                 role,
                 content: content.replace(LEGACY_MSG_CLOSE_ESCAPED, LEGACY_MSG_CLOSE),
                 extra_metadata: None,
+                cache_breakpoints: Vec::new(),
             });
             search_from = content_start + content_end_rel + LEGACY_MSG_CLOSE.len();
             continue;
@@ -441,6 +442,7 @@ fn parse_legacy_messages(raw: &str) -> Result<Vec<ChatMessage>> {
             role,
             content: content.replace(LEGACY_MSG_CLOSE_ESCAPED, LEGACY_MSG_CLOSE),
             extra_metadata: None,
+            cache_breakpoints: Vec::new(),
         });
 
         search_from = content_start + content_end_rel + close_tag.len();

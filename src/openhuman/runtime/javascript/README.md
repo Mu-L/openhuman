@@ -5,7 +5,7 @@ First-class **JavaScript language slot** for the core. This module is a thin re-
 ## Responsibilities
 
 - Provide the canonical `openhuman::runtime::javascript::*` import path for Node.js runtime resolution/bootstrap and the agent-tool bridge.
-- Re-export the JS-namespaced RPC controller schemas/registry (`javascript.list_tools`, `javascript.execute_tool`) under stable `all_javascript_*` names so `src/core/all.rs` can wire them.
+- Re-export the JS-namespaced RPC controller schemas/registry (`javascript.list_tools`, `javascript.execute_tool`) under stable `all_javascript_*` names so `crates/openhuman-core/src/core/all.rs` can wire them.
 - Re-export `NodeBootstrap` and related resolve/download/extract types used by the system exec tools to locate a `node` binary.
 
 ## Key files
@@ -68,7 +68,7 @@ No persisted domain state (`store.rs`). The managed-Node install path (`extracto
 
 ## Used by
 
-- `src/core/all.rs` — wires `all_javascript_registered_controllers` / `all_javascript_controller_schemas` into the controller registry; the about-app catalog describes namespace `javascript`.
+- `crates/openhuman-core/src/core/all.rs` — wires `all_javascript_registered_controllers` / `all_javascript_controller_schemas` into the controller registry; the about-app catalog describes namespace `javascript`.
 - `src/openhuman/tools/ops.rs`, `tools/impl/system/shell.rs`, `node_exec.rs`, `npm_exec.rs` — import `openhuman::runtime::javascript::NodeBootstrap` for Node binary resolution.
 - `src/openhuman/runtime/node/rpc.rs` — calls `javascript::list_tools` through the facade.
 

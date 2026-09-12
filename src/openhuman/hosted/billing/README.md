@@ -77,7 +77,7 @@ None of its own; stateless adapter. The only state it reads is the backend sessi
 
 ## Used by
 
-- `src/core/all.rs` — registers `all_billing_registered_controllers()` (controllers, ~L215) and `all_billing_controller_schemas()` (schemas, ~L346) into the global registry. This is the sole in-tree consumer.
+- `crates/openhuman-core/src/core/all.rs` — registers `all_billing_registered_controllers()` (controllers, ~L215) and `all_billing_controller_schemas()` (schemas, ~L346) into the global registry. This is the sole in-tree consumer.
 
 ## Notes / gotchas
 

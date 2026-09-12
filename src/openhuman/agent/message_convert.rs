@@ -6,7 +6,7 @@
 //! - openhuman `ChatMessage` is `{ role: String, content: String }` — tool
 //!   calls and tool-result correlation ids are not first-class fields; the
 //!   legacy loop threads them through provider-native encoding instead.
-//! - `tinyinference::message::Message` is a typed enum
+//! - `tinyagents::harness::message::Message` is a typed enum
 //!   (`System`/`User`/`Assistant`/`Tool`) whose `Assistant` arm carries
 //!   structured `tool_calls` and whose `Tool` arm carries a `tool_call_id`.
 //!
@@ -308,6 +308,49 @@ pub(crate) fn messages_to_history(messages: &[Message]) -> Vec<ChatMessage> {
     messages.iter().map(message_to_chat_message).collect()
 }
 
+/// Serialize a user [`Message`]'s content blocks back into a single string for a
+/// native provider request, **preserving image attachments** as inline
+/// `[IMAGE:<url>]` markers. This is the inverse of [`user_content_blocks`]: the
+/// forward hop lifts `[IMAGE:…]` markers into typed [`ContentBlock::Image`]
+/// blocks, so the reverse hop must re-emit them, or a native-tool provider that
+/// round-trips through a string-content [`ChatMessage`] (claude-code, and any
+/// other `supports_native_tools` provider) silently loses every pasted image —
+/// [`Message::text`] concatenates only [`ContentBlock::Text`] and drops the rest.
+/// The marker-aware provider input builders reinflate `[IMAGE:data:…]` back into
+/// real image content blocks. Text-only turns are byte-for-byte identical to
+/// `msg.text()` (fast path), so non-image traffic is unaffected.
+fn native_user_content(msg: &Message) -> String {
+    let Message::User(user) = msg else {
+        return msg.text();
+    };
+    // Fast path: no image blocks → identical to `msg.text()`.
+    if !user
+        .content
+        .iter()
+        .any(|b| matches!(b, ContentBlock::Image(_)))
+    {
+        return msg.text();
+    }
+    let mut out = String::new();
+    for block in &user.content {
+        let piece = match block {
+            ContentBlock::Text(text) => text.replace("[OH_IMAGE:", "[OH_IMAGE_LITERAL:"),
+            // Use a private wire marker so provider input builders can
+            // distinguish an image block from literal text that happens to
+            // look like `[IMAGE:…]`.
+            ContentBlock::Image(image) => format!("[OH_IMAGE:{}]", image.url),
+            // Json / ProviderExtension carry no user-visible text — `msg.text()`
+            // drops them too, so skip them to preserve that behaviour.
+            _ => continue,
+        };
+        if piece.is_empty() {
+            continue;
+        }
+        out.push_str(&piece);
+    }
+    out
+}
+
 /// Convert one harness [`Message`] into a [`ChatMessage`] for a **native**
 /// tool-calling provider request, preserving the structure the provider needs to
 /// round-trip a tool round: an assistant turn that made tool calls is encoded as
@@ -320,7 +363,7 @@ pub(crate) fn messages_to_history(messages: &[Message]) -> Vec<ChatMessage> {
 pub(crate) fn message_to_native_chat_message(msg: &Message) -> ChatMessage {
     match msg {
         Message::System(_) => ChatMessage::system(msg.text()),
-        Message::User(_) => ChatMessage::user(msg.text()),
+        Message::User(_) => ChatMessage::user(native_user_content(msg)),
         Message::Assistant(a) if !a.tool_calls.is_empty() => {
             let tool_calls: Vec<_> = a.tool_calls.iter().map(ta_call_to_oh_call).collect();
             let payload = serde_json::json!({

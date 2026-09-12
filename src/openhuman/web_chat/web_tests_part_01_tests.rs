@@ -222,6 +222,54 @@ fn extract_provider_error_detail_returns_none_for_transport_errors() {
 }
 
 #[test]
+fn extract_provider_error_detail_decodes_standard_json_escapes() {
+    // The escaped solidus matters most in practice: provider bodies routinely
+    // carry URLs as `https:\/\/…`. `\r`, `\b` and `\f` complete the JSON
+    // standard set. Every one of them must decode — none may survive as a
+    // literal backslash.
+    let raw = r#"provider API error (400): {"error":{"message":"GET https:\/\/api.example.com\/v1\/models failed\r\nretry\tlater\b\f done"}}"#;
+    let detail = extract_provider_error_detail(raw).expect("expected JSON message");
+    assert!(
+        !detail.contains('\\'),
+        "no escape should survive decoding, got: {detail:?}"
+    );
+    assert!(
+        detail.contains("https://api.example.com/v1/models"),
+        "escaped solidus must decode, got: {detail:?}"
+    );
+    assert!(
+        detail.contains('\r'),
+        "carriage return must decode: {detail:?}"
+    );
+    assert!(detail.contains('\n'), "newline must decode: {detail:?}");
+    assert!(detail.contains('\t'), "tab must decode: {detail:?}");
+    assert!(
+        detail.contains('\u{8}'),
+        "backspace must decode: {detail:?}"
+    );
+    assert!(
+        detail.contains('\u{c}'),
+        "form feed must decode: {detail:?}"
+    );
+}
+
+#[test]
+fn extract_provider_error_detail_preserves_unknown_escapes() {
+    // Genuinely unsupported sequences keep both characters — an unhandled
+    // `\uXXXX` is better shown to the user as visible literal text than
+    // silently mangled into a character nobody asked for. `\"` and `\\`
+    // keep their existing meaning.
+    let raw = r#"provider API error: {"error":{"message":"quote \" hi and slash \\ then unicode \u263A and \q \s \&"}}"#;
+    let detail = extract_provider_error_detail(raw).expect("expected JSON message");
+    assert!(detail.contains("quote \" hi"), "got: {detail:?}");
+    assert!(detail.contains("slash \\ then"), "got: {detail:?}");
+    assert!(detail.contains(r"\u263A"), "got: {detail:?}");
+    assert!(detail.contains(r"\q"), "got: {detail:?}");
+    assert!(detail.contains(r"\s"), "got: {detail:?}");
+    assert!(detail.contains(r"\&"), "got: {detail:?}");
+}
+
+#[test]
 fn classify_inference_error_quotes_model_unavailable_detail() {
     // A stale model pin (`model_not_found` / "does not exist or you do not
     // have access") is the #2202 config-rejection class: it now resolves

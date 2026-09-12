@@ -865,7 +865,7 @@ async fn memory_sources_composio_registry_flow() {
 // workspace it is handed: `PathBuf::from(base_path)` used the configured string
 // verbatim, so a RELATIVE path resolved against the host process's current
 // working directory. For the desktop app that is the Tauri build directory, so
-// a source configured as `docs` looked in `…/app/src-tauri/docs`, found
+// a source configured as `docs` looked in `…/crates/openhuman-app/docs`, found
 // nothing, and failed on every sync cycle forever.
 //
 // `resolve_base` now anchors a relative path on the workspace (absolute paths

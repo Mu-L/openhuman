@@ -22,7 +22,7 @@ Multi-platform messaging integration. Owns the `Channel` trait, per-provider con
 - `src/openhuman/threads/` — thread state for platforms with native threading (Slack `thread_ts`).
 - `src/openhuman/desktop/notifications/` — surface inbound deliveries to the UI.
 - `src/openhuman/security/encryption/` — at-rest secret protection.
-- `src/core/event_bus/` — emits `DomainEvent::Channel(*)`; `channels/bus.rs` registers `ChannelInboundSubscriber`.
+- `crates/openhuman-core/src/core/event_bus/` — emits `DomainEvent::Channel(*)`; `channels/bus.rs` registers `ChannelInboundSubscriber`.
 
 ## Called by
 
@@ -30,7 +30,7 @@ Multi-platform messaging integration. Owns the `Channel` trait, per-provider con
 - `src/openhuman/memory/conversations/bus.rs` — persists incoming channel messages as conversation memories.
 - `src/openhuman/cron/bus.rs` — scheduled triggers can post via channels.
 - `src/openhuman/config/schema/channels.rs` — config layer references channel types for validation.
-- `src/core/all.rs` — controller registry wiring.
+- `crates/openhuman-core/src/core/all.rs` — controller registry wiring.
 
 ## Tests
 

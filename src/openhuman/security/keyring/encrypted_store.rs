@@ -325,7 +325,7 @@ impl SecretStore {
             // Write key file with restrictive permissions atomically on Unix
             // to avoid a TOCTOU race where the file is briefly world-readable,
             // and to avoid clobbering a key another process created first.
-            // See: src/core/auth.rs:write_token_file for the reference pattern.
+            // See: crates/openhuman-core/src/core/auth.rs:write_token_file for the reference pattern.
             #[cfg(unix)]
             {
                 use std::io::Write as _;

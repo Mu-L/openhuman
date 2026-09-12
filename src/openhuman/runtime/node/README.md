@@ -65,7 +65,7 @@ entirely — the first native toolchain build removed rather than merely gated.
 
 ## RPC / controllers
 
-Registered under namespace `javascript` (schemas wired into `src/core/all.rs`
+Registered under namespace `javascript` (schemas wired into `crates/openhuman-core/src/core/all.rs`
 via the `javascript` module's `all_javascript_*` aliases, not under a
 `runtime_node` name):
 
@@ -119,7 +119,7 @@ those went with the machinery.
   non-blocking `try_cached()`.
 - `src/openhuman/agent/harness_init/registry.rs` — the `node_runtime` init step
   uses `probe_installed()` to decide whether provisioning is visible work.
-- `src/core/all.rs` — registers the `javascript.*` controllers.
+- `crates/openhuman-core/src/core/all.rs` — registers the `javascript.*` controllers.
 
 ## Notes / gotchas
 

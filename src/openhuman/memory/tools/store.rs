@@ -5,7 +5,7 @@ use crate::openhuman::memory::ops::guard::active_memory_guard;
 use crate::openhuman::memory::safety;
 use crate::openhuman::security::policy::ToolOperation;
 use crate::openhuman::security::SecurityPolicy;
-use crate::openhuman::tools::traits::{Tool, ToolResult};
+use crate::openhuman::tools::traits::{Tool, ToolExposure, ToolResult};
 use async_trait::async_trait;
 use serde_json::json;
 use sha2::{Digest, Sha256};
@@ -94,6 +94,14 @@ fn derive_key(content: &str) -> String {
 
 #[async_trait]
 impl Tool for MemoryStoreTool {
+    /// Superseded by the `memory` tool, which dispatches every memory
+    /// operation on one `action` field. Kept registered and dispatchable so a
+    /// replayed transcript or a saved skill naming `memory_*` keeps working;
+    /// hidden from the wire so eleven schemas do not ship where one does.
+    fn exposure(&self) -> ToolExposure {
+        ToolExposure::Hidden
+    }
+
     fn name(&self) -> &str {
         "memory_store"
     }

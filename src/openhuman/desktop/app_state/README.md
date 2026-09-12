@@ -20,12 +20,12 @@ Aggregator that the React shell polls every few seconds to render the OS-level c
 - `src/openhuman/inference/local/` — `LocalAiStatus` snapshot.
 - `src/openhuman/platform/service/` — `ServiceState` / `ServiceStatus` runtime info.
 - `src/openhuman/security/credentials/` — `session_support::build_session_state` for the auth slice.
-- `src/api/{config,jwt}` — backend base URL + bearer token used by the cached current-user fetch.
+- `crates/openhuman-core/src/api/{config,jwt}` — backend base URL + bearer token used by the cached current-user fetch.
 
 ## Called by
 
 - `src/openhuman/agent/harness/session/builder.rs` — agent builder reads cached app state when resolving identity.
-- `src/core/all.rs` — registers `all_app_state_*` controllers; the shell hits these via `core_rpc_relay`.
+- `crates/openhuman-core/src/core/all.rs` — registers `all_app_state_*` controllers; the shell hits these via `core_rpc_relay`.
 - `app/src/` — Tauri shell consumes the snapshot in its polling loops (out of scope for this README).
 
 ## Tests

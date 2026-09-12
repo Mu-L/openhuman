@@ -47,7 +47,7 @@ mod tool_memory;
 // `all_<family>_registered_controllers()` pair so a caller can register (or, in
 // a later slice, decline to register) one family at a time. The aggregators
 // below fan these out in a fixed order — core_recall, documents, ingest, files,
-// kv_graph, sync, learn, provider, tool_memory. Do not reorder: `src/core/all.rs`
+// kv_graph, sync, learn, provider, tool_memory. Do not reorder: `crates/openhuman-core/src/core/all.rs`
 // pushes the nine parts in exactly this sequence and
 // `registered_controller_order_is_pinned_to_the_capability_partition_snapshot` in
 // `schemas_tests.rs` fails if it drifts.

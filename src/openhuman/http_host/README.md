@@ -61,9 +61,9 @@ None on disk. Running servers are held in a process-global `HostedDirRegistry` (
 
 ## Used by
 
-- `src/core/all.rs` — registers `all_http_host_registered_controllers()` (line ~145) and `all_http_host_controller_schemas()` (line ~309) into the core controller registry, exposing the RPC/CLI surface.
+- `crates/openhuman-core/src/core/all.rs` — registers `all_http_host_registered_controllers()` (line ~145) and `all_http_host_controller_schemas()` (line ~309) into the core controller registry, exposing the RPC/CLI surface.
 - `src/openhuman/mod.rs` — declares `pub mod http_host`.
-- `src/core/observability.rs` references `http_host::path_utils` paths in error-classification docs/tests (`http_host` directory-not-found maps to a filesystem user-path-invalid class).
+- `crates/openhuman-core/src/core/observability.rs` references `http_host::path_utils` paths in error-classification docs/tests (`http_host` directory-not-found maps to a filesystem user-path-invalid class).
 
 ## Notes / gotchas
 

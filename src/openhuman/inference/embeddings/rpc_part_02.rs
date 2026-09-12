@@ -281,7 +281,7 @@ fn classify_embed_probe(outcome: EmbedProbe) -> Option<RpcOutcome<serde_json::Va
 ///   `Embedding API error (401 Unauthorized): …`           (parenthesized host shape)
 ///   `Embedding API error 401 Unauthorized: …`             (bare-status host shape)
 /// The bare-status `Embedding API error {code}` form is the one the observability
-/// classifier in `src/core/observability.rs` covers; without it, setup-time
+/// classifier in `crates/openhuman-core/src/core/observability.rs` covers; without it, setup-time
 /// verification for those hosts fell through to the generic failure code (#5017).
 fn embed_error_mentions_status(lower: &str, code: u16) -> bool {
     let code = code.to_string();

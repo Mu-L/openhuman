@@ -636,9 +636,16 @@ fn emit<T: serde::Serialize>(event: &str, payload: T) {
         log::debug!("[medulla] no socket manager — dropping {event}");
         return;
     };
+    // `emit` is reachable from synchronous callers (socket event handlers,
+    // unit tests). `tokio::spawn` panics outside a runtime, so resolve the
+    // handle first and treat "no runtime" like "no socket": best-effort drop.
+    let Ok(handle) = tokio::runtime::Handle::try_current() else {
+        log::debug!("[medulla] no tokio runtime — dropping {event}");
+        return;
+    };
     let mgr = Arc::clone(mgr);
     let event = event.to_string();
-    tokio::spawn(async move {
+    handle.spawn(async move {
         if let Err(err) = mgr.emit(&event, data).await {
             log::warn!("[medulla] failed to emit {event}: {err}");
         }

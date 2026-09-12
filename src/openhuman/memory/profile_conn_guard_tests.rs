@@ -26,7 +26,7 @@ fn profile_conn_is_confined_to_the_memory_family() {
         }
     }
 
-    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("src");
+    let root = std::path::Path::new(env!("OPENHUMAN_REPOSITORY_ROOT")).join("src");
     let family = root.join("openhuman").join("memory");
     let mut files = Vec::new();
     rs_files_under(&root, &mut files);

@@ -56,6 +56,15 @@ pub fn load_workflow_metadata_for_profile(
     Vec::new()
 }
 
+/// No-op: with skills compiled out nothing can discover a bundled skill, so
+/// writing one into the workspace would only leave files nothing reads.
+///
+/// Returns unit rather than the real `InstallReport` — the report type lives
+/// inside the gated tree, and the one caller only logs it.
+pub fn install_bundled_skills(_workspace_dir: &Path) {
+    log::debug!("[skills-stub] install_bundled_skills skipped (skills disabled)");
+}
+
 /// No-op success: with skills compiled out there is no skills directory to
 /// provision, and workspace bootstrap must not fail because of it.
 pub fn init_workflows_dir(_workspace_dir: &Path) -> Result<(), String> {
@@ -64,7 +73,7 @@ pub fn init_workflows_dir(_workspace_dir: &Path) -> Result<(), String> {
 }
 
 // ---------------------------------------------------------------------------
-// Controller aggregators — empty so `src/core/all.rs` needs no `#[cfg]`.
+// Controller aggregators — empty so `crates/openhuman-core/src/core/all.rs` needs no `#[cfg]`.
 // ---------------------------------------------------------------------------
 
 /// Always empty: the `openhuman.skills_*` controllers are compiled out, so

@@ -1,6 +1,6 @@
 # overlay
 
-Signals pushed from the core to the desktop **overlay window** — a separate Tauri WebView (`OverlayApp.tsx`, configured in `app/src-tauri/tauri.conf.json`) that renders short, non-focus-stealing messages over the desktop. Because the overlay runs in its own JS runtime it cannot share Redux state with the main window; instead it subscribes to a dedicated Socket.IO connection and reacts to events the core broadcasts. This module owns a single fire-and-forget broadcast bus for **attention** events; the Socket.IO transport bridge (`src/core/socketio.rs`) subscribes and forwards them to the overlay window. It is deliberately light: export-focused, one broadcast channel, no persistence and no RPC.
+Signals pushed from the core to the desktop **overlay window** — a separate Tauri WebView (`OverlayApp.tsx`, configured in `crates/openhuman-app/tauri.conf.json`) that renders short, non-focus-stealing messages over the desktop. Because the overlay runs in its own JS runtime it cannot share Redux state with the main window; instead it subscribes to a dedicated Socket.IO connection and reacts to events the core broadcasts. This module owns a single fire-and-forget broadcast bus for **attention** events; the Socket.IO transport bridge (`crates/openhuman-core/src/core/socketio.rs`) subscribes and forwards them to the overlay window. It is deliberately light: export-focused, one broadcast channel, no persistence and no RPC.
 
 ## Responsibilities
 
@@ -26,7 +26,7 @@ Signals pushed from the core to the desktop **overlay window** — a separate Ta
 
 ## Events
 
-Not a `DomainEvent` / event-bus (`src/core/event_bus/`) participant. It runs its own standalone `tokio::sync::broadcast` channel. The Socket.IO bridge in `src/core/socketio.rs` (`spawn_web_channel_bridge`, task #3) subscribes via `subscribe_attention_events()` and emits each event to the overlay socket as both `overlay:attention` and `overlay_attention`; it logs and continues on `Lagged` and breaks on `Closed`.
+Not a `DomainEvent` / event-bus (`crates/openhuman-core/src/core/event_bus/`) participant. It runs its own standalone `tokio::sync::broadcast` channel. The Socket.IO bridge in `crates/openhuman-core/src/core/socketio.rs` (`spawn_web_channel_bridge`, task #3) subscribes via `subscribe_attention_events()` and emits each event to the overlay socket as both `overlay:attention` and `overlay_attention`; it logs and continues on `Lagged` and breaks on `Closed`.
 
 ## Persistence
 
@@ -38,7 +38,7 @@ None. State is purely an in-memory broadcast channel; events not consumed when p
 
 ## Used by
 
-- `src/core/socketio.rs` — subscribes to the bus and forwards events to the overlay WebView over Socket.IO.
+- `crates/openhuman-core/src/core/socketio.rs` — subscribes to the bus and forwards events to the overlay WebView over Socket.IO.
 - `src/openhuman/desktop/notifications/bus.rs` — references this module's bus only as a documented pattern to mirror (no code dependency).
 - Per the module docstring, intended publishers include the subconscious loop and heartbeat via `publish_attention`.
 

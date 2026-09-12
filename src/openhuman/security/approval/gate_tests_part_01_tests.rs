@@ -511,16 +511,27 @@ async fn auto_approve_all_allows_a_remote_triage_dispatch_without_an_audit_row()
 
 #[tokio::test]
 async fn timeout_returns_deny() {
-    let (gate, _dir) = test_gate(); // TTL = 500ms
+    let (gate, _dir, env) = expiry_gate();
     let gate = Arc::new(gate);
-    let outcome = turn_origin::with_origin(
-        web_origin(),
-        APPROVAL_CHAT_CONTEXT.scope(
-            chat_ctx(),
-            gate.intercept("composio", "timed out", serde_json::json!({})),
-        ),
-    )
-    .await;
+    let g = gate.clone();
+    let handle = tokio::spawn(async move {
+        turn_origin::with_origin(
+            web_origin(),
+            APPROVAL_CHAT_CONTEXT.scope(
+                chat_ctx(),
+                g.intercept("composio", "timed out", serde_json::json!({})),
+            ),
+        )
+        .await
+    });
+    let mut tries = 0;
+    while gate.list_pending().unwrap().is_empty() {
+        tries += 1;
+        assert!(tries < 50, "audit row never appeared for timeout test");
+        tokio::time::sleep(Duration::from_millis(10)).await;
+    }
+    drop(env);
+    let outcome = handle.await.unwrap();
     match outcome {
         GateOutcome::Deny { reason } => assert!(reason.contains("timed out")),
         other => panic!("expected deny, got {other:?}"),
@@ -538,20 +549,31 @@ async fn timeout_returns_deny() {
 /// unapproved, mirroring `timeout_returns_deny` above.
 #[tokio::test]
 async fn cancel_flow_run_parks_for_approval_when_a_gate_is_present() {
-    let (gate, _dir) = test_gate(); // TTL = 500ms
+    let (gate, _dir, env) = expiry_gate();
     let gate = Arc::new(gate);
-    let outcome = turn_origin::with_origin(
-        web_origin(),
-        APPROVAL_CHAT_CONTEXT.scope(
-            chat_ctx(),
-            gate.intercept(
-                "cancel_flow_run",
-                "cancel run r-1 of flow f-1",
-                serde_json::json!({ "flow_id": "f-1", "run_id": "r-1" }),
+    let g = gate.clone();
+    let handle = tokio::spawn(async move {
+        turn_origin::with_origin(
+            web_origin(),
+            APPROVAL_CHAT_CONTEXT.scope(
+                chat_ctx(),
+                g.intercept(
+                    "cancel_flow_run",
+                    "cancel run r-1 of flow f-1",
+                    serde_json::json!({ "flow_id": "f-1", "run_id": "r-1" }),
+                ),
             ),
-        ),
-    )
-    .await;
+        )
+        .await
+    });
+    let mut tries = 0;
+    while gate.list_pending().unwrap().is_empty() {
+        tries += 1;
+        assert!(tries < 50, "audit row never appeared for cancel_flow_run");
+        tokio::time::sleep(Duration::from_millis(10)).await;
+    }
+    drop(env);
+    let outcome = handle.await.unwrap();
     // No decision ever arrives — the call must NOT auto-execute. It
     // parks until the gate's TTL elapses, then denies (never `Allow`).
     match outcome {

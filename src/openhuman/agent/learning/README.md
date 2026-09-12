@@ -53,7 +53,7 @@ Not re-exported but public within the module: `candidate::global()`, the `linked
 
 ## RPC / controllers
 
-Namespace `learning` (wired into `src/core/all.rs`; 11 controllers). Methods:
+Namespace `learning` (wired into `crates/openhuman-core/src/core/all.rs`; 11 controllers). Methods:
 
 | Method | Purpose |
 | --- | --- |
@@ -76,7 +76,7 @@ All handlers go through the memory client's `profile_store()` and a `FacetCache`
 
 ## Events
 
-Uses the typed event bus (`src/core/event_bus/`):
+Uses the typed event bus (`crates/openhuman-core/src/core/event_bus/`):
 
 - **Publishes**: `DomainEvent::CacheRebuilt { added, evicted, kept, total_size, rebuilt_at }` after each rebuild (`stability_detector.rs`).
 - **Subscribes**:
@@ -108,7 +108,7 @@ These are subscriber registrations rather than a single `bus.rs`; subscriptions 
 
 ## Used by
 
-- `src/core/all.rs` — registers the `learning.*` controllers + schemas.
+- `crates/openhuman-core/src/core/all.rs` — registers the `learning.*` controllers + schemas.
 - `src/openhuman/agent/harness/session/{builder,turn}.rs` and `agent_memory/memory_loader.rs` — wire the post-turn hooks, prompt sections, and learned-context loading into the agent loop.
 - `src/openhuman/channels/runtime/startup.rs` — likely registers schedulers/subscribers at startup.
 - `src/openhuman/memory/store/namespace_store/profile.rs`, `memory_sync/composio/providers/profile.rs`, `memory_tools/{capture,mod}.rs`, `tools/impl/system/tool_stats.rs`, `tools/schemas.rs` — consume facet/learning types.

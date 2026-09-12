@@ -47,7 +47,7 @@
 
 /// Brings this domain up: its lifecycle subscriber and its service.
 ///
-/// The one entry point core startup calls. It exists so that `src/core/` — which
+/// The one entry point core startup calls. It exists so that `crates/openhuman-core/src/core/` — which
 /// is transport, and carries no business logic — does not have to know that this
 /// domain has a service, that opening one can fail, or what to do when it does.
 ///

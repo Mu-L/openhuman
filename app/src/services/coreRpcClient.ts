@@ -127,7 +127,7 @@ type CoreRpcErrorKind =
 
 /**
  * Prefix the core prepends to an unrecognised-method error. Mirrors
- * `UNKNOWN_METHOD_PREFIX` in `src/core/dispatch.rs` — keep the two in sync.
+ * `UNKNOWN_METHOD_PREFIX` in `crates/openhuman-core/src/core/dispatch.rs` — keep the two in sync.
  */
 const UNKNOWN_METHOD_PREFIX = 'unknown method: ';
 
@@ -190,7 +190,7 @@ export function classifyRpcError(
     return 'auth_expired';
   // Everything above matched an explicit backend marker in the message. What
   // is left, if the transport gave us a 401, is the LOCAL core's bearer gate
-  // (`src/core/auth.rs` — "Missing or invalid Authorization header"), never the
+  // (`crates/openhuman-core/src/core/auth.rs` — "Missing or invalid Authorization header"), never the
   // TinyHumans backend: the core proxies backend calls and surfaces their
   // rejections as a JSON-RPC error inside a 200, with no `httpStatus` at all.
   // Custom transports (cloud / LAN / tunnel) return before the branch that
@@ -678,7 +678,7 @@ export async function getCoreHttpBaseUrl(): Promise<string> {
  * Native `EventSource` cannot attach an `Authorization` header (whatwg/html
  * §10.7), so the core RPC bearer is forwarded as a `?token=…` query param.
  * The Rust middleware validates it against the same in-process token used
- * for `POST /rpc` (single source of truth — see `src/core/auth.rs`
+ * for `POST /rpc` (single source of truth — see `crates/openhuman-core/src/core/auth.rs`
  * `QUERY_TOKEN_PATHS`).
  *
  * Returns the URL on success, or `null` when no token is available — the

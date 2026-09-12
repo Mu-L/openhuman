@@ -452,7 +452,7 @@ fn the_ci_workflows_pin_the_same_module_digest_as_the_registry() {
         "../.github/workflows/ci-lite.yml",
         "../.github/workflows/e2e-reusable.yml",
     ];
-    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
+    let root = std::path::Path::new(env!("OPENHUMAN_REPOSITORY_ROOT"));
 
     let mut checked = 0usize;
     for relative in workflows {

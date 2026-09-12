@@ -104,6 +104,7 @@ recipe. The slim recipe drops everything not required by the harness:
 
 ```bash
 cargo build --release \
+  -p openhuman \
   --no-default-features --features rss-bench \
   --bin library-profile --bin rss-bench
 ```

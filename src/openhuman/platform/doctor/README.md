@@ -47,7 +47,7 @@ Namespace `doctor`, two functions:
 | `doctor.report` | none | `DoctorReport` ("Run diagnostics for workspace and runtime configuration.") |
 | `doctor.models` | `use_cache: Option<bool>` (default `true`) | `ModelProbeReport` ("Probe provider model availability and auth status.") |
 
-Both handlers load config via `config_rpc::load_config_with_timeout()` and return `RpcOutcome::single_log(...)`. Wired into the global registry in `src/core/all.rs` (controllers, schemas, and the namespace description "Run diagnostics for workspace and runtime health.").
+Both handlers load config via `config_rpc::load_config_with_timeout()` and return `RpcOutcome::single_log(...)`. Wired into the global registry in `crates/openhuman-core/src/core/all.rs` (controllers, schemas, and the namespace description "Run diagnostics for workspace and runtime health.").
 
 ## Agent tools
 
@@ -75,7 +75,7 @@ None of its own (no `store.rs`). It only **reads** existing state owned by other
 
 ## Used by
 
-- `src/core/all.rs` — registers the doctor controllers/schemas into the global RPC + CLI registry (the only in-tree consumer).
+- `crates/openhuman-core/src/core/all.rs` — registers the doctor controllers/schemas into the global RPC + CLI registry (the only in-tree consumer).
 
 ## Notes / gotchas
 

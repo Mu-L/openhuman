@@ -58,7 +58,8 @@ function cargoToml(defaultFeatures, extraFeatures) {
  * A fixture world.
  *
  * Two things every fixture needs that a bare temp dir does not have. The gate
- * hard-requires `Cargo.toml` and `scripts/ci/product-features.txt`, because
+ * hard-requires `crates/openhuman-core/Cargo.toml` and
+ * `scripts/ci/product-features.txt`, because
  * that pair is what `scripts/test-rust-e2e.sh` builds its `--features` string
  * from and therefore the only honest answer to "which configuration is being
  * measured". And — unless a test is proving the stale-entry guard — it needs a
@@ -80,7 +81,7 @@ function fixture(t, options = {}) {
   // it — an undeclared gate is a rename the table missed, not a disabled one,
   // and the gate refuses it.
   const features = declareExcludedFeatures ? { 'e2e-test-support': [], ...featureGraph } : featureGraph;
-  write(root, 'Cargo.toml', cargoToml(defaultFeatures, features));
+  write(root, 'crates/openhuman-core/Cargo.toml', cargoToml(defaultFeatures, features));
   write(root, 'scripts/ci/product-features.txt', `${productFeatures.join('\n')}\n`);
   if (withExcludedNamespaces) {
     write(
@@ -336,14 +337,14 @@ test('refuses to run without the files the measured feature set comes from', (t)
 test('refuses to run when the feature table cannot be parsed', (t) => {
   const root = fixture(t);
   write(root, 'src/openhuman/widgets/schemas_part_01.rs', controller('widgets', 'list'));
-  write(root, 'Cargo.toml', '[package]\nname = "openhuman"\n');
+  write(root, 'crates/openhuman-core/Cargo.toml', '[package]\nname = "openhuman"\n');
 
   const result = runGate(root);
 
   assert.equal(result.status, 2, `an unparseable feature table must be refused; got:\n${result.stdout}`);
   assert.match(
     result.stderr,
-    /no `\[features\] default` in Cargo\.toml/,
+    /no `\[features\] default` in crates\/openhuman-core\/Cargo\.toml/,
     `the failure must name what could not be resolved; got:\n${result.stderr}`,
   );
 });
@@ -381,7 +382,11 @@ test('fails when an excluded namespace names a gate the manifest does not declar
 // for controllers the measured build actually compiles in.
 test('reads a single-quoted TOML feature array', (t) => {
   const root = fixture(t);
-  write(root, 'Cargo.toml', "[features]\ndefault = ['e2e-test-support']\ne2e-test-support = []\n");
+  write(
+    root,
+    'crates/openhuman-core/Cargo.toml',
+    "[features]\ndefault = ['e2e-test-support']\ne2e-test-support = []\n",
+  );
   write(root, 'src/openhuman/widgets/schemas_part_01.rs', controller('widgets', 'list'));
   write(root, 'tests/widgets_e2e.rs', 'let m = "openhuman.widgets_list";');
 

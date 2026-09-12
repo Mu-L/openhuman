@@ -201,7 +201,7 @@ fn every_essential_name_exists_in_the_real_toolkit_fixture() {
     for (toolkit, essentials) in TOOLKIT_ESSENTIAL_ACTIONS {
         let path = format!(
             "{}/tests/fixtures/composio_{}.json",
-            env!("CARGO_MANIFEST_DIR"),
+            env!("OPENHUMAN_REPOSITORY_ROOT"),
             toolkit
         );
         let raw = std::fs::read_to_string(&path)
@@ -235,7 +235,7 @@ fn gmail_read_prompt_keeps_a_content_returning_action() {
     // sub-agent can actually read an email.
     let path = format!(
         "{}/tests/fixtures/composio_gmail.json",
-        env!("CARGO_MANIFEST_DIR")
+        env!("OPENHUMAN_REPOSITORY_ROOT")
     );
     let raw = std::fs::read_to_string(&path).expect("gmail fixture");
     let parsed: serde_json::Value = serde_json::from_str(&raw).expect("gmail fixture parses");

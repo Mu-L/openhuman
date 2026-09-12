@@ -78,7 +78,7 @@ None local. State lives in the hosted backend. The only stored value it reads is
 
 ## Used by
 
-- `src/core/all.rs` — registers `all_team_registered_controllers()` into the controller registry and `all_team_controller_schemas()` into the schema list (the standard controller-only exposure path). No domain branches in `cli.rs` / `jsonrpc.rs`.
+- `crates/openhuman-core/src/core/all.rs` — registers `all_team_registered_controllers()` into the controller registry and `all_team_controller_schemas()` into the schema list (the standard controller-only exposure path). No domain branches in `cli.rs` / `jsonrpc.rs`.
 
 ## Notes / gotchas
 
