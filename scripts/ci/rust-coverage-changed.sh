@@ -271,16 +271,16 @@ run_full() {
     phase2_flush_also_triggers_tree_ingest; do
     log "running isolated archivist tree test: ${archivist_test}"
     llvm_cov --no-report --no-fail-fast -p openhuman --lib \
-      "openhuman::agent::harness::archivist::tests::part_01_tests::${archivist_test}" \
-      -- --exact --test-threads=1
+      -- "openhuman::agent::harness::archivist::tests::part_01_tests::${archivist_test}" \
+      --exact --test-threads=1
   done
   # This test deliberately boots a real harness-only CoreBuilder. Doing so
   # installs one-shot process globals (including DEFAULT_CONTEXT), which would
   # narrow every later registry lookup in the aggregate unit-test process.
   log "running isolated build-only reaper test"
   llvm_cov --no-report --no-fail-fast -p openhuman --lib \
-    "openhuman::agent::tinyagents::reaper::tests::a_build_only_runtime_is_swept_before_it_can_be_invoked" \
-    -- --exact --test-threads=1
+    -- "openhuman::agent::tinyagents::reaper::tests::a_build_only_runtime_is_swept_before_it_can_be_invoked" \
+    --exact --test-threads=1
   llvm_cov_package --no-report --no-fail-fast -p openhuman-embed --all-targets
   llvm_cov_package --no-report --no-fail-fast -p openhuman-tui --all-targets
   while IFS= read -r target; do
