@@ -149,7 +149,6 @@ fn catalog_includes_additional_user_facing_surfaces() {
         "settings.clear_app_data",
         "local_ai.configure_provider",
         "intelligence.mcp_server",
-        "channels.mcp_custom_server",
         "intelligence.searxng_search",
         "intelligence.tool_registry",
         "intelligence.agent_library",

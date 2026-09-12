@@ -26,8 +26,6 @@ pub fn all_controller_schemas() -> Vec<ControllerSchema> {
         schemas("registry_settings_get"),
         schemas("registry_settings_set"),
         schemas("set_enabled"),
-        schemas("add_custom"),
-        schemas("update_custom"),
         // Setup-agent surface (mcp_setup namespace, lives in setup_ops.rs).
         setup_schemas("search"),
         setup_schemas("get"),
@@ -103,14 +101,6 @@ pub fn all_registered_controllers() -> Vec<RegisteredController> {
         RegisteredController {
             schema: schemas("set_enabled"),
             handler: handle_set_enabled,
-        },
-        RegisteredController {
-            schema: schemas("add_custom"),
-            handler: handle_add_custom,
-        },
-        RegisteredController {
-            schema: schemas("update_custom"),
-            handler: handle_update_custom,
         },
         RegisteredController {
             schema: setup_schemas("search"),
@@ -646,10 +636,6 @@ pub fn schemas(function: &str) -> ControllerSchema {
             ],
         },
 
-        "add_custom" => custom_server_schema(false),
-
-        "update_custom" => custom_server_schema(true),
-
         // Handled by setup_schemas() — surface a clearer error rather than
         // falling through to the generic unknown sink.
         "setup_search"
@@ -676,27 +662,5 @@ pub fn schemas(function: &str) -> ControllerSchema {
                 required: true,
             }],
         },
-    }
-}
-
-fn custom_server_schema(include_server_id: bool) -> ControllerSchema {
-    let mut inputs = vec![
-        FieldSchema { name: "display_name", ty: TypeSchema::String, comment: "User-visible name for the hand-entered server.", required: true },
-        FieldSchema { name: "transport", ty: TypeSchema::String, comment: "Transport: `stdio` or `http_remote`.", required: true },
-        FieldSchema { name: "command", ty: TypeSchema::Option(Box::new(TypeSchema::String)), comment: "Executable for a stdio server.", required: false },
-        FieldSchema { name: "args", ty: TypeSchema::Option(Box::new(TypeSchema::Array(Box::new(TypeSchema::String)))), comment: "Arguments for a stdio server.", required: false },
-        FieldSchema { name: "url", ty: TypeSchema::Option(Box::new(TypeSchema::String)), comment: "HTTP(S) endpoint for an http_remote server.", required: false },
-        FieldSchema { name: "env", ty: TypeSchema::Option(Box::new(TypeSchema::Map(Box::new(TypeSchema::String)))), comment: "Environment variables or HTTP headers; values are write-only.", required: false },
-        FieldSchema { name: "description", ty: TypeSchema::Option(Box::new(TypeSchema::String)), comment: "Optional description.", required: false },
-    ];
-    if include_server_id {
-        inputs.insert(0, FieldSchema { name: "server_id", ty: TypeSchema::String, comment: "UUID of the custom server to edit.", required: true });
-    }
-    ControllerSchema {
-        namespace: "mcp_clients",
-        function: if include_server_id { "update_custom" } else { "add_custom" },
-        description: if include_server_id { "Update a hand-entered MCP server." } else { "Add a hand-entered MCP server." },
-        inputs,
-        outputs: vec![FieldSchema { name: "server", ty: TypeSchema::Ref("InstalledServer"), comment: "The saved server record; secret values are omitted.", required: true }],
     }
 }

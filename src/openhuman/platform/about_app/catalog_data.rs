@@ -54,12 +54,6 @@ const LOCAL_CREDENTIALS: Option<CapabilityPrivacy> = Some(CapabilityPrivacy {
     destinations: &[],
 });
 
-const CUSTOM_MCP_CREDENTIALS: Option<CapabilityPrivacy> = Some(CapabilityPrivacy {
-    leaves_device: true,
-    data_kind: PrivacyDataKind::Credentials,
-    destinations: &["Configured MCP endpoint(s) or local subprocesses"],
-});
-
 const DIAGNOSTICS_TO_BACKEND: Option<CapabilityPrivacy> = Some(CapabilityPrivacy {
     leaves_device: true,
     data_kind: PrivacyDataKind::Diagnostics,

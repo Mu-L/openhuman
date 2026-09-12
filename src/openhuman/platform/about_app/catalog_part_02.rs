@@ -507,15 +507,6 @@ Capability {
         }),
     },
     Capability {
-        id: "channels.mcp_custom_server",
-        name: "Add Custom MCP Servers",
-        domain: "channels",
-        category: CapabilityCategory::Channels,
-        description: "Add and manage user-entered MCP servers using local commands or remote HTTP endpoints. Credentials are stored locally and excluded from responses.",
-        status: CapabilityStatus::Beta,
-        privacy: CUSTOM_MCP_CREDENTIALS,
-    },
-    Capability {
         id: "channels.mcp_connection_alerts",
         name: "MCP Connection Health Alerts",
         domain: "channels",
