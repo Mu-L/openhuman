@@ -5,7 +5,7 @@ icon: desktop
 
 # Tauri shell (`crates/openhuman-app/`)
 
-The desktop host for OpenHuman: Tauri v2 + WebView, IPC commands, window management, and bridging to the embedded `openhuman-core` Rust runtime (core JSON-RPC). It does **not** duplicate the full domain stack; that lives in the repo-root Rust crate (`openhuman_core`, `src/main.rs`).
+The desktop host for OpenHuman: Tauri v2 + WebView, IPC commands, window management, and bridging to the embedded `openhuman-core` Rust runtime (core JSON-RPC). It does **not** duplicate the full domain stack; that lives in `crates/openhuman-core` (`openhuman_core`, `src/main.rs`).
 
 ## Responsibilities
 
@@ -94,13 +94,13 @@ The renderer talks to the local core **directly over HTTP** — `app/src/service
 
 ### Bundled resources
 
-`tauri.conf.json` bundles **`../../src/openhuman/agent/prompts`** so the core prompt markdown ships with the app.
+`tauri.conf.json` bundles **`../../crates/openhuman-core/src/openhuman/agent/prompts`** so the core prompt markdown ships with the app.
 
 ### Related
 
 - IPC surface: see the [Commands](#tauri-ipc-commands-app-src-tauri) section below
 - HTTP bridge: see the [Core bridge & helpers](#core-bridge-helpers-app-src-tauri) section below
-- Rust domains (implementation): repo root `src/openhuman/`, `crates/openhuman-core/src/core/`
+- Rust domains and runtime: `crates/openhuman-core/src/openhuman/`, `crates/openhuman-core/src/core/`
 
 ## Tauri IPC commands (`crates/openhuman-app`)
 

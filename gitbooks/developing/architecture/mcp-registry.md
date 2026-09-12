@@ -7,13 +7,13 @@ description: >-
 icon: plug
 ---
 
-# MCP Registry (`src/openhuman/mcp/registry/`)
+# MCP Registry (`crates/openhuman-core/src/openhuman/mcp/registry/`)
 
-`src/openhuman/mcp/registry/` is the **dynamic, user-facing** half of OpenHuman's Model Context Protocol client support. It lets a user browse the supported upstream registries (Smithery and the official modelcontextprotocol registry), install a chosen server, persist that choice to SQLite, and (for servers launched as local subprocesses or HTTP-remote endpoints) supervise the connection lifecycle. Installed servers' tools are surfaced to agents via the unified tool registry (`crate::openhuman::tools::registry`).
+`crates/openhuman-core/src/openhuman/mcp/registry/` is the **dynamic, user-facing** half of OpenHuman's Model Context Protocol client support. It lets a user browse the supported upstream registries (Smithery and the official modelcontextprotocol registry), install a chosen server, persist that choice to SQLite, and (for servers launched as local subprocesses or HTTP-remote endpoints) supervise the connection lifecycle. Installed servers' tools are surfaced to agents via the unified tool registry (`crate::openhuman::tools::registry`).
 
 > **Naming note**: the Rust module path is `mcp_registry`, but the RPC namespace and on-disk SQLite filename are still `mcp_clients` for backward compatibility with existing frontend code and stored user state. Grep both names when chasing call sites.
 
-This module is paired with `src/openhuman/mcp/config_servers/` + `src/openhuman/mcp/http_client/`: the **transport library** (HTTP + stdio primitives) plus the _static, config-declared_ server set read from `[[mcp_client.servers]]` in `config.toml`. Agents reach that static set through generic bridge tools. The static set is intentionally separate from this dynamic registry; both kinds will eventually share the transport primitives from `mcp::http_client`.
+This module is paired with `crates/openhuman-core/src/openhuman/mcp/config_servers/` + `crates/openhuman-core/src/openhuman/mcp/http_client/`: the **transport library** (HTTP + stdio primitives) plus the _static, config-declared_ server set read from `[[mcp_client.servers]]` in `config.toml`. Agents reach that static set through generic bridge tools. The static set is intentionally separate from this dynamic registry; both kinds will eventually share the transport primitives from `mcp::http_client`.
 
 ```text
                  ┌───────────────────────────────────────────────┐
@@ -109,7 +109,7 @@ Unit tests are co-located inline under `#[cfg(test)]` blocks in `store.rs`, `con
 
 ## Related
 
-- [`mcp/registry/mod.rs`](https://github.com/tinyhumansai/openhuman/blob/main/src/openhuman/mcp/registry/mod.rs): the authoritative rustdoc this page mirrors.
-- `src/openhuman/mcp/config_servers/` + `src/openhuman/mcp/http_client/`: the transport library + static config-declared server set.
+- [`mcp/registry/mod.rs`](https://github.com/tinyhumansai/openhuman/blob/main/crates/openhuman-core/src/openhuman/mcp/registry/mod.rs): the authoritative rustdoc this page mirrors.
+- `crates/openhuman-core/src/openhuman/mcp/config_servers/` + `crates/openhuman-core/src/openhuman/mcp/http_client/`: the transport library + static config-declared server set.
 - [Agent Harness](agent-harness.md): how the agent ends up calling MCP tools through `tool_registry`.
 - [Architecture overview](../architecture.md): where this fits in the wider system.

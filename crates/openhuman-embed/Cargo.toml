@@ -36,3 +36,16 @@ scheduler-gate = ["openhuman-core/scheduler-gate"]
 
 [dependencies]
 openhuman-core = { path = "../openhuman-core", package = "openhuman", default-features = false }
+anyhow = "1"
+log = "0.4"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tempfile = "3"
+thiserror = "2"
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "sync", "time"] }
+url = "2"
+uuid = { version = "1", features = ["v4"] }
+
+[dev-dependencies]
+env_logger = "0.11"
+wiremock = "0.6"

@@ -20,7 +20,7 @@ The `[privacy]` config block defines three modes:
 
 ## Why "enforced" matters
 
-Privacy Mode is deliberately **not** a policy the model is asked to follow. The check lives in the inference provider factory (`src/openhuman/inference/provider/factory.rs`): under `local_only`, the core refuses to _build_ an external provider at all, and the error names exactly which provider was blocked and tells you how to fix it: switch to a local model, or change the mode in Settings.
+Privacy Mode is deliberately **not** a policy the model is asked to follow. The check lives in the inference provider factory (`crates/openhuman-core/src/openhuman/inference/provider/factory.rs`): under `local_only`, the core refuses to _build_ an external provider at all, and the error names exactly which provider was blocked and tells you how to fix it: switch to a local model, or change the mode in Settings.
 
 That makes the guarantee independent of prompts, agents, tools, or bugs upstream: if a code path anywhere in the app tries to reach a cloud model while you're in local-only mode, it structurally cannot get a client.
 

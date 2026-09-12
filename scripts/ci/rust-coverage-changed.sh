@@ -113,7 +113,7 @@ integration_test_targets() {
 # tested, and wrong for domains whose contract lives in an integration target:
 # such a gate never runs on a PR that touches only the domain's `src/`.
 #
-#   `src/openhuman/memory/**` used to sit here, naming the golden-workspace
+#   `crates/openhuman-core/src/openhuman/memory/**` used to sit here, naming the golden-workspace
 #   schema gates. Both of those targets — `memory_golden_fixture_e2e` and
 #   `memory_golden_parity_e2e` — were deleted in cc99ba9c6, which cut the
 #   engine out of the test build. A mapping that names a target Cargo no longer
@@ -122,7 +122,7 @@ integration_test_targets() {
 #   at a substitute. The domain scopes to its `--lib` filter alone until there
 #   is a live gate to name again.
 #
-#   src/openhuman/agent/harness/session/** and src/openhuman/threads/goals/**
+#   crates/openhuman-core/src/openhuman/agent/harness/session/** and crates/openhuman-core/src/openhuman/threads/goals/**
 #   → `agent_turn_overrides_e2e`. Per-turn `TurnOverrides` (`session/types.rs`)
 #   are consumed in `session/turn/core_turn.rs`, and the terminal thread-goal
 #   APIs live in `threads/goals/runtime.rs`; the whole contract is an
@@ -135,7 +135,7 @@ integration_test_targets() {
 # empty result.
 domain_integration_targets() {
   case "$1" in
-    src/openhuman/agent/harness/session/* | src/openhuman/threads/goals/*)
+    crates/openhuman-core/src/openhuman/agent/harness/session/* | crates/openhuman-core/src/openhuman/threads/goals/*)
       printf '%s\n' agent_turn_overrides_e2e
       ;;
   esac
@@ -380,7 +380,7 @@ for f in "${files[@]}"; do
       ;;
     src/*/*)
       # Non-.rs asset embedded in a domain (e.g. agent prompt markdown under
-      # src/openhuman/agent/prompts/) — scope to that domain's tests.
+      # crates/openhuman-core/src/openhuman/agent/prompts/) — scope to that domain's tests.
       p="${f#src/}"
       IFS='/' read -r -a segs <<<"${p}"
       n="${#segs[@]}"

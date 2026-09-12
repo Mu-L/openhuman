@@ -79,7 +79,7 @@ Multi-byte text (CJK, emoji, combining marks) is handled grapheme-by-grapheme th
 
 ## ML compression (opt-in)
 
-Beyond the deterministic compressors, TokenJuice can route plain text through a **ModernBERT** token-salience model that scores and drops low-information spans. The TinyJuice compressor exposes the optional ML slot, and OpenHuman bridges it to Kompress in `src/openhuman/inference/tokenjuice/ml/`.
+Beyond the deterministic compressors, TokenJuice can route plain text through a **ModernBERT** token-salience model that scores and drops low-information spans. The TinyJuice compressor exposes the optional ML slot, and OpenHuman bridges it to Kompress in `crates/openhuman-core/src/openhuman/inference/tokenjuice/ml/`.
 
 - **Off by default.** Enable with `ml_compression_enabled = true` in `[tokenjuice]`.
 - **Runs locally** as the `kompress` backend of the shared Python runtime sidecar. No data leaves your machine.
@@ -103,7 +103,7 @@ So the agent gets the cheap compacted view by default, and can transparently "zo
 
 ## Savings tracking
 
-Every compression is metered by an OpenHuman savings callback (`src/openhuman/inference/tokenjuice/savings.rs`). TokenJuice reports events and token deltas; OpenHuman applies per-model input pricing, aggregates `total`, `by_model`, and `by_compressor`, and persists stats to `<workspace>/state/tokenjuice_savings.json`.
+Every compression is metered by an OpenHuman savings callback (`crates/openhuman-core/src/openhuman/inference/tokenjuice/savings.rs`). TokenJuice reports events and token deltas; OpenHuman applies per-model input pricing, aggregates `total`, `by_model`, and `by_compressor`, and persists stats to `<workspace>/state/tokenjuice_savings.json`.
 
 Read them over RPC with `openhuman.tokenjuice_savings_stats`; clear them with `openhuman.tokenjuice_savings_reset`.
 
@@ -125,7 +125,7 @@ Each rule names a command/tool pattern and a reduction strategy (skip/keep filte
 
 ## Configuration, RPC & tools
 
-Everything lives under the `[tokenjuice]` config block (`src/openhuman/config/schema/tokenjuice.rs`) and can be changed live.
+Everything lives under the `[tokenjuice]` config block (`crates/openhuman-core/src/openhuman/config/schema/tokenjuice.rs`) and can be changed live.
 
 - **Master switch:** `router_enabled` (default `true`).
 - **Thresholds:** `min_bytes_to_compress`, `ccr_min_tokens`.

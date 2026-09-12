@@ -84,7 +84,7 @@ const MODULES = [
 // the report.
 //
 // This has to live HERE and not in Rust. The schemas are already `#[cfg]`-
-// correct — `src/openhuman/mod.rs` gates the whole `test_support` module — but
+// correct — `crates/openhuman-core/src/openhuman/mod.rs` gates the whole `test_support` module — but
 // discovery reads source text off disk and would find these literals even if
 // every line were `#[cfg(never)]`. There is no Rust-side edit that changes what
 // a text scan sees.
@@ -104,7 +104,7 @@ const UNREACHABLE_NAMESPACES = {
   test_support: {
     feature: 'e2e-test-support',
     reason:
-      'Same gate as `test`: src/openhuman/mod.rs declares the whole `test_support` module behind ' +
+      'Same gate as `test`: crates/openhuman-core/src/openhuman/mod.rs declares the whole `test_support` module behind ' +
       '`#[cfg(feature = "e2e-test-support")]`, so these workspace- and chat-introspection helpers exist only in ' +
       'the E2E build produced by app/scripts/e2e-build.sh.',
   },
@@ -123,7 +123,7 @@ const PRODUCT_FEATURES_FILE = path.join(ROOT, 'scripts', 'ci', 'product-features
 
 // Where `ControllerSchema` literals live.
 //
-// `src/openhuman` is the bulk. The second root is not optional: the `channels`
+// `crates/openhuman-core/src/openhuman` is the bulk. The second root is not optional: the `channels`
 // namespace's 20 controllers are declared in the vendored TinyChannels *bus*
 // crate as `ChannelControllerSchema` literals, and openhuman's
 // `channels/controllers/schemas.rs` only maps them across with
@@ -134,7 +134,7 @@ const PRODUCT_FEATURES_FILE = path.join(ROOT, 'scripts', 'ci', 'product-features
 // `app/src/services/__tests__/rpcMethods.test.ts` already reaches into the same
 // vendored crate for the same reason.
 const SCHEMA_ROOTS = [
-  path.join(ROOT, 'src', 'openhuman'),
+  path.join(ROOT, 'crates', 'openhuman-core', 'src', 'openhuman'),
   path.join(ROOT, 'vendor', 'tinychannels', 'crates', 'tinychannels-bus', 'src', 'controllers'),
 ];
 
@@ -371,7 +371,7 @@ function attributesBefore(text, index) {
  * Is `file` reachable only when `feature` is enabled?
  *
  * `#[cfg]` sits on the `mod` declaration in the PARENT, never in the file
- * itself, so this walks upward: `src/openhuman/test_support/schemas.rs` is
+ * itself, so this walks upward: `crates/openhuman-core/src/openhuman/test_support/schemas.rs` is
  * reached through `mod schemas;` in `test_support/mod.rs` and then through
  * `pub mod test_support;` in `openhuman/mod.rs` — and only the second carries
  * the gate. A file pulled in by `include!` has no `mod` of its own and simply

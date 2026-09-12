@@ -3,7 +3,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-const ROOT = "src/openhuman";
+const ROOT = "crates/openhuman-core/src/openhuman";
 const CORE_MANIFEST = "crates/openhuman-core/Cargo.toml";
 const LINE_LIMIT = 750;
 
@@ -11,10 +11,10 @@ const LINE_LIMIT = 750;
 // their current size makes the gate monotonic: they cannot grow, no new
 // exception can appear, and deleting an entry is the only way to relax it.
 const LEGACY_LIMITS = new Map([
-  ["src/openhuman/agent/harness/session/builder/factory.rs", 1552],
-  ["src/openhuman/agent/harness/subagent_runner/ops/runner.rs", 1769],
-  ["src/openhuman/tools/ops.rs", 1502],
-  ["src/openhuman/web_chat/progress_bridge.rs", 1547],
+  ["crates/openhuman-core/src/openhuman/agent/harness/session/builder/factory.rs", 1552],
+  ["crates/openhuman-core/src/openhuman/agent/harness/subagent_runner/ops/runner.rs", 1769],
+  ["crates/openhuman-core/src/openhuman/tools/ops.rs", 1502],
+  ["crates/openhuman-core/src/openhuman/web_chat/progress_bridge.rs", 1547],
 ]);
 
 function rustFiles(directory) {
@@ -57,8 +57,8 @@ for (const file of LEGACY_LIMITS.keys()) {
     failures.push(`${file}: stale legacy exception; remove it from the gate`);
 }
 
-// The member manifest points outside its own directory, so Cargo cannot
-// auto-discover root-level tests or examples. Keep the explicit target list
+// Integration tests and examples remain repository-level for now, so Cargo
+// cannot auto-discover them. Keep the explicit target list
 // exhaustive: otherwise adding a file can make `cargo test` silently run
 // nothing for it while still exiting successfully.
 const manifest = fs.readFileSync(CORE_MANIFEST, "utf8");

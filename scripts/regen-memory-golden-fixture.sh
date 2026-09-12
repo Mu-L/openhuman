@@ -38,8 +38,8 @@ README="$FIXTURE_DIR/README.md"
 
 echo "[golden-fixture] regenerating from the current build"
 SOURCE_SHA="$(git rev-parse HEAD)"
-if ! git diff --quiet -- src/openhuman/memory; then
-  echo "[golden-fixture] WARNING: src/openhuman/memory has uncommitted changes." >&2
+if ! git diff --quiet -- crates/openhuman-core/src/openhuman/memory; then
+  echo "[golden-fixture] WARNING: crates/openhuman-core/src/openhuman/memory has uncommitted changes." >&2
   echo "[golden-fixture]          The fixture will capture the WORKING TREE, but the" >&2
   echo "[golden-fixture]          README will record ${SOURCE_SHA}. Commit first." >&2
 fi

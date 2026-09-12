@@ -6,11 +6,11 @@ description: >-
 icon: diagram-project
 ---
 
-# Memory Tree (`src/openhuman/memory/tree/`)
+# Memory Tree (`crates/openhuman-core/src/openhuman/memory/tree/`)
 
-`src/openhuman/memory/tree/` is the **generic tree engine** sitting under the user-facing [Memory Tree feature](../../features/obsidian-wiki/memory-tree.md). It owns the kind-agnostic mechanics that a concrete tree uses: appending leaves, cascading bucket seals, summarising one level to the next, scoring and embedding, and retrieving for agents. It is deliberately **unaware** of which flavour a tree belongs to.
+`crates/openhuman-core/src/openhuman/memory/tree/` is the **generic tree engine** sitting under the user-facing [Memory Tree feature](../../features/obsidian-wiki/memory-tree.md). It owns the kind-agnostic mechanics that a concrete tree uses: appending leaves, cascading bucket seals, summarising one level to the next, scoring and embedding, and retrieving for agents. It is deliberately **unaware** of which flavour a tree belongs to.
 
-> **Removed: Global & Topic trees.** Earlier revisions also built a singleton **Global** (cross-source, time-axis: day → week → month → year) digest tree and per-entity **Topic** (subject-axis) trees. Both were derived projections over the Source trees (no original content lived only in them) and were removed in favour of "walk the Source trees + the entity index." Source-tree policy lives in `src/openhuman/memory/tree_source`; persistence (the single `Tree` table) lives one layer down in `memory_store::trees`. The `TreeKind::Global`/`Topic` enum variants survive only as inert serialization plumbing so the one-shot purge migration can read and delete legacy rows.
+> **Removed: Global & Topic trees.** Earlier revisions also built a singleton **Global** (cross-source, time-axis: day → week → month → year) digest tree and per-entity **Topic** (subject-axis) trees. Both were derived projections over the Source trees (no original content lived only in them) and were removed in favour of "walk the Source trees + the entity index." Source-tree policy lives in `crates/openhuman-core/src/openhuman/memory/tree_source`; persistence (the single `Tree` table) lives one layer down in `memory_store::trees`. The `TreeKind::Global`/`Topic` enum variants survive only as inert serialization plumbing so the one-shot purge migration can read and delete legacy rows.
 
 ```text
 memory (orchestrator) ──┐
@@ -32,7 +32,7 @@ memory_store::trees    (persistence: one Tree table, one schema)
 
 | Path                                                                                             | Role                                                                                                                                                                                                                                 |
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| [`mod.rs`](https://github.com/tinyhumansai/openhuman/blob/main/src/openhuman/memory/tree/mod.rs) | Re-exports `io::*` and the controller-schema registries hosted in `memory`. Also re-exports `memory::tree_global` + `memory::tree_topic` under the legacy `memory_tree::tree_{global,topic}` paths for backward compatibility.       |
+| [`mod.rs`](https://github.com/tinyhumansai/openhuman/blob/main/crates/openhuman-core/src/openhuman/memory/tree/mod.rs) | Re-exports `io::*` and the controller-schema registries hosted in `memory`. Also re-exports `memory::tree_global` + `memory::tree_topic` under the legacy `memory_tree::tree_{global,topic}` paths for backward compatibility.       |
 | `io.rs`                                                                                          | Canonical contract types: `TreeWriteRequest` / `TreeWriteOutcome`, `TreeReadRequest` / `TreeReadHit` / `TreeReadResult`, `TreeLeafPayload`, `TreeLabelStrategy`. Pure types, no IO.                                                  |
 | `tree/`                                                                                          | `bucket_seal` (append leaf + cascade seal), `flush` (time-based partial seal), `registry` (kind-parameterized `get_or_create_tree` with UNIQUE-race recovery), `mod.rs` (re-exports + `memory_store::trees` shims for legacy paths). |
 | `summarise.rs`                                                                                   | One function: produce the next-level summary text for a bucket. Wraps the chat model with a fixed prompt and token budget.                                                                                                           |
@@ -45,7 +45,7 @@ memory_store::trees    (persistence: one Tree table, one schema)
 
 These are load-bearing invariants. Break one and the engine stops being kind-agnostic:
 
-- **No tree-kind branching here.** `bucket_seal`, `flush`, `registry`, and `summarise` all take `TreeKind` as a parameter or treat it as opaque. Conditionals on "is this a Source tree?" belong in the orchestrator (`src/openhuman/memory/`), not here.
+- **No tree-kind branching here.** `bucket_seal`, `flush`, `registry`, and `summarise` all take `TreeKind` as a parameter or treat it as opaque. Conditionals on "is this a Source tree?" belong in the orchestrator (`crates/openhuman-core/src/openhuman/memory/`), not here.
 - **No persistence here.** Reads and writes go through `memory_store::trees::{store, registry, hotness}`. This module does not open SQLite handles directly.
 - **No policy here.** Curator gates (hotness thresholds), digest cadence, global scope sentinels all live in `memory::tree_{global,topic}`. This module reacts to policy decisions, it does not make them.
 
@@ -80,6 +80,6 @@ All retrieval handlers consult `memory_store::trees::hotness` so warm content su
 
 ## Related
 
-- [`memory_tree/README.md`](https://github.com/tinyhumansai/openhuman/blob/main/src/openhuman/memory/tree/README.md): authoritative internal-audience overview this page mirrors.
+- [`memory_tree/README.md`](https://github.com/tinyhumansai/openhuman/blob/main/crates/openhuman-core/src/openhuman/memory/tree/README.md): authoritative internal-audience overview this page mirrors.
 - [Memory Tree feature](../../features/obsidian-wiki/memory-tree.md): what end users see.
 - [Architecture overview](../architecture.md): where this fits in the wider system.

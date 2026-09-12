@@ -56,7 +56,7 @@ When a run pauses, you get a **Flow Approval Card** in your notifications naming
 
 ## RPC surface (for developers)
 
-The `flows` domain (`src/openhuman/flows/`) exposes ten controllers under `openhuman.flows_*`: `create`, `get`, `list`, `update`, `delete`, `set_enabled`, `run`, `resume`, `list_runs`, `get_run`. See the [Agent Harness](../developing/architecture/agent-harness.md) page for how flow runs share the tinyagents execution stack.
+The `flows` domain (`crates/openhuman-core/src/openhuman/flows/`) exposes ten controllers under `openhuman.flows_*`: `create`, `get`, `list`, `update`, `delete`, `set_enabled`, `run`, `resume`, `list_runs`, `get_run`. See the [Agent Harness](../developing/architecture/agent-harness.md) page for how flow runs share the tinyagents execution stack.
 
 ## See also
 

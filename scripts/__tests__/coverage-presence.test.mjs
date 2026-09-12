@@ -209,14 +209,14 @@ test("skips non-Rust paths, crate roots and src/bin", () => {
 test("skips families that are uncovered by design", () => {
   const res = run(
     {
-      "src/openhuman/test_support/reset.rs": WITH_FN,
-      "src/openhuman/tools/impl/browser/native_backend.rs": WITH_FN,
+      "crates/openhuman-core/src/openhuman/test_support/reset.rs": WITH_FN,
+      "crates/openhuman-core/src/openhuman/tools/impl/browser/native_backend.rs": WITH_FN,
     },
     [],
     [
       "--files",
-      "src/openhuman/test_support/reset.rs",
-      "src/openhuman/tools/impl/browser/native_backend.rs",
+      "crates/openhuman-core/src/openhuman/test_support/reset.rs",
+      "crates/openhuman-core/src/openhuman/tools/impl/browser/native_backend.rs",
     ],
   );
   assert.equal(res.status, 0);

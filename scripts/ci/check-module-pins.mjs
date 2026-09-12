@@ -5,7 +5,7 @@
 // Nine subsystems load as downloaded cdylib modules, and each is pinned TWICE,
 // independently: once as a git submodule (the source this repo compiles the
 // wire contract against) and once as a `version` + per-platform SHA-256 in
-// `src/openhuman/modules/registry.rs` (the artifact actually loaded at runtime).
+// `crates/openhuman-core/src/openhuman/modules/registry.rs` (the artifact actually loaded at runtime).
 // Nothing compared the two. When they drift, the build compiles clean, every
 // lane is green, and a capability goes missing at runtime on a user's machine —
 // which is how #5598 (capability bitmask 8191 vs 262143), #5623 (missing
@@ -137,7 +137,7 @@ function readRustModule(relativePath, what) {
 // ── Parse the registry ────────────────────────────────────────────────────────
 
 const registrySrc = readRustModule(
-  "src/openhuman/modules/registry.rs",
+  "crates/openhuman-core/src/openhuman/modules/registry.rs",
   "registry",
 );
 const allNames = parseAllList(registrySrc);
@@ -269,13 +269,13 @@ if (!memRec) {
   );
 } else {
   const memSrc = readRustModule(
-    "src/openhuman/modules/memory.rs",
+    "crates/openhuman-core/src/openhuman/modules/memory.rs",
     "modules/memory.rs",
   );
   const pin = parseArtifactCapabilitiesPin(memSrc);
   if (!pin) {
     fail(
-      "src/openhuman/modules/memory.rs: could not find ARTIFACT_CAPABILITIES_PIN",
+      "crates/openhuman-core/src/openhuman/modules/memory.rs: could not find ARTIFACT_CAPABILITIES_PIN",
     );
   } else if (pin !== memRec.version) {
     fail(
