@@ -41,7 +41,7 @@ pub(crate) fn resolve_data_dir() -> PathBuf {
             return PathBuf::from(workspace);
         }
     }
-    openhuman_core::openhuman::config::default_root_openhuman_dir().unwrap_or_else(|err| {
+    openhuman_core::config::default_root_openhuman_dir().unwrap_or_else(|err| {
         eprintln!(
             "[file_logging] default_root_openhuman_dir failed ({err}); falling back to temp dir"
         );

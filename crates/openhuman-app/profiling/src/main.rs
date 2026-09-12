@@ -587,7 +587,7 @@ fn parse_rust_module_cpu(contents: &str) -> Vec<RustModuleCpu> {
 }
 
 fn own_rust_module(symbol: &str) -> Option<String> {
-    const CORE_PREFIX: &str = "openhuman_core::openhuman::";
+    const CORE_PREFIX: &str = "openhuman_core::";
     const TAURI_PREFIX: &str = "openhuman::";
     if let Some(start) = symbol.find(CORE_PREFIX) {
         let tail = &symbol[start + CORE_PREFIX.len()..];
@@ -784,9 +784,9 @@ mod tests {
     fn parses_recursive_stack_counts_into_openhuman_modules() {
         let sample = r#"
 Total number in stack (recursive counted multiple, when >=5):
-        81 openhuman_core::openhuman::agent::run  (in OpenHuman) + 10
-        34 <openhuman_core::openhuman::agent::Tool as core::future::Future>::poll  (in OpenHuman) + 2
-        17 openhuman_core::openhuman::memory::search  (in OpenHuman) + 4
+        81 openhuman_core::agent::run  (in OpenHuman) + 10
+        34 <openhuman_core::agent::Tool as core::future::Future>::poll  (in OpenHuman) + 2
+        17 openhuman_core::memory::search  (in OpenHuman) + 4
          9 openhuman::core_process::ensure_running  (in OpenHuman) + 1
        200 tokio::runtime::park  (in OpenHuman) + 3
 
@@ -796,11 +796,11 @@ Sort by top of stack, same collapsed (when >= 5):
             parse_rust_module_cpu(sample),
             vec![
                 RustModuleCpu {
-                    module: "openhuman_core::openhuman::agent".into(),
+                    module: "openhuman_core::agent".into(),
                     recursive_samples: 115,
                 },
                 RustModuleCpu {
-                    module: "openhuman_core::openhuman::memory".into(),
+                    module: "openhuman_core::memory".into(),
                     recursive_samples: 17,
                 },
                 RustModuleCpu {

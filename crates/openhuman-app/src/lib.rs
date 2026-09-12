@@ -11,7 +11,7 @@ compile_error!("src-tauri host supports desktop (Windows/macOS/Linux) only. Mobi
 // method" and the UI blames a stale sidecar (#4901). Keep `voice` in the
 // `openhuman_core` feature list in Cargo.toml to satisfy this.
 const _: () = assert!(
-    openhuman_core::openhuman::voice::VOICE_COMPILED_IN,
+    openhuman_core::voice::VOICE_COMPILED_IN,
     "openhuman_core must be built with the `voice` feature: the desktop app ships voice, \
      and without it every openhuman.voice_* controller is unregistered (#4901). \
      Add \"voice\" to the openhuman_core `features` list in crates/openhuman-app/Cargo.toml."
@@ -476,11 +476,9 @@ async fn restart_app(app: tauri::AppHandle<AppRuntime>) -> Result<(), String> {
 /// `OPENHUMAN_WORKSPACE` overrides used in test harnesses. (#900)
 #[tauri::command]
 fn get_active_user_id() -> Result<Option<String>, String> {
-    let root = openhuman_core::openhuman::config::default_root_openhuman_dir()
+    let root = openhuman_core::config::default_root_openhuman_dir()
         .map_err(|err| format!("resolve active-user state directory: {err}"))?;
-    Ok(openhuman_core::openhuman::config::read_active_user_id(
-        &root,
-    ))
+    Ok(openhuman_core::config::read_active_user_id(&root))
 }
 
 /// Information about an available shell-app update returned to the frontend.
@@ -2345,7 +2343,7 @@ pub fn run() {
     // `SIGBUS / KERN_PROTECTION_FAILURE`.
     //
     // The structural fix (`spawn_blocking` for the TOML parse + cache in
-    // `crates/openhuman-core/src/openhuman/config/{schema/load.rs, ops.rs}`) moves the largest
+    // `crates/openhuman-core/src/config/{schema/load.rs, ops.rs}`) moves the largest
     // contributor off the worker. An initial 8 MiB bump shipped here was
     // enough for that single tower, but sub-agent delegation (issue #3159
     // / PR #3155) re-tipped the scale: the standalone `openhuman-core`
@@ -2559,7 +2557,7 @@ pub fn run() {
             // (the original userCount=0 root cause).
             if event.user.is_none() {
                 event.user =
-                    openhuman_core::openhuman::desktop::app_state::peek_cached_current_user_identity()
+                    openhuman_core::desktop::app_state::peek_cached_current_user_identity()
                         .and_then(|identity| identity.id)
                         .map(|id| sentry::User {
                             id: Some(id),
@@ -3118,7 +3116,7 @@ pub fn run() {
                             // after the <key>ProgramArguments</key> marker. The
                             // service installer always writes it as an absolute
                             // path to the openhuman-core binary (see
-                            // crates/openhuman-core/src/openhuman/platform/service/macos.rs).
+                            // crates/openhuman-core/src/platform/service/macos.rs).
                             let after_key = contents.split("<key>ProgramArguments</key>").nth(1)?;
                             let start = after_key.find("<string>")? + "<string>".len();
                             let rest = &after_key[start..];

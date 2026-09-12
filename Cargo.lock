@@ -4139,6 +4139,7 @@ dependencies = [
  "motosan-ai-oauth",
  "nu-ansi-term 0.46.0",
  "once_cell",
+ "openhuman-rpc",
  "parking_lot",
  "proptest",
  "rand 0.10.2",
@@ -4231,6 +4232,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "openhuman-rpc"
+version = "0.63.25"
+dependencies = [
+ "log",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "url",
+]
+
+[[package]]
 name = "openhuman-tui"
 version = "0.63.25"
 dependencies = [
@@ -4241,6 +4253,7 @@ dependencies = [
  "dotenvy",
  "log",
  "openhuman",
+ "openhuman-rpc",
  "ratatui",
  "sentry",
  "serde_json",

@@ -4,7 +4,7 @@
 # resolve against their own roots.
 [workspace]
 resolver = "2"
-members = ["crates/openhuman-core", "crates/openhuman-embed", "crates/openhuman-tui"]
+members = ["crates/openhuman-core", "crates/openhuman-embed", "crates/openhuman-rpc", "crates/openhuman-tui"]
 exclude = [
     "vendor",
     "worktrees",
@@ -21,6 +21,7 @@ repository = "https://github.com/tinyhumansai/openhuman"
 
 [workspace.dependencies]
 openhuman-core = { path = "crates/openhuman-core", package = "openhuman" }
+openhuman-rpc = { path = "crates/openhuman-rpc", default-features = false }
 
 # Patches are workspace-root settings; Cargo ignores them in member manifests.
 [patch."https://github.com/tinyhumansai/tinymemory"]

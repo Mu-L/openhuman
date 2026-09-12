@@ -75,7 +75,7 @@ pub async fn resolve_workspace_absolute_path(path: String) -> Result<String, Str
 }
 
 async fn active_workspace_root() -> Result<PathBuf, String> {
-    let config = openhuman_core::openhuman::config::Config::load_or_init()
+    let config = openhuman_core::config::Config::load_or_init()
         .await
         .map_err(|err| workspace_path_error(format!("failed to load OpenHuman config: {err}")))?;
     fs::create_dir_all(&config.workspace_dir).map_err(|err| {
