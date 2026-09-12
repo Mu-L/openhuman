@@ -68,7 +68,23 @@ fn test_gate_with_ttl(ttl: Duration) -> (ApprovalGate, TempDir) {
 /// the gate is built would leave the window open for the park itself.
 /// `test_gate_with_ttl` must not take the lock, because the
 /// `effective_ttl_*` tests call it while already holding it.
-fn expiry_gate() -> (ApprovalGate, TempDir, std::sync::MutexGuard<'static, ()>) {
+struct ExpiryEnvGuard {
+    previous_ttl: Option<String>,
+    _env_lock: std::sync::MutexGuard<'static, ()>,
+}
+
+impl Drop for ExpiryEnvGuard {
+    fn drop(&mut self) {
+        match self.previous_ttl.take() {
+            Some(value) => unsafe {
+                std::env::set_var("OPENHUMAN_APPROVAL_TTL_SECS", value)
+            },
+            None => unsafe { std::env::remove_var("OPENHUMAN_APPROVAL_TTL_SECS") },
+        }
+    }
+}
+
+fn expiry_gate() -> (ApprovalGate, TempDir, ExpiryEnvGuard) {
     let env = crate::openhuman::config::TEST_ENV_LOCK
         .lock()
         .unwrap_or_else(|e| e.into_inner());
@@ -76,9 +92,17 @@ fn expiry_gate() -> (ApprovalGate, TempDir, std::sync::MutexGuard<'static, ()>) 
     // developer who exported it in their shell. effective_ttl would then
     // replace EXPIRY_TEST_TTL at park time and the wait would be measuring
     // their value, so clear it while the lock is held.
+    let previous_ttl = std::env::var("OPENHUMAN_APPROVAL_TTL_SECS").ok();
     unsafe { std::env::remove_var("OPENHUMAN_APPROVAL_TTL_SECS") };
     let (gate, dir) = test_gate_with_ttl(EXPIRY_TEST_TTL);
-    (gate, dir, env)
+    (
+        gate,
+        dir,
+        ExpiryEnvGuard {
+            previous_ttl,
+            _env_lock: env,
+        },
+    )
 }
 
 /// Decide a row that the test has just seen parked, failing on the expiry
