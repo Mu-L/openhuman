@@ -252,28 +252,11 @@ run_full() {
   # `test-rust-with-mock.sh` runner. A number of fixtures intentionally mutate
   # process-global provider/config state, so libtest's default parallelism can
   # make unrelated tests observe each other's temporary overrides. The five
-  # archivist tree tests also share a process-global recorder and therefore run
-  # in fresh processes below, exactly as they do in the canonical runner.
+  # build-only reaper test installs process globals and therefore runs in a
+  # fresh process below, exactly as it does in the canonical runner.
   llvm_cov --no-report --no-fail-fast -p openhuman --lib --bins -- \
     --test-threads=1 \
-    --skip phase2_no_per_turn_tree_write \
-    --skip phase2_exactly_one_tree_ingest_per_segment_close \
-    --skip phase2_provenance_stamped_on_leaf_and_source_id_is_constant \
-    --skip phase2_ingested_content_is_raw_prose_not_recap \
-    --skip phase2_flush_also_triggers_tree_ingest \
     --skip a_build_only_runtime_is_swept_before_it_can_be_invoked
-  local archivist_test
-  for archivist_test in \
-    phase2_no_per_turn_tree_write \
-    phase2_exactly_one_tree_ingest_per_segment_close \
-    phase2_provenance_stamped_on_leaf_and_source_id_is_constant \
-    phase2_ingested_content_is_raw_prose_not_recap \
-    phase2_flush_also_triggers_tree_ingest; do
-    log "running isolated archivist tree test: ${archivist_test}"
-    llvm_cov --no-report --no-fail-fast -p openhuman --lib \
-      -- "openhuman::agent::harness::archivist::tests::part_01_tests::${archivist_test}" \
-      --exact --test-threads=1
-  done
   # This test deliberately boots a real harness-only CoreBuilder. Doing so
   # installs one-shot process globals (including DEFAULT_CONTEXT), which would
   # narrow every later registry lookup in the aggregate unit-test process.
