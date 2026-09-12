@@ -90,9 +90,13 @@ pub(super) fn is_builtin_skill(skill_id: &str) -> bool {
 fn skill_allowed_including_profile(
     allowlist: &SkillAllowlist,
     profile_local_ids: &std::collections::HashSet<String>,
+    workspace_dir: &Path,
+    profile_skills_root: Option<&Path>,
     skill_id: &str,
 ) -> bool {
-    is_builtin_skill(skill_id)
+    let resolved_scope = get_workflow_with_profile(workspace_dir, skill_id, profile_skills_root)
+        .map(|workflow| workflow.scope);
+    matches!(resolved_scope, Some(WorkflowScope::Builtin))
         || profile_local_ids.contains(skill_id)
         || skill_allowed(allowlist, skill_id)
 }

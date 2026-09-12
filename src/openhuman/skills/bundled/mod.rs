@@ -225,6 +225,58 @@ pub fn install_bundled_skills(workspace_dir: &Path) {
     let _ = install(workspace_dir);
 }
 
+/// Whether `dir` contains exactly the bytes compiled for `skill`.
+///
+/// Discovery must not trust the sidecar alone: a user who can modify the
+/// materialised directory must not be able to turn arbitrary instructions into
+/// a `Builtin` workflow.  Check every compiled file and reject extra entries,
+/// symlinks, and non-regular files.
+pub fn is_current_materialization(dir: &Path, skill: &BundledSkill) -> bool {
+    if skill.validate().is_err() || !dir.is_dir() {
+        return false;
+    }
+    let expected: std::collections::HashSet<&str> = skill.files.iter().map(|f| f.path).collect();
+    for file in skill.files {
+        let path = dir.join(file.path);
+        let Ok(meta) = std::fs::symlink_metadata(&path) else {
+            return false;
+        };
+        if !meta.is_file() || meta.file_type().is_symlink() {
+            return false;
+        }
+        let Ok(contents) = std::fs::read(&path) else {
+            return false;
+        };
+        if contents != file.contents.as_bytes() {
+            return false;
+        }
+    }
+    let mut stack = vec![dir.to_path_buf()];
+    while let Some(current) = stack.pop() {
+        let Ok(entries) = std::fs::read_dir(&current) else {
+            return false;
+        };
+        for entry in entries.flatten() {
+            let Ok(meta) = entry symlink_metadata() else {
+                return false;
+            };
+            let Ok(relative) = entry.path().strip_prefix(dir) else {
+                return false;
+            };
+            let relative = relative.to_string_lossy().replace('\\', "/");
+            if meta.file_type().is_symlink() || (!meta.is_dir() && !meta.is_file()) {
+                return false;
+            }
+            if meta.is_dir() {
+                stack.push(entry.path());
+            } else if !expected.contains(relative.as_str()) {
+                return false;
+            }
+        }
+    }
+    true
+}
+
 /// Returns `Ok(true)` when the bundle was (re)written, `Ok(false)` when the
 /// on-disk copy was already current.
 fn install_one(root: &Path, skill: &BundledSkill) -> Result<bool, String> {

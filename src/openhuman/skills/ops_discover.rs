@@ -239,7 +239,10 @@ fn discover_filtered(
                 scope = ?WorkflowScope::Builtin,
                 "[workflows] discover:branch:builtin"
             );
-            absorb(&mut by_name, scan_root(&root, WorkflowScope::Builtin));
+            absorb(
+                &mut by_name,
+                scan_bundled_root(&root, WorkflowScope::Builtin),
+            );
         }
     }
 
@@ -316,6 +319,19 @@ fn discover_filtered(
     let mut out: Vec<Workflow> = by_name.into_values().collect();
     out.sort_by(|a, b| a.name.cmp(&b.name));
     tracing::debug!(discovered_count = out.len(), "[workflows] discover:exit");
+    out
+}
+
+fn scan_bundled_root(root: &Path, scope: WorkflowScope) -> Vec<Workflow> {
+    let mut out = Vec::new();
+    for bundled in crate::openhuman::skills::bundled::BUNDLED {
+        let dir = root.join(bundled.dir_name);
+        if crate::openhuman::skills::bundled::is_current_materialization(&dir, bundled) {
+            if let Some(workflow) = load_skill_dir(&dir, bundled.dir_name, scope) {
+                out.push(workflow);
+            }
+        }
+    }
     out
 }
 
