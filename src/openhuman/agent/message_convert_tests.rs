@@ -30,7 +30,6 @@ fn user_image_marker_becomes_an_image_content_block() {
 fn native_image_round_trip_preserves_adjacent_text_for_claude_code() {
     let png = "data:image/png;base64,QUJD";
     let source = Message::User(UserMessage {
-        id: None,
         content: vec![
             ContentBlock::Text("before ".to_string()),
             ContentBlock::Image(ImageRef {
@@ -39,8 +38,6 @@ fn native_image_round_trip_preserves_adjacent_text_for_claude_code() {
             }),
             ContentBlock::Text(" after".to_string()),
         ],
-        tool_calls: Vec::new(),
-        usage: None,
     });
     let native = message_to_native_chat_message(&source);
     let stdin = crate::openhuman::inference::provider::claude_code::input_builder::build_stdin(
