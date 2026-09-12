@@ -209,6 +209,9 @@ async fn token_and_details(
     );
     let mut matches: Option<Vec<ChunkListRow>> = None;
     for token in tokens {
+        if matches.as_ref().is_some_and(Vec::is_empty) {
+            break;
+        }
         let mut token_query = query.clone();
         token_query.content_contains = Some(token.clone());
         token_query.limit = None;
