@@ -383,11 +383,11 @@ fn round20_credentials_profiles_cover_legacy_plaintext_errors_and_active_edges()
     assert_eq!(
         loaded
             .profiles
-            .get("legacy-token")
+            .get("token:plain")
             .and_then(|profile| profile.token.as_deref()),
         Some("plain-secret")
     );
-    let oauth = loaded.profiles.get("legacy-oauth").expect("oauth loaded");
+    let oauth = loaded.profiles.get("github:oauth").expect("oauth loaded");
     assert_eq!(oauth.kind, AuthProfileKind::OAuth);
     assert_eq!(
         oauth.token_set.as_ref().map(|tokens| (
