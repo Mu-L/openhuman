@@ -17,8 +17,8 @@ use futures_util::StreamExt;
 use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
 use tempfile::tempdir;
-use tinyagents::harness::message::Message;
-use tinyagents::harness::model::ModelRequest;
+use tinyinference::message::Message;
+use tinyinference::model::ModelRequest;
 
 use openhuman_core::core::auth::{init_rpc_token, CORE_TOKEN_ENV_VAR};
 use openhuman_core::core::jsonrpc::build_core_http_router;
@@ -122,9 +122,6 @@ fn ensure_json_rpc_e2e_memory_seams() {
                     workspace_dir: json_rpc_e2e_shared_workspace().to_path_buf(),
                     ..openhuman_core::openhuman::config::Config::default()
                 });
-                openhuman_core::openhuman::memory::host_impls::install_memory_host_seams(
-                    config.clone(),
-                );
                 #[cfg(feature = "modules")]
                 openhuman_core::openhuman::modules::memory::set_modules_policy(config);
             })
@@ -3381,15 +3378,15 @@ async fn json_rpc_run_ledger_lifecycle() {
         .await
         .expect("load config");
 
-    tinyagents::session::run_ledger::upsert_agent_run(
+    tinyagents_session::run_ledger::upsert_agent_run(
         &config.workspace_dir,
-        tinyagents::session::run_ledger::AgentRunUpsert {
+        tinyagents_session::run_ledger::AgentRunUpsert {
             id: "sub-run-1".to_string(),
-            kind: tinyagents::session::run_ledger::AgentRunKind::WorkerThread,
+            kind: tinyagents_session::run_ledger::AgentRunKind::WorkerThread,
             parent_run_id: Some("req-run-1".to_string()),
             parent_thread_id: Some("thread-run-1".to_string()),
             agent_id: Some("researcher".to_string()),
-            status: tinyagents::session::run_ledger::AgentRunStatus::AwaitingUser,
+            status: tinyagents_session::run_ledger::AgentRunStatus::AwaitingUser,
             prompt_ref: Some("thread:worker-1:message:seed".to_string()),
             worker_thread_id: Some("worker-1".to_string()),
             task_board_id: Some("thread-run-1".to_string()),
@@ -3408,9 +3405,9 @@ async fn json_rpc_run_ledger_lifecycle() {
     )
     .expect("seed run");
 
-    tinyagents::session::run_ledger::append_run_event(
+    tinyagents_session::run_ledger::append_run_event(
         &config.workspace_dir,
-        tinyagents::session::run_ledger::RunEventAppend {
+        tinyagents_session::run_ledger::RunEventAppend {
             run_id: "sub-run-1".to_string(),
             event_type: "subagent_awaiting_user".to_string(),
             payload: json!({ "question": "Which repo should I inspect?" }),
@@ -3500,7 +3497,7 @@ async fn json_rpc_agent_work_list_groups_runs_by_bucket() {
         .await
         .expect("load config");
 
-    use tinyagents::session::run_ledger::{
+    use tinyagents_session::run_ledger::{
         upsert_agent_run, AgentRunKind, AgentRunStatus, AgentRunUpsert,
     };
     let seed = |id: &str, status: AgentRunStatus| AgentRunUpsert {
@@ -3631,16 +3628,16 @@ async fn json_rpc_workflow_run_definitions_and_runs_roundtrip() {
     );
 
     // Seed a durable workflow run, then list + get it.
-    tinyagents::session::run_ledger::upsert_workflow_run(
+    tinyagents_session::run_ledger::upsert_workflow_run(
         &config.workspace_dir,
-        tinyagents::session::run_ledger::WorkflowRunUpsert {
+        tinyagents_session::run_ledger::WorkflowRunUpsert {
             id: "wf-run-1".to_string(),
             definition_id: "parallel_research_cross_check".to_string(),
             parent_thread_id: Some("thread-wf-1".to_string()),
             input: json!({ "question": "test" }),
             phase_states: json!({ "decompose": "completed" }),
             child_run_ids: vec!["child-1".to_string()],
-            status: tinyagents::session::run_ledger::WorkflowRunStatus::Running,
+            status: tinyagents_session::run_ledger::WorkflowRunStatus::Running,
             summary: None,
             started_at: None,
             completed_at: None,
@@ -3830,17 +3827,17 @@ async fn json_rpc_agent_team_coordination_roundtrip() {
 
     // Mark A done directly via the run ledger, then B claims fine.
     let task_a =
-        tinyagents::session::run_ledger::get_agent_team_task(&config.workspace_dir, &task_a_id)
+        tinyagents_session::run_ledger::get_agent_team_task(&config.workspace_dir, &task_a_id)
             .expect("get task A")
             .expect("task A present");
-    tinyagents::session::run_ledger::upsert_agent_team_task(
+    tinyagents_session::run_ledger::upsert_agent_team_task(
         &config.workspace_dir,
-        tinyagents::session::run_ledger::AgentTeamTaskUpsert {
+        tinyagents_session::run_ledger::AgentTeamTaskUpsert {
             id: task_a.id.clone(),
             team_id: task_a.team_id.clone(),
             title: task_a.title.clone(),
             objective: task_a.objective.clone(),
-            status: tinyagents::session::run_ledger::AgentTeamTaskStatus::Done,
+            status: tinyagents_session::run_ledger::AgentTeamTaskStatus::Done,
             owner_member_id: task_a.owner_member_id.clone(),
             depends_on: task_a.depends_on.clone(),
             gate_status: Some(task_a.gate_status.clone()),
@@ -4400,7 +4397,7 @@ async fn json_rpc_memory_sync_and_learn() {
         "non-existent namespace must be filtered out"
     );
 
-    // ── memory_ingestion_status: idle on a fresh store ──────────────────────
+    // ── memory_ingestion_status: idle after direct learning ─────────────────
     let ing_status = post_json_rpc(
         &rpc_base,
         7006,
@@ -4414,10 +4411,12 @@ async fn json_rpc_memory_sync_and_learn() {
         Some(&json!(false)),
         "ingestion must be idle on a fresh store, got: {ing_result}"
     );
-    assert_eq!(
-        ing_result.get("queue_depth").and_then(Value::as_u64),
-        Some(0),
-        "queue_depth must be 0 on a fresh store"
+    assert!(
+        ing_result
+            .get("queue_depth")
+            .and_then(Value::as_u64)
+            .is_some_and(|depth| depth <= 1),
+        "direct learning may leave one bounded pending item, got: {ing_result}"
     );
 
     mock_join.abort();
@@ -10672,10 +10671,8 @@ async fn json_rpc_task_sources_crud_and_status() {
     let tasks_result = assert_no_jsonrpc_error(&tasks, "task_sources_list_tasks");
     assert_eq!(tasks_result.as_array().map(|a| a.len()), Some(0));
 
-    // (preview_filter is covered end to end by
-    // json_rpc_task_sources_fetch_pipeline_e2e with a stub provider; we
-    // do not assert on it here because the provider registry is global
-    // and shared across tests in this binary.)
+    // (preview_filter's refusal is covered end to end by
+    // json_rpc_task_sources_fetch_pipeline_e2e.)
 
     // ── remove, then get is not found ────────────────────────────────
     let remove = post_json_rpc(
@@ -10700,60 +10697,22 @@ async fn json_rpc_task_sources_crud_and_status() {
     rpc_join.abort();
 }
 
-/// Stub Composio provider used by the task-sources fetch E2E. Returns a
-/// canned set of tasks from `fetch_tasks` so the full
-/// fetch → enrich → route → ingest pipeline can be exercised over RPC
-/// without a live Composio connection.
-mod task_sources_stub {
-    use async_trait::async_trait;
-    use openhuman_core::openhuman::memory::sync::composio::providers::{
-        ComposioProvider, NormalizedTask, ProviderContext, ProviderUserProfile, TaskFetchFilter,
-    };
-
-    pub struct StubGithubProvider {
-        pub tasks: Vec<NormalizedTask>,
-    }
-
-    pub fn task(external_id: &str, title: &str, updated: &str) -> NormalizedTask {
-        NormalizedTask {
-            external_id: external_id.to_string(),
-            provider: "github".to_string(),
-            title: title.to_string(),
-            url: Some(format!("https://example.com/{external_id}")),
-            updated_at: Some(updated.to_string()),
-            ..Default::default()
-        }
-    }
-
-    #[async_trait]
-    impl ComposioProvider for StubGithubProvider {
-        fn toolkit_slug(&self) -> &'static str {
-            "github"
-        }
-        async fn fetch_user_profile(
-            &self,
-            _ctx: &ProviderContext,
-        ) -> Result<ProviderUserProfile, String> {
-            Ok(ProviderUserProfile::default())
-        }
-        async fn fetch_tasks(
-            &self,
-            _ctx: &ProviderContext,
-            _filter: &TaskFetchFilter,
-        ) -> Result<Vec<NormalizedTask>, String> {
-            Ok(self.tasks.clone())
-        }
-    }
-}
-
-/// Full task-sources fetch pipeline over JSON-RPC: a stub provider feeds
-/// `fetch_tasks`, then `task_sources_fetch` routes the tasks onto the
-/// board, `list_tasks` surfaces them, a re-fetch dedups, and
-/// `preview_filter` returns matches without ingesting.
+/// `task_sources_fetch` / `task_sources_preview_filter` over JSON-RPC now
+/// that `ComposioProvider::fetch_tasks` has no replacement.
+///
+/// This test used to register a stub `ComposioProvider` (deleted by
+/// tinymemory v1.13.4 with the whole in-process provider registry — see
+/// `crate::openhuman::integrations::composio::providers`'s module docs) and
+/// exercise the full fetch → enrich → route → ingest pipeline against it.
+/// `task_sources::pipeline::fetch_tasks_unavailable` documents why that
+/// capability was not ported forward: tinyconnectors' `Sync` member returns
+/// memory records, not board items, and there is no structured task-fetch
+/// bus surface to reimplement `fetch_tasks` against for any toolkit. So the
+/// pipeline now refuses cleanly for every provider instead of silently
+/// dropping some toolkits' coverage, and this test asserts that refusal
+/// end to end over RPC rather than a successful fetch.
 #[tokio::test]
 async fn json_rpc_task_sources_fetch_pipeline_e2e() {
-    use std::sync::Arc;
-
     let _env_lock = json_rpc_e2e_env_lock();
     let tmp = tempdir().expect("tempdir");
     let home = tmp.path();
@@ -10765,17 +10724,6 @@ async fn json_rpc_task_sources_fetch_pipeline_e2e() {
     let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
 
     write_min_config(&openhuman_home, "http://127.0.0.1:1");
-
-    // Register the stub github provider BEFORE serving so the fetch RPC
-    // resolves it from the global registry.
-    openhuman_core::openhuman::memory::sync::composio::providers::register_provider(Arc::new(
-        task_sources_stub::StubGithubProvider {
-            tasks: vec![
-                task_sources_stub::task("101", "Fix flaky test", "2025-01-01T00:00:00Z"),
-                task_sources_stub::task("102", "Update docs", "2025-01-02T00:00:00Z"),
-            ],
-        },
-    ));
 
     let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
     let rpc_base = format!("http://{rpc_addr}");
@@ -10801,7 +10749,9 @@ async fn json_rpc_task_sources_fetch_pipeline_e2e() {
         .expect("source id")
         .to_string();
 
-    // First fetch: both stub tasks routed.
+    // Fetch is infallible at the RPC boundary — the pipeline captures the
+    // refusal into `FetchOutcome::error` rather than failing the call, so
+    // the scheduler loop that shares this same entry point never unwinds.
     let fetch1 = post_json_rpc(
         &rpc_base,
         7402,
@@ -10810,16 +10760,19 @@ async fn json_rpc_task_sources_fetch_pipeline_e2e() {
     )
     .await;
     let outcome1 = assert_no_jsonrpc_error(&fetch1, "task_sources_fetch first");
-    assert_eq!(
-        outcome1.get("error"),
-        None,
-        "fetch should not error: {outcome1}"
+    let error1 = outcome1
+        .get("error")
+        .and_then(Value::as_str)
+        .expect("fetch outcome carries a refusal error");
+    assert!(
+        error1.contains("fetch_tasks") && error1.contains("unavailable"),
+        "unexpected fetch error: {error1}"
     );
-    assert_eq!(outcome1.get("fetched").and_then(Value::as_u64), Some(2));
-    assert_eq!(outcome1.get("routed").and_then(Value::as_u64), Some(2));
+    assert_eq!(outcome1.get("fetched").and_then(Value::as_u64), Some(0));
+    assert_eq!(outcome1.get("routed").and_then(Value::as_u64), Some(0));
     assert_eq!(outcome1.get("skippedDupe").and_then(Value::as_u64), Some(0));
 
-    // list_tasks surfaces the two ingested tasks.
+    // list_tasks stays empty — nothing was ever routed.
     let tasks = post_json_rpc(
         &rpc_base,
         7403,
@@ -10831,15 +10784,14 @@ async fn json_rpc_task_sources_fetch_pipeline_e2e() {
         .as_array()
         .expect("tasks array")
         .clone();
-    assert_eq!(tasks_arr.len(), 2);
-    let ids: Vec<&str> = tasks_arr
-        .iter()
-        .filter_map(|t| t.get("externalId").and_then(Value::as_str))
-        .collect();
-    assert!(ids.contains(&"101"));
-    assert!(ids.contains(&"102"));
+    assert_eq!(
+        tasks_arr.len(),
+        0,
+        "nothing can be routed without fetch_tasks"
+    );
 
-    // Second fetch: identical tasks → all deduped, none re-routed.
+    // A second fetch refuses identically — the refusal is not a one-shot
+    // fluke, it is the pipeline's steady state for every toolkit.
     let fetch2 = post_json_rpc(
         &rpc_base,
         7404,
@@ -10848,11 +10800,14 @@ async fn json_rpc_task_sources_fetch_pipeline_e2e() {
     )
     .await;
     let outcome2 = assert_no_jsonrpc_error(&fetch2, "task_sources_fetch second");
-    assert_eq!(outcome2.get("fetched").and_then(Value::as_u64), Some(2));
+    assert_eq!(outcome2.get("fetched").and_then(Value::as_u64), Some(0));
     assert_eq!(outcome2.get("routed").and_then(Value::as_u64), Some(0));
-    assert_eq!(outcome2.get("skippedDupe").and_then(Value::as_u64), Some(2));
+    assert!(outcome2.get("error").and_then(Value::as_str).is_some());
 
-    // preview_filter returns matches WITHOUT ingesting (count unchanged).
+    // preview_filter propagates the same refusal as a JSON-RPC error rather
+    // than an in-band outcome field, because `ops::preview_filter` has no
+    // outcome envelope to capture it into — it is a dry-run read, not a
+    // pipeline pass.
     let preview = post_json_rpc(
         &rpc_base,
         7405,
@@ -10863,11 +10818,15 @@ async fn json_rpc_task_sources_fetch_pipeline_e2e() {
         }),
     )
     .await;
-    let preview_arr = assert_no_jsonrpc_error(&preview, "task_sources_preview_filter pipeline")
-        .as_array()
-        .expect("preview array")
-        .clone();
-    assert_eq!(preview_arr.len(), 2);
+    let preview_error = assert_jsonrpc_error(&preview, "task_sources_preview_filter pipeline");
+    let preview_message = preview_error
+        .get("message")
+        .and_then(Value::as_str)
+        .unwrap_or_default();
+    assert!(
+        preview_message.contains("fetch_tasks") && preview_message.contains("unavailable"),
+        "unexpected preview_filter error: {preview_message}"
+    );
 
     let tasks_after = post_json_rpc(
         &rpc_base,
@@ -10882,14 +10841,9 @@ async fn json_rpc_task_sources_fetch_pipeline_e2e() {
         .clone();
     assert_eq!(
         tasks_after_arr.len(),
-        2,
-        "preview_filter must not ingest tasks"
+        0,
+        "a refused preview_filter must not ingest tasks either"
     );
-
-    // Restore the global provider registry so the stub "github" provider
-    // does not leak into other tests in this binary (re-registers the
-    // real built-in providers).
-    openhuman_core::openhuman::memory::sync::composio::providers::init_default_providers();
 
     rpc_join.abort();
 }
@@ -13096,6 +13050,23 @@ async fn json_rpc_memory_sources_list_filters_to_active_connections() {
     .await;
     add_folder_memory_source(&rpc_base, 8804, "My notes", "/tmp/notes").await;
 
+    // Probe the exact chain the filter depends on FIRST, so a broken scan
+    // fails here with its real error instead of downstream as a silently
+    // fail-open (unfiltered) listing.
+    let probe = post_json_rpc(
+        &rpc_base,
+        8899,
+        "openhuman.composio_list_connections",
+        json!({}),
+    )
+    .await;
+    let probe_result = assert_no_jsonrpc_error(&probe, "composio_list_connections probe").clone();
+    let probe_text = probe_result.to_string();
+    assert!(
+        probe_text.contains("conn_active_gmail"),
+        "the connections probe must see the mock's active set; got {probe_text}"
+    );
+
     let list = post_json_rpc(&rpc_base, 8805, "openhuman.memory_sources_list", json!({})).await;
     let result = assert_no_jsonrpc_error(&list, "memory_sources_list").clone();
     let sources = memory_sources_from_list(&result);
@@ -13231,6 +13202,23 @@ async fn json_rpc_memory_sources_list_keeps_multiple_active_connections_per_tool
         "conn_gmail_stale",
     )
     .await;
+
+    // Probe the exact chain the filter depends on FIRST, so a broken scan
+    // fails here with its real error instead of downstream as a silently
+    // fail-open (unfiltered) listing.
+    let probe = post_json_rpc(
+        &rpc_base,
+        8999,
+        "openhuman.composio_list_connections",
+        json!({}),
+    )
+    .await;
+    let probe_result = assert_no_jsonrpc_error(&probe, "composio_list_connections probe").clone();
+    let probe_text = probe_result.to_string();
+    assert!(
+        probe_text.contains("conn_gmail_one"),
+        "the connections probe must see the mock's active set; got {probe_text}"
+    );
 
     let list = post_json_rpc(&rpc_base, 8954, "openhuman.memory_sources_list", json!({})).await;
     let result = assert_no_jsonrpc_error(&list, "memory_sources_list").clone();
@@ -14107,4 +14095,710 @@ async fn memory_flavour_agent_tool_e2e_5172() {
         .await
         .expect_err("an unrecognized flavour slug must be rejected");
     assert!(unknown.to_string().contains("Unknown flavour"));
+}
+
+/// The `memory_diff` RPC surface is gone, and the `memory` domain is not (#5839).
+///
+/// #5839 deleted the `memory-git` feature, `src/openhuman/memory/diff/`, the
+/// `memory_diff` tool and `tests/memory_artifacts_e2e.rs`. What it left behind
+/// is a unit test over `all_controller_schemas()`
+/// (`src/core/all_tests.rs::memory_diff_controllers_are_gone_and_memory_survives`),
+/// which reads the registry as a data structure. Nothing dispatched a removed
+/// method through the live router, so nothing proved the wire surface actually
+/// went with it — a re-registration behind a different namespace, or a stale
+/// alias, would satisfy that unit test and still answer on `/rpc`.
+///
+/// This asks the real HTTP router. Both halves matter and are deliberately in
+/// one test: removing the git ledger must not take the memory domain with it,
+/// so a change that deleted too much fails here rather than passing quietly.
+#[tokio::test]
+async fn json_rpc_memory_diff_surface_is_gone_and_memory_still_answers() {
+    let _env_lock = json_rpc_e2e_env_lock();
+    let tmp = tempdir().expect("tempdir");
+    let home = tmp.path();
+    let openhuman_home = home.join(".openhuman");
+
+    let _home_guard = EnvVarGuard::set_to_path("HOME", home);
+    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
+    let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
+
+    write_min_config(&openhuman_home, "http://127.0.0.1:9");
+
+    let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
+    let rpc_base = format!("http://{rpc_addr}");
+
+    // Every function the deleted `memory_diff` namespace used to register.
+    for (id, method) in [
+        "openhuman.memory_diff_take_snapshot",
+        "openhuman.memory_diff_create_checkpoint",
+        "openhuman.memory_diff_diff_since_checkpoint",
+        "openhuman.memory_diff_diff_since_last",
+        "openhuman.memory_diff_diff_since_read",
+        "openhuman.memory_diff_mark_read",
+    ]
+    .into_iter()
+    .enumerate()
+    {
+        let response = post_json_rpc(&rpc_base, 5_839_000 + id as i64, method, json!({})).await;
+        assert_unknown_method(&response, method);
+    }
+
+    // The other half: the memory domain survived the removal. `memory_init` is
+    // dispatched here purely to prove the namespace still answers — any
+    // response but unknown-method is a pass, because what is under test is
+    // registration, not this call's own outcome.
+    let survivor = post_json_rpc(&rpc_base, 5_839_100, "openhuman.memory_init", json!({})).await;
+    let unknown = survivor
+        .get("error")
+        .and_then(|error| error.get("message"))
+        .and_then(Value::as_str)
+        .is_some_and(|message| message.contains("unknown method"));
+    assert!(
+        !unknown,
+        "removing the git ledger must not deregister the memory domain: {survivor}"
+    );
+
+    rpc_join.abort();
+}
+
+// ── Backfilled e2e cover (#5795, #5947) ──────────────────────────────────────
+//
+// Both of these drive the JSON-RPC surface rather than the library type the
+// fix lives on, so a future refactor that swaps the write path or the dispatch
+// arm is caught even though the inner unit tests keep passing.
+
+/// Set on the re-exec below so the child runs the test body instead of
+/// spawning another child.
+#[cfg(unix)]
+const OWNER_ONLY_CHILD_ENV: &str = "OPENHUMAN_E2E_OWNER_ONLY_CHILD";
+#[cfg(unix)]
+const OWNER_ONLY_TEST_NAME: &str =
+    "auth_store_provider_credentials_writes_an_owner_only_store_file";
+
+/// Find `auth-profiles.json` beneath a temp `HOME`.
+///
+/// `cfg(unix)` to match its only caller: the mode assertion below has nothing
+/// to check on a platform without permission bits, and an uncalled helper
+/// would be dead code there.
+///
+/// Searched rather than hard-coded: the state dir is resolved from config and
+/// user scope, and pinning that layout here would make this test fail for a
+/// reason that has nothing to do with file modes.
+#[cfg(unix)]
+fn find_auth_profiles_store(root: &Path) -> Option<PathBuf> {
+    let mut stack = vec![root.to_path_buf()];
+    while let Some(dir) = stack.pop() {
+        let Ok(entries) = std::fs::read_dir(&dir) else {
+            continue;
+        };
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.is_dir() {
+                stack.push(path);
+            } else if path.file_name() == Some(std::ffi::OsStr::new("auth-profiles.json")) {
+                return Some(path);
+            }
+        }
+    }
+    None
+}
+
+/// #5795 — the credential store must not be group/world readable.
+///
+/// `fs::write` creates at `0o666 & ~umask` (0644 under the usual 022) and
+/// `fs::rename` carries the source mode onto the destination, so before the fix
+/// every save left OAuth-token ciphertext readable by any UID on the box.
+///
+/// Driven through `auth.store_provider_credentials` — the RPC a user hits when
+/// they paste a provider key — because the existing unit cover calls
+/// `AuthProfilesStore` directly and would not notice the RPC path acquiring a
+/// different writer.
+#[cfg(unix)]
+#[tokio::test]
+async fn auth_store_provider_credentials_writes_an_owner_only_store_file() {
+    use std::os::unix::fs::PermissionsExt as _;
+
+    // Re-exec this one test under a known-permissive umask before doing
+    // anything else.
+    //
+    // umask is process-global and libtest runs tests as threads, so it cannot
+    // be set in-process without racing every other test in this binary. It has
+    // to be controlled, though: a reverted `fs::write` creates at
+    // `0o666 & ~umask`, which is 0644 under the usual 022 but ALSO 0600 under a
+    // hardened 077 — and under 077 an owner-only assertion passes whether or not
+    // the fix is present. Skipping in that case is not a way out either: libtest
+    // records an early `return` as a PASS, so on a hardened runner this
+    // security regression test would go green having checked nothing.
+    if std::env::var(OWNER_ONLY_CHILD_ENV).is_err() {
+        let exe = std::env::current_exe().expect("current_exe");
+        // The exe path and the test name go in as POSITIONAL PARAMETERS rather
+        // than interpolated into the command string. A repository or
+        // CARGO_TARGET_DIR containing a single quote (`/home/o'connor/openhuman`)
+        // would close the literal `'...'` early and hand `sh` invalid syntax, so
+        // this test would fail before its child ever started — on exactly the
+        // machines whose paths are least likely to be noticed. `$0` is the
+        // conventional placeholder slot for `sh -c`, so the real arguments start
+        // at `$1`.
+        let status = std::process::Command::new("sh")
+            .arg("-c")
+            .arg("umask 022 && exec \"$1\" --exact \"$2\" --nocapture --test-threads=1")
+            .arg("sh")
+            .arg(&exe)
+            .arg(OWNER_ONLY_TEST_NAME)
+            .env(OWNER_ONLY_CHILD_ENV, "1")
+            .status()
+            .expect("re-exec the owner-only test under umask 022");
+        assert!(
+            status.success(),
+            "the owner-only credential-store check failed under umask 022 (see child output above)"
+        );
+        return;
+    }
+
+    let _env_lock = json_rpc_e2e_env_lock();
+    let tmp = tempdir().expect("tempdir");
+    let home = tmp.path();
+    let openhuman_home = home.join(".openhuman");
+
+    let _home_guard = EnvVarGuard::set_to_path("HOME", home);
+    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
+    let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
+
+    // Precondition, asserted rather than skipped: with umask 022 an ordinary
+    // create must land group/world-readable. If it does not, the umask did not
+    // take and the assertion below could not tell the fix from its absence —
+    // that is a failure, not a pass.
+    let probe = home.join("umask-probe");
+    std::fs::write(&probe, b"probe").expect("write probe");
+    let probe_mode = std::fs::metadata(&probe)
+        .expect("probe metadata")
+        .permissions()
+        .mode()
+        & 0o777;
+    assert_ne!(
+        probe_mode & 0o077,
+        0,
+        "umask 022 should leave a plain create group-readable, got {probe_mode:#o}; \
+         without that this test cannot distinguish the owner-only fix from its absence"
+    );
+
+    let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
+    let mock_origin = format!("http://{}", mock_addr);
+    write_min_config(&openhuman_home, &mock_origin);
+
+    let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
+    let rpc_base = format!("http://{}", rpc_addr);
+    tokio::time::sleep(Duration::from_millis(100)).await;
+
+    let stored = post_json_rpc(
+        &rpc_base,
+        9_795,
+        "openhuman.auth_store_provider_credentials",
+        json!({
+            "provider": "provider:openai",
+            "profile": "default",
+            "token": "sk-owner-only-e2e",
+            "setActive": true
+        }),
+    )
+    .await;
+    assert_no_jsonrpc_error(&stored, "auth_store_provider_credentials");
+
+    let store_path =
+        find_auth_profiles_store(home).expect("the save must have produced an auth-profiles.json");
+    let mode = std::fs::metadata(&store_path)
+        .expect("store metadata")
+        .permissions()
+        .mode()
+        & 0o777;
+
+    assert_eq!(
+        mode,
+        0o600,
+        "the credential store at {} must be owner-only, got {mode:#o} \
+         (a plain create in this environment yields {probe_mode:#o})",
+        store_path.display()
+    );
+
+    mock_join.abort();
+    rpc_join.abort();
+}
+
+/// #5947 — `validate_only` is a dry run for **stt**, not only for tts.
+///
+/// It used to be checked inside the `"tts"` arm alone. Every provider the
+/// settings modal can reach maps to `"stt"`, so the modal's dry-run request
+/// fell through to a live transcription — the opposite of what "Test Key"
+/// promises. A reserved slug is used because it is the one dry-run answer that
+/// is fully determined with no network: there is no user-held key to check, so
+/// the handler reports success without calling a provider.
+#[tokio::test]
+async fn voice_test_provider_honours_validate_only_for_the_stt_workload() {
+    let _env_lock = json_rpc_e2e_env_lock();
+    let tmp = tempdir().expect("tempdir");
+    let home = tmp.path();
+    let openhuman_home = home.join(".openhuman");
+
+    let _home_guard = EnvVarGuard::set_to_path("HOME", home);
+    let _workspace_guard = EnvVarGuard::unset("OPENHUMAN_WORKSPACE");
+    let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
+    let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
+    let _piper_guard = EnvVarGuard::unset("PIPER_BIN");
+
+    let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
+    let mock_origin = format!("http://{}", mock_addr);
+    write_min_config(&openhuman_home, &mock_origin);
+
+    let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
+    let rpc_base = format!("http://{}", rpc_addr);
+    tokio::time::sleep(Duration::from_millis(100)).await;
+
+    let dry_run = post_json_rpc(
+        &rpc_base,
+        9_947,
+        "openhuman.voice_test_provider",
+        json!({ "workload": "stt", "provider": "cloud", "validate_only": true }),
+    )
+    .await;
+    // Asserted on the whole envelope rather than through
+    // `assert_no_jsonrpc_error` so that BOTH shapes a regression can take —
+    // an error response from `create_stt_provider`, or an ok response
+    // carrying a live-transcription verdict — fail on this assertion and say
+    // why, instead of tripping a generic harness helper first.
+    let detail = dry_run
+        .get("result")
+        .and_then(|r| r.get("detail"))
+        .and_then(Value::as_str)
+        .unwrap_or_default();
+    assert!(
+        detail.contains("managed by OpenHuman"),
+        "validate_only must short-circuit an stt request before any provider call: \
+         expected a managed-provider answer, got detail {detail:?} in {dry_run}. \
+         An error here, or an \"STT test …\" verdict, means validate_only was \
+         ignored for the stt workload (#5947)."
+    );
+    assert_eq!(
+        dry_run
+            .get("result")
+            .and_then(|r| r.get("ok"))
+            .and_then(Value::as_bool),
+        Some(true),
+        "a managed provider has no key to check, which is not a failed check: {dry_run}"
+    );
+
+    mock_join.abort();
+    rpc_join.abort();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// #5846 — the two authoring-gate behaviour changes, driven end-to-end through
+// the real strict-mode create path.
+//
+// `flows_create` with `strict: true` runs `ops::strict_gate`
+// (`flows/schemas_handlers.rs:18`) -> `run_builder_gates`
+// (`flows/ops_part_01.rs:509`) -> `validate_binding_resolvability`
+// (`flows/ops_part_02.rs:433`) -> `tinyflows::gates::failures`, the stack
+// #5846 evicted upstream.
+//
+// `ops_tests_part_06_tests.rs` already pins the gate FUNCTION at unit level.
+// What no test covered is that the evicted gate is still WIRED into the strict
+// RPC path — the eviction moved the implementation out of this repository, so
+// the wiring is exactly the thing that can now rot without a local test failing.
+//
+// A NOTE ON #5846's SUMMARY. The PR body reads "a workflow whose `tool_call`
+// arg binds to a schema-less agent is now refused". Taken literally that is not
+// what the gate does, deliberately: an agent with NO `output_parser.schema` is
+// skipped because "the field may exist, so it is unverifiable rather than
+// guaranteed invalid" (`gates/mod.rs:234-239`). Only a field absent from a
+// schema that EXISTS is refused. These tests pin the implemented contract, and
+// the carve-out gets its own case precisely because the PR wording invites
+// someone to "fix" it away.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// A `tool_call` arg reading a field the target agent's declared schema omits.
+#[cfg(feature = "flows")]
+fn graph_binding_to_undeclared_agent_field() -> Value {
+    json!({
+        "name": "undeclared-field",
+        "nodes": [
+            { "id": "t", "kind": "trigger", "name": "Manual" },
+            { "id": "summarize", "kind": "agent", "name": "Summarize",
+              "config": { "prompt": "summarize",
+                "output_parser": { "schema": { "type": "object",
+                  "properties": { "summary": { "type": "string" } } } } } },
+            { "id": "post", "kind": "tool_call", "name": "Post",
+              "config": { "slug": "SLACK_SEND_MESSAGE",
+                "args": { "channel": "=nodes.summarize.item.json.channel" } } }
+        ],
+        "edges": [
+            { "from_node": "t", "to_node": "summarize" },
+            { "from_node": "summarize", "to_node": "post" }
+        ]
+    })
+}
+
+/// The same shape with NO declared schema — the deliberate carve-out.
+#[cfg(feature = "flows")]
+fn graph_binding_to_schemaless_agent() -> Value {
+    json!({
+        "name": "schemaless-agent",
+        "nodes": [
+            { "id": "t", "kind": "trigger", "name": "Manual" },
+            { "id": "summarize", "kind": "agent", "name": "Summarize",
+              "config": { "prompt": "summarize" } },
+            { "id": "post", "kind": "tool_call", "name": "Post",
+              "config": { "slug": "SLACK_SEND_MESSAGE",
+                "args": { "channel": "=nodes.summarize.item.json.channel" } } }
+        ],
+        "edges": [
+            { "from_node": "t", "to_node": "summarize" },
+            { "from_node": "summarize", "to_node": "post" }
+        ]
+    })
+}
+
+/// An instruction written as a `=`-expression beside a real `messages` array.
+#[cfg(feature = "flows")]
+fn graph_prose_prompt_beside_real_messages() -> Value {
+    json!({
+        "name": "prose-prompt-with-messages",
+        "nodes": [
+            { "id": "t", "kind": "trigger", "name": "Manual" },
+            { "id": "writer", "kind": "agent", "name": "Writer",
+              "config": {
+                "prompt": "=Write a short friendly summary of the article above",
+                "messages": [{ "role": "user", "content": "summarise the article" }] } }
+        ],
+        "edges": [{ "from_node": "t", "to_node": "writer" }]
+    })
+}
+
+/// The same prompt with no `messages` to fall through to — still refused.
+#[cfg(feature = "flows")]
+fn graph_prose_prompt_without_messages() -> Value {
+    json!({
+        "name": "prose-prompt-alone",
+        "nodes": [
+            { "id": "t", "kind": "trigger", "name": "Manual" },
+            { "id": "writer", "kind": "agent", "name": "Writer",
+              "config": { "prompt": "=Write a short friendly summary of the article above" } }
+        ],
+        "edges": [{ "from_node": "t", "to_node": "writer" }]
+    })
+}
+
+/// The refusal message from a strict `flows_create`, or `None` when it saved.
+#[cfg(feature = "flows")]
+fn strict_create_refusal(response: &Value) -> Option<String> {
+    response
+        .get("error")
+        .and_then(|e| e.get("message"))
+        .and_then(Value::as_str)
+        .map(ToOwned::to_owned)
+}
+
+#[cfg(feature = "flows")]
+#[tokio::test]
+async fn json_rpc_flows_strict_create_refuses_binding_to_undeclared_agent_field() {
+    let _env_lock = json_rpc_e2e_env_lock();
+    let (rpc_base, _tmp, api_join, rpc_join, _guards) = boot_flows_rpc_env().await;
+
+    let create = post_json_rpc(
+        &rpc_base,
+        9801,
+        "openhuman.flows_create",
+        json!({
+            "name": "undeclared-field",
+            "graph": graph_binding_to_undeclared_agent_field(),
+            "strict": true
+        }),
+    )
+    .await;
+
+    let refusal = strict_create_refusal(&create)
+        .unwrap_or_else(|| panic!("strict create must be refused, got: {create}"));
+    assert!(
+        refusal.contains("output_parser.schema"),
+        "the refusal must come from the undeclared-field gate, got: {refusal}"
+    );
+    assert!(
+        refusal.contains("channel"),
+        "the refusal must name the offending field, got: {refusal}"
+    );
+
+    rpc_join.abort();
+    api_join.abort();
+}
+
+/// The carve-out: an agent with no declared schema is unverifiable, not
+/// invalid, so this binding must NOT be refused by the schema gate.
+///
+/// Asserted as "no refusal naming this gate" rather than "the save succeeded",
+/// because a strict create must clear every later gate too and this test is
+/// about one of them. It is still non-vacuous: revert the carve-out and the
+/// refusal names `output_parser.schema`, which is exactly what this forbids.
+#[cfg(feature = "flows")]
+#[tokio::test]
+async fn json_rpc_flows_strict_create_accepts_binding_to_schemaless_agent() {
+    let _env_lock = json_rpc_e2e_env_lock();
+    let (rpc_base, _tmp, api_join, rpc_join, _guards) = boot_flows_rpc_env().await;
+
+    let create = post_json_rpc(
+        &rpc_base,
+        9803,
+        "openhuman.flows_create",
+        json!({
+            "name": "schemaless-agent",
+            "graph": graph_binding_to_schemaless_agent(),
+            "strict": true
+        }),
+    )
+    .await;
+
+    if let Some(refusal) = strict_create_refusal(&create) {
+        // A refusal is expected here and is NOT this gate's doing: the fixture
+        // also carries a Slack node whose `channel` arg binds to an upstream
+        // field that is null under a sandboxed dry run, which strict mode
+        // refuses on its own. Success therefore cannot be asserted.
+        //
+        // But the refusal must still be a *strict-validation* one. Without this
+        // the test would also pass on a transport failure, an unknown-method
+        // error or any other structural break — the false-positive shape a bare
+        // "does not contain" check leaves open.
+        assert!(
+            refusal.starts_with("strict validation failed:"),
+            "expected a strict-validation refusal, not an unrelated failure: {refusal}"
+        );
+        assert!(
+            !refusal.contains("output_parser.schema"),
+            "a schema-less agent must be treated as unverifiable, not refused: {refusal}"
+        );
+    }
+
+    rpc_join.abort();
+    api_join.abort();
+}
+
+/// #5846's second behaviour change: a vestigial `=`-prose `prompt` beside real
+/// `messages` no longer blocks the save — the node never runs on `prompt` once
+/// `messages` supply the turn, so refusing it was a refusal with no failure
+/// behind it.
+#[cfg(feature = "flows")]
+#[tokio::test]
+async fn json_rpc_flows_strict_create_accepts_prose_prompt_beside_real_messages() {
+    let _env_lock = json_rpc_e2e_env_lock();
+    let (rpc_base, _tmp, api_join, rpc_join, _guards) = boot_flows_rpc_env().await;
+
+    let create = post_json_rpc(
+        &rpc_base,
+        9804,
+        "openhuman.flows_create",
+        json!({
+            "name": "prose-prompt-with-messages",
+            "graph": graph_prose_prompt_beside_real_messages(),
+            "strict": true
+        }),
+    )
+    .await;
+
+    // Asserted as a successful save, not merely "no refusal naming this gate".
+    // This fixture is a trigger plus one agent node — no bindings, no
+    // connections, no external-tool args — so there is no later gate it could
+    // legitimately trip, and a tolerated-error form would have gone green on a
+    // structural error, a transport failure or a renamed diagnostic while
+    // proving nothing. Confirmed against the running stack: the create returns
+    // a flow id.
+    let created = assert_no_jsonrpc_error(&create, "flows_create prose prompt beside messages");
+    let created = peel_logs_envelope(created);
+    assert_eq!(
+        created.get("name").and_then(Value::as_str),
+        Some("prose-prompt-with-messages"),
+        "the saved flow must be the one submitted: {created}"
+    );
+    assert!(
+        created
+            .get("id")
+            .and_then(Value::as_str)
+            .is_some_and(|id| !id.is_empty()),
+        "a saved flow must come back with an id: {created}"
+    );
+
+    rpc_join.abort();
+    api_join.abort();
+}
+
+/// The other side of the same rule: with no `messages` to fall through to, the
+/// `=`-prose prompt is still a hard refusal. #5846 narrowed this rule; it did
+/// not remove it, and pinning that stops the narrowing being widened.
+#[cfg(feature = "flows")]
+#[tokio::test]
+async fn json_rpc_flows_strict_create_still_refuses_prose_prompt_without_messages() {
+    let _env_lock = json_rpc_e2e_env_lock();
+    let (rpc_base, _tmp, api_join, rpc_join, _guards) = boot_flows_rpc_env().await;
+
+    let create = post_json_rpc(
+        &rpc_base,
+        9805,
+        "openhuman.flows_create",
+        json!({
+            "name": "prose-prompt-alone",
+            "graph": graph_prose_prompt_without_messages(),
+            "strict": true
+        }),
+    )
+    .await;
+
+    let refusal = strict_create_refusal(&create)
+        .unwrap_or_else(|| panic!("strict create must be refused, got: {create}"));
+    assert!(
+        refusal.contains("reads as an instruction written as a"),
+        "the refusal must come from the `=`-prose prompt gate, got: {refusal}"
+    );
+
+    rpc_join.abort();
+    api_join.abort();
+}
+
+// ---------------------------------------------------------------------------
+// Migration import guard: refusing the null memory driver (#5799)
+// ---------------------------------------------------------------------------
+
+/// An apply-mode migration into a null memory driver must REFUSE, and the
+/// refusal must not name the wrong product.
+///
+/// The guard exists because every write into a null driver is discarded, so an
+/// import that reports "migrated N entries" having written none is silent data
+/// loss of the worst kind: the user may delete the source workspace on the
+/// strength of that report and have nothing left to re-run against.
+///
+/// #5799 rewrote the refusal. The half reachable in a modules-on build — which
+/// is every build this lane runs — is the headline: it used to read "refusing to
+/// import **OpenClaw** memory into the null driver" and was raised verbatim by
+/// `migrate_hermes` too, telling a Hermes user about a product they were not
+/// migrating. That is what this drives: the Hermes RPC, asserting the refusal
+/// does not say "OpenClaw".
+///
+/// Not covered here, and deliberately: the third arm #5799 added, which names a
+/// modules-off *build* rather than the user's config. `binding::module_provider`
+/// only substitutes the null provider under `#[cfg(not(feature = "modules"))]`
+/// (`memory/binding.rs:406-415`); with modules on it always answers
+/// `DriverClass::Module`, so that arm is unreachable from this binary. It is
+/// asserted by the gates-off unit test
+/// `migration_helpers::ops_tests::apply_refuses_and_names_the_build_when_no_memory_module_is_compiled_in`.
+#[tokio::test]
+async fn json_rpc_migrate_hermes_refuses_null_driver_without_naming_openclaw() {
+    let _env_lock = json_rpc_e2e_env_lock();
+    let tmp = tempdir().expect("tempdir");
+    let home = tmp.path();
+    let openhuman_home = home.join(".openhuman");
+
+    // `Config::workspace_dir` is `#[serde(skip)]` (`config/schema/types_part_01.rs:78`),
+    // so it cannot be set from config.toml — the workspace comes from the
+    // `OPENHUMAN_WORKSPACE` env overlay, which is what this sets. A `workspace_dir`
+    // key in the TOML would be silently inert, and the migration's
+    // self-migration guard compares against whatever the overlay resolved.
+    let workspace = home.join("workspace");
+    std::fs::create_dir_all(&workspace).expect("mkdir workspace");
+
+    let _home_guard = EnvVarGuard::set_to_path("HOME", home);
+    let _workspace_guard = EnvVarGuard::set_to_path("OPENHUMAN_WORKSPACE", &workspace);
+    let _backend_url_guard = EnvVarGuard::unset("BACKEND_URL");
+    let _vite_backend_guard = EnvVarGuard::unset("VITE_BACKEND_URL");
+
+    let (mock_addr, mock_join) = serve_on_ephemeral(mock_upstream_router()).await;
+    let mock_origin = format!("http://{}", mock_addr);
+
+    // `driver = "null"` is the one route to a null-classed binding that a
+    // modules-on build can take: `admit` returns the configured id, and the id
+    // *is* the null driver, so the binding reports class Null with no fallback.
+    let cfg = format!(
+        r#"api_url = "{mock_origin}"
+default_model = "e2e-mock-model"
+default_temperature = 0.7
+chat_onboarding_completed = true
+
+[secrets]
+encrypt = false
+
+[subsystems.memory]
+driver = "null"
+"#
+    );
+    std::fs::create_dir_all(&openhuman_home).expect("mkdir openhuman");
+    std::fs::write(openhuman_home.join("config.toml"), &cfg).expect("write config");
+    std::fs::create_dir_all(openhuman_home.join("users").join("local")).expect("mkdir users/local");
+    std::fs::write(
+        openhuman_home
+            .join("users")
+            .join("local")
+            .join("config.toml"),
+        &cfg,
+    )
+    .expect("write user config");
+    let _: openhuman_core::openhuman::config::Config =
+        toml::from_str(&cfg).expect("config toml must match Config schema");
+
+    // A Hermes source with something real to lose. `MEMORY.md` is the first of
+    // `hermes_file_mappings()`, so the import has an entry to write and the
+    // refusal has to come from the guard rather than from an empty plan.
+    let source = home.join("hermes-src");
+    std::fs::create_dir_all(&source).expect("mkdir hermes source");
+    let source_memory = source.join("MEMORY.md");
+    std::fs::write(&source_memory, "# Note\nwould be lost").expect("write hermes MEMORY.md");
+
+    let (rpc_addr, rpc_join) = serve_on_ephemeral(build_core_http_router(false)).await;
+    let rpc_base = format!("http://{}", rpc_addr);
+    tokio::time::sleep(Duration::from_millis(100)).await;
+
+    let response = post_json_rpc(
+        &rpc_base,
+        7310,
+        "openhuman.migrate_hermes",
+        json!({
+            "source_workspace": source.to_string_lossy(),
+            "dry_run": false,
+        }),
+    )
+    .await;
+
+    // The refusal may surface as a JSON-RPC error or as an error payload
+    // depending on how the controller maps it; take whichever carries text so
+    // the assertions below are about the message, not the envelope.
+    let message = response
+        .get("error")
+        .and_then(|e| e.get("message"))
+        .and_then(Value::as_str)
+        .map(str::to_string)
+        .unwrap_or_else(|| response.to_string());
+
+    assert!(
+        message.contains("null driver"),
+        "apply into a null memory driver must be refused by the guard; got: {message}"
+    );
+    assert!(
+        !message.contains("OpenClaw"),
+        "the Hermes migration must not blame OpenClaw — #5799 dropped the \
+         hard-coded product name from a message both migrations raise; got: {message}"
+    );
+    assert!(
+        message.contains("the source workspace is untouched"),
+        "the refusal must still promise the source survived; got: {message}"
+    );
+
+    // The promise in that sentence, checked rather than taken on trust.
+    assert!(
+        source_memory.exists(),
+        "the refusal promised the source workspace was untouched, but {} is gone",
+        source_memory.display()
+    );
+    assert_eq!(
+        std::fs::read_to_string(&source_memory).expect("read source memory"),
+        "# Note\nwould be lost",
+        "the source workspace must be byte-identical after a refused import"
+    );
+
+    mock_join.abort();
+    rpc_join.abort();
 }

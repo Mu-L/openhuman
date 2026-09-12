@@ -88,6 +88,36 @@ function tileCanvas(theme: Theme): string {
   return theme.gradient?.canvas ?? channelsToCss(swatchChannels(theme, 'surface-canvas'));
 }
 
+/**
+ * Is this a usable colour map — an object of `token -> "r g b"` strings?
+ *
+ * The bug this exists for (#5901): the old check was
+ * `typeof parsed.colors !== 'object'`, which passes for `null` AND for an
+ * array, since `typeof null` and `typeof []` are both `'object'`. Execution
+ * then reached `colors: { ...(parsed.colors) }`; spreading either yields `{}`
+ * silently, so a malformed paste was accepted as a theme.
+ *
+ * An EMPTY object is deliberately allowed. `CLASSIC_LIGHT` and `CLASSIC_DARK`
+ * both carry `colors: {}` on purpose (`lib/theme/presets.ts:63-78`) — they
+ * inherit the base stylesheet tokens and carry their meaning in `isDark`, which
+ * `applyTheme` applies independently of any colour
+ * (`providers/ThemeProvider.tsx:48-50`). The panel's own export serialises the
+ * effective theme, so rejecting `{}` would break its export -> import round trip
+ * for the two most common themes, and would also refuse legitimate
+ * font-, gradient- or backdrop-only themes.
+ *
+ * Every value must be a string. `swatchChannels` falls back only on
+ * `null`/`undefined` (`??`), so a non-string like `{"surface": 42}` reaches
+ * `channelsToCss`, which calls `.trim()` on it and throws — crashing the panel
+ * on a theme that was already stored.
+ */
+function isValidColorMap(colors: unknown): colors is Record<string, string> {
+  if (typeof colors !== 'object' || colors === null || Array.isArray(colors)) {
+    return false;
+  }
+  return Object.values(colors).every(value => typeof value === 'string');
+}
+
 function importedGradient(parsed: Partial<Theme>): Theme['gradient'] {
   if (!parsed.gradient || typeof parsed.gradient !== 'object') return undefined;
   return typeof parsed.gradient.canvas === 'string' ? { canvas: parsed.gradient.canvas } : {};
@@ -148,7 +178,7 @@ const ThemeStudioPanel = ({ embedded = false }: ThemeStudioPanelProps = {}) => {
     setImportError('');
     try {
       const parsed = JSON.parse(importText) as Partial<Theme>;
-      if (!parsed || typeof parsed !== 'object' || typeof parsed.colors !== 'object') {
+      if (!parsed || typeof parsed !== 'object' || !isValidColorMap(parsed.colors)) {
         throw new Error('shape');
       }
       const theme: Theme = {
@@ -185,7 +215,7 @@ const ThemeStudioPanel = ({ embedded = false }: ThemeStudioPanelProps = {}) => {
       {/* ── Theme gallery: family tiles + one Light/Dark/Auto toggle ──── */}
       <div>
         <div className="mb-2 flex items-center justify-between px-1">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-content-faint">
+          <h3 className="font-title text-sm font-semibold text-content">
             {t('settings.theme.presetsHeading', 'Themes')}
           </h3>
           <ToggleGroupRoot
@@ -274,7 +304,7 @@ const ThemeStudioPanel = ({ embedded = false }: ThemeStudioPanelProps = {}) => {
                 </span>
                 <span className="flex items-center justify-between gap-1">
                   <span className="text-sm font-medium text-content truncate">{th.name}</span>
-                  <span className="text-[10px] uppercase tracking-wide text-content-faint">
+                  <span className="text-[11px] text-content-faint">
                     {t('settings.theme.customBadge', 'Custom')}
                   </span>
                 </span>
@@ -307,7 +337,9 @@ const ThemeStudioPanel = ({ embedded = false }: ThemeStudioPanelProps = {}) => {
       {/* ── Colour editor ──────────────────────────────────────────── */}
       {COLOR_GROUPS.map(group => (
         <SettingsSection key={group.id} title={t(group.i18nKey, humanize(group.id))}>
-          <div className="px-1">
+          {/* A ruled list, matching the billing panel: the hairlines do the
+              separating so each row needs no box of its own. */}
+          <div className="divide-y divide-line-subtle px-4">
             {group.keys.map(key => (
               <ColorTokenField
                 key={key}

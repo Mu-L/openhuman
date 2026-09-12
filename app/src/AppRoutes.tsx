@@ -1,9 +1,10 @@
-import { type Location, Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { type Location, Navigate, Route, Routes } from 'react-router-dom';
 
 import AppRoutesIOS from './AppRoutesIOS';
 import DefaultRedirect from './components/DefaultRedirect';
 import ProtectedRoute from './components/ProtectedRoute';
 import PublicRoute from './components/PublicRoute';
+import ForwardSearch from './components/routing/ForwardSearch';
 import HumanPage from './features/human/HumanPage';
 import { getIsMobile } from './lib/platform';
 import Accounts from './pages/Accounts';
@@ -34,54 +35,6 @@ interface AppRoutesProps {
    * hatch for any future overlay-over-a-page surface.
    */
   location?: Location | string;
-}
-
-/**
- * Redirects the retired `/orchestration` route to its new home under Brain
- * (`/brain?tab=orchestration`), mapping the legacy `?tab=`/`?sub=` query onto
- * Brain's `?ov=`/`?sub=` scheme so old deep links land on the same view:
- *   - `?tab=connections|discover|usage` → `?ov=network&sub=<that>`
- *   - `?tab=agent|overview|tasks|network|medulla` → `?ov=<that>`
- *   - `?session=` is preserved for the agent chat.
- */
-const NETWORK_SUBS = ['connections', 'discover', 'usage'];
-const ORCH_VIEWS = ['medulla', 'agent', 'overview', 'tasks', 'network'];
-
-export function OrchestrationRedirect() {
-  const { search } = useLocation();
-  const legacy = new URLSearchParams(search);
-  const tab = legacy.get('tab');
-  // Privacy-safe: only the allowlisted branch id and whether a session param was
-  // present are logged — never the session value or any raw query string.
-  console.debug(
-    '[routes] orchestration-redirect: entry tab=%s',
-    tab && ORCH_VIEWS.includes(tab) ? tab : tab && NETWORK_SUBS.includes(tab) ? tab : '<unmapped>'
-  );
-
-  const next = new URLSearchParams();
-  next.set('tab', 'orchestration');
-  let branch: string;
-  if (tab && NETWORK_SUBS.includes(tab)) {
-    next.set('ov', 'network');
-    next.set('sub', tab);
-    branch = 'network-sub';
-  } else {
-    if (tab && ORCH_VIEWS.includes(tab)) next.set('ov', tab);
-    const sub = legacy.get('sub');
-    if (sub && NETWORK_SUBS.includes(sub)) next.set('sub', sub);
-    branch = tab && ORCH_VIEWS.includes(tab) ? 'view' : 'default';
-  }
-  const session = legacy.get('session');
-  if (session) next.set('session', session);
-
-  console.debug(
-    '[routes] orchestration-redirect: exit branch=%s ov=%s hasSub=%s hasSession=%s',
-    branch,
-    next.get('ov') ?? '<none>',
-    next.has('sub'),
-    next.has('session')
-  );
-  return <Navigate to={`/brain?${next.toString()}`} replace />;
 }
 
 const AppRoutes = ({ location }: AppRoutesProps = {}) => {
@@ -185,27 +138,15 @@ const AppRoutes = ({ location }: AppRoutesProps = {}) => {
         }
       />
 
-      {/* Orchestration folded back under Brain (`/brain?tab=orchestration`).
-          The old first-class `/orchestration` route and the even older Brain
-          deep link both redirect there; `<OrchestrationRedirect>` maps the
-          legacy `?tab=`/`?sub=` query onto Brain's `?ov=`/`?sub=` scheme so
-          deep links (e.g. `/orchestration?tab=tasks`) keep landing on the same
-          view. */}
-      <Route path="/orchestration" element={<OrchestrationRedirect />} />
-      <Route
-        path="/brain/tinyplace-orchestration"
-        element={<Navigate to="/brain?tab=orchestration" replace />}
-      />
-
       {/* Back-compat: /activity and /intelligence → settings notifications page. */}
       <Route path="/activity" element={<Navigate to="/settings/notifications" replace />} />
       <Route path="/intelligence" element={<Navigate to="/settings/notifications" replace />} />
 
       {/* Connections page lives at /connections (Phase 2 rename from /skills).
           The old /skills path is kept as a back-compat redirect so bookmarks
-          and deep links continue to work.  `?tab=` query params are preserved
-          by Navigate (replace) so existing deep links still land on the right
-          sub-tab. */}
+          and deep links continue to work.  ForwardSearch copies the current
+          ?tab= (and any other query params) to the destination so existing
+          deep links still land on the right sub-tab. */}
       {/* `/workflows/run` is the single-purpose Skill runner page — the live
           destination of the Run button in the Automations tab (WorkflowsTab). */}
       <Route
@@ -227,7 +168,7 @@ const AppRoutes = ({ location }: AppRoutesProps = {}) => {
       />
 
       {/* Back-compat: /skills → /connections (preserves ?tab= deep links). */}
-      <Route path="/skills" element={<Navigate to="/connections" replace />} />
+      <Route path="/skills" element={<ForwardSearch to="/connections" />} />
 
       {/* Unified chat = agent + connected web apps. Replaces the old
           /conversations and /accounts routes. */}
@@ -295,7 +236,7 @@ const AppRoutes = ({ location }: AppRoutesProps = {}) => {
       />
 
       {/* Webhooks retired from the UI — land on the Integrations settings. */}
-      <Route path="/webhooks" element={<Navigate to="/settings/integrations" replace />} />
+      <Route path="/webhooks" element={<ForwardSearch to="/settings/integrations" />} />
 
       {/* Settings is a routed page like every other surface: the shared route
           table renders inside `SettingsLayout`, which projects the settings nav

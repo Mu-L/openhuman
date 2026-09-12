@@ -29,18 +29,18 @@
 //! `use`, this family must convert to the facade+stub shape (see `voice/`).
 
 pub mod agents;
-mod build_registry;
 pub mod builder_tools;
 pub mod bus;
 pub mod catalogue;
 pub mod discovery_tools;
 mod draft_store;
+#[cfg(test)]
+#[path = "import_tests.rs"]
+mod import_tests;
 pub mod medulla_bridge;
 pub mod memory_tools;
-mod n8n_import;
 pub mod node_contracts;
 pub mod ops;
-mod run_registry;
 mod schemas;
 /// Skills this domain ships inside the binary. Needs BOTH gates: the pages
 /// teach flows authoring, and `BundledSkill` is part of the skills subsystem.
@@ -50,7 +50,15 @@ mod store;
 /// The tinyflows engine seam (formerly `openhuman::tinyflows`).
 pub mod tinyflows;
 pub mod tools;
-mod types;
+
+// The saved-flow model, the cancellation registries and the format importers
+// are `tinyflows-catalog`'s, not this host's — a graph's identity, revision
+// history, runs, drafts and suggestions are the same shapes for anyone keeping
+// a library of workflows. These aliases keep the existing
+// `flows::types::…` / `flows::run_registry::…` / `flows::n8n_import::…` call
+// sites resolving unchanged while the definitions live upstream.
+pub use tinyflows_catalog::import::n8n as n8n_import;
+pub use tinyflows_catalog::{build_registry, run_registry, types};
 
 pub use schemas::{
     all_controller_schemas as all_flows_controller_schemas,
@@ -70,7 +78,7 @@ pub use node_contracts::{
     render_node_kinds_required, ConfigField, NodeKindContract, PortSpec, NODE_KINDS,
 };
 pub use store::{kv_get, kv_set, upsert_flow_run_step};
-pub use types::{
+pub use tinyflows_catalog::{
     DraftOrigin, Flow, FlowConnection, FlowDraft, FlowImport, FlowRevision, FlowRun, FlowRunStep,
     FlowRunTrigger, FlowSuggestion, FlowValidation, FlowValidationError, SuggestionStatus,
 };

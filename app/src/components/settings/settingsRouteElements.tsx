@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Navigate, Route } from 'react-router-dom';
 
+import ForwardSearch from '../routing/ForwardSearch';
 import SettingsIndexRedirect from './layout/SettingsIndexRedirect';
 import AboutPanel from './panels/AboutPanel';
 import AccountPanel from './panels/AccountPanel';
@@ -126,7 +127,7 @@ export function settingsRouteElements(): ReactNode {
       {/* ── Connections ─────────────────────────────────────────── */}
       {/* The Integrations settings section was retired; the composio/OAuth grid
           lives on the Connections page. */}
-      <Route path="integrations" element={<Navigate to="/connections" replace />} />
+      <Route path="integrations" element={<ForwardSearch to="/connections" />} />
       <Route path="tools" element={wrapSettingsPage(<ToolsPanel />)} />
 
       {/* ── System ──────────────────────────────────────────────── */}
@@ -157,8 +158,8 @@ export function settingsRouteElements(): ReactNode {
       <Route path="agent-chat" element={<Navigate to="/connections?tab=llm" replace />} />
       {/* Schedules live on the Workflows page now (`/flows?view=schedules`). */}
       <Route path="cron-jobs" element={<Navigate to="/flows?view=schedules" replace />} />
-      {/* Tasks now live on Brain's Orchestration Kanban board. */}
-      <Route path="tasks" element={<Navigate to="/brain?tab=orchestration&ov=tasks" replace />} />
+      {/* Tasks are represented by goals on the Brain page. */}
+      <Route path="tasks" element={<Navigate to="/brain?tab=goals" replace />} />
       {/* Workflows is a first-level module now — /settings/automations bounces
           to /flows (the Workflows page). */}
       <Route path="automations" element={<Navigate to="/flows" replace />} />

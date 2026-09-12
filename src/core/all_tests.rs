@@ -376,18 +376,6 @@ fn schema_for_rpc_method_finds_internal_mcp_audit_list() {
 }
 
 #[test]
-fn schema_for_rpc_method_finds_internal_orchestration_pairing_link_session() {
-    let schema = schema_for_rpc_method("openhuman.orchestration_pairing_link_session");
-    assert!(
-        schema.is_some(),
-        "orchestration_pairing.link_session should be internally routable"
-    );
-    let s = schema.unwrap();
-    assert_eq!(s.namespace, "orchestration_pairing");
-    assert_eq!(s.function, "link_session");
-}
-
-#[test]
 fn rpc_method_from_parts_does_not_expose_internal_mcp_audit_list() {
     assert!(
         rpc_method_from_parts("mcp_audit", "list").is_none(),
@@ -1274,7 +1262,6 @@ fn carved_out_families_report_their_own_group() {
         ("task_sources", DomainGroup::Integrations),
         ("billing", DomainGroup::Hosted),
         ("team", DomainGroup::Hosted),
-        ("tinyplace", DomainGroup::Relay),
         ("dashboard", DomainGroup::Desktop),
         ("notification", DomainGroup::Desktop),
         ("sandbox", DomainGroup::Runtimes),
@@ -1323,7 +1310,6 @@ fn platform_holds_only_kernel_surfaces() {
                     | "team"
                     | "referral"
                     | "announcements"
-                    | "tinyplace"
                     | "dashboard"
                     | "notification"
                     | "sandbox"
@@ -1383,7 +1369,6 @@ fn kernel_preset_is_the_floor() {
         ("runtimes", k.runtimes),
         ("desktop", k.desktop),
         ("hosted", k.hosted),
-        ("relay", k.relay),
         ("platform", k.platform),
     ] {
         assert!(!on, "kernel() must leave `{name}` off");
@@ -1401,7 +1386,6 @@ fn embedded_preset_excludes_desktop_and_hosted() {
         !e.hosted,
         "embedded() must not enable hosted-backend clients"
     );
-    assert!(!e.relay, "embedded() must not enable the relay surface");
     // Still needs these: skills run on the managed runtimes, and the session
     // loop is driven by cron.
     assert!(e.runtimes, "embedded() needs the code-execution runtimes");
@@ -1486,7 +1470,6 @@ fn every_domain_group_is_accounted_for_in_store_init_plan() {
         DomainGroup::Runtimes,
         DomainGroup::Desktop,
         DomainGroup::Hosted,
-        DomainGroup::Relay,
         // The registry is a compiled-in `const` table and the loaded-module set
         // lives in tinybus's own `ModuleHost`, so there is nothing for
         // `init_stores` to stand up.
@@ -1543,7 +1526,6 @@ fn every_domain_group_is_accounted_for_in_subscriber_plan() {
         DomainGroup::Automation,
         DomainGroup::Runtimes,
         DomainGroup::Hosted,
-        DomainGroup::Relay,
         // Modules run on their own in-process broker, so they cannot publish a
         // `DomainEvent` and there is nothing on the core bus to subscribe to.
         DomainGroup::Modules,
@@ -1662,6 +1644,9 @@ const MEMORY_FUNCTION_CAPABILITY: &[(&str, Option<Capability>)] = &[
     ("init", Some(Capability::Core)),
     ("list_documents", Some(Capability::Core)),
     ("list_namespaces", Some(Capability::Core)),
+    // Same tier as list_namespaces beside it: the per-namespace counts are
+    // the sync-verification surface, gated with the core partition.
+    ("namespace_summaries", Some(Capability::Core)),
     ("delete_document", Some(Capability::Core)),
     ("query_namespace", Some(Capability::Core)),
     ("recall_context", Some(Capability::Core)),
@@ -1691,6 +1676,11 @@ const MEMORY_FUNCTION_CAPABILITY: &[(&str, Option<Capability>)] = &[
     ("sync_channel", Some(Capability::Sources)),
     ("sync_all", Some(Capability::Sources)),
     ("ingestion_status", Some(Capability::Sources)),
+    // Sources, with the rest of its schema family (one push_cap site): the
+    // override exists so user-requested source maintenance runs while the
+    // gate is paused, and a driver serving no Sources family has nothing the
+    // window would unblock.
+    ("scheduler_override", Some(Capability::Sources)),
     // the tree summarizer, NOT ingestion
     ("learn_all", Some(Capability::Tree)),
     // never gated: this is the RPC that reports the capability set
@@ -1809,6 +1799,15 @@ fn every_capability_family_is_accounted_for_in_the_rpc_surface() {
             // is represented by that same partition; Portability is RPC-less.
             Capability::Core => true,
             Capability::Recall | Capability::Portability => false,
+            // v1.13.7's ingestion round: engine-side families (typed document
+            // /conversation/learning/event ingest and the answer surface) the
+            // host reaches through existing controllers, not per-family RPC
+            // namespaces — no controller carries these tags yet.
+            Capability::DocumentIngest
+            | Capability::ConversationIngest
+            | Capability::LearningIngest
+            | Capability::EventIngest
+            | Capability::Answer => false,
             // Folded into `Tree`: the tree registry's ~25 methods span tree,
             // entities, graph and maintenance and are tagged as ONE family.
             // See the push site in `all.rs` for why that trade was chosen.
@@ -2480,5 +2479,61 @@ fn memory_diff_controllers_are_gone_and_memory_survives() {
     assert!(
         namespaces.contains(&"memory"),
         "removing the git ledger must not remove the memory domain"
+    );
+}
+
+// ---- session_db removal (#6082) --------------------------------------------
+
+/// The six read-only `session_db` controllers were removed in #6082: they
+/// queried a session index that nothing in `src/` ever writes (permanently
+/// empty in production, no frontend consumer). The three `run_ledger`
+/// controllers live in the same module and read a table that *is* written
+/// (from `web_chat::progress_bridge` and `agent::progress_tracing`), so they
+/// must stay fully registered.
+///
+/// `run_ledger` is asserted present in the same test on purpose: the removal
+/// took the dead read surface, not the run-ledger domain. Splitting that into a
+/// separate test would let one pass while the other silently regressed.
+#[test]
+fn session_db_controllers_are_gone_and_run_ledger_survives() {
+    let methods: Vec<String> = all_controller_schemas()
+        .iter()
+        .map(rpc_method_name)
+        .collect();
+
+    for removed in [
+        "openhuman.session_db_list",
+        "openhuman.session_db_get",
+        "openhuman.session_db_search",
+        "openhuman.session_db_get_messages",
+        "openhuman.session_db_get_tool_calls",
+        "openhuman.session_db_get_children",
+    ] {
+        assert!(
+            !methods.contains(&removed.to_string()),
+            "removed session_db controller `{removed}` must be absent \
+             (unknown-method over /rpc, omitted from /schema), got: {methods:?}"
+        );
+    }
+
+    for kept in [
+        "openhuman.run_ledger_list",
+        "openhuman.run_ledger_get",
+        "openhuman.run_ledger_events",
+    ] {
+        assert!(
+            methods.contains(&kept.to_string()),
+            "run_ledger controller `{kept}` must stay registered — removing the \
+             dead session_db read surface must not touch the run ledger"
+        );
+    }
+
+    let namespaces: Vec<&str> = all_controller_schemas()
+        .iter()
+        .map(|s| s.namespace)
+        .collect();
+    assert!(
+        !namespaces.contains(&"session_db"),
+        "the `session_db` namespace was removed and must not be registered, got: {namespaces:?}"
     );
 }

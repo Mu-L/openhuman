@@ -48,6 +48,7 @@ mod deep_link_ipc_windows;
 // developer host covers them.
 mod deep_link_registration_check;
 mod dictation_hotkeys;
+mod directory_picker;
 mod file_logging;
 // Routing the frontend to a core that is not the one in this process. Leaf
 // gated: with `gateways` off the commands are simply absent, which is what the
@@ -65,7 +66,6 @@ mod mcp_commands;
 mod native_notifications;
 #[cfg(target_os = "macos")]
 mod notch_window;
-mod notification_settings;
 mod process_kill;
 mod process_recovery;
 mod ptt_hotkeys;
@@ -2121,10 +2121,8 @@ fn append_platform_cef_gpu_workarounds(
     //
     // The original workaround disabled the GPU path with `--disable-gpu`, but
     // that shuts the GPU process down entirely — and with it every WebGL
-    // surface. That regressed Tiny Place (#4193): the world renderer needs a
-    // WebGL2 context, so on every packaged Linux build it failed to initialise
-    // and the world page showed a black screen with "Could not start the world
-    // renderer" (the Rive mascot on the Human tab is collateral damage too).
+    // surface. That regressed WebGL rendering (#4193), including the Rive
+    // mascot on the Human tab.
     //
     // Instead of killing the GPU process, pin it to ANGLE's SwiftShader
     // software backend. SwiftShader is a pure-software rasteriser that needs no
@@ -2144,7 +2142,7 @@ fn append_platform_cef_gpu_workarounds(
         } else {
             push_swiftshader_software_gl(args);
             log::info!(
-                "[cef-startup] Linux detected: forcing ANGLE/SwiftShader software GL so WebGL surfaces (Tiny Place world renderer, Rive mascot) render without the crash-prone hardware GPU process (issues #1697/#4193); set OPENHUMAN_FORCE_GPU=1 for hardware acceleration"
+                "[cef-startup] Linux detected: forcing ANGLE/SwiftShader software GL so WebGL surfaces render without the crash-prone hardware GPU process (issues #1697/#4193); set OPENHUMAN_FORCE_GPU=1 for hardware acceleration"
             );
         }
     }
@@ -3002,7 +3000,6 @@ pub fn run() {
             std::sync::Mutex::new(Vec::new()),
         ))
         .manage(ptt_hotkeys::PttHotkeyState::new())
-        .manage(notification_settings::NotificationSettingsState::new())
         .manage(PendingAppUpdateState::default());
     let builder = builder.manage(std::sync::Arc::new(imessage_scanner::ScannerRegistry::new()));
     builder
@@ -3398,6 +3395,11 @@ pub fn run() {
             // too (CodeRabbit on #4127). The Save-As dialog that used to sit in
             // front of this went with the shell's `rfd` dependency.
             artifact_commands::download_artifact_to_downloads,
+            // Native directory chooser for the folder memory-source (#5831).
+            // Unlike the Save-As dialog above it, this one has no renderer-side
+            // substitute: a `webkitdirectory` input cannot report where the
+            // directory it returned actually lives.
+            directory_picker::pick_directory_via_dialog,
             check_core_update,
             apply_core_update,
             check_app_update,
@@ -3417,8 +3419,6 @@ pub fn run() {
             register_ptt_hotkey,
             unregister_ptt_hotkey,
             ptt_overlay::show_ptt_overlay,
-            notification_settings::notification_settings_get,
-            notification_settings::notification_settings_set,
             native_notifications::notification_permission_state,
             native_notifications::notification_permission_request,
             activate_main_window,
@@ -3557,21 +3557,9 @@ pub fn run() {
                 if let Some(window) = app_handle.get_webview_window("main") {
                     window_state::save_main(&window);
                 }
-                // Run our cleanup BEFORE CEF's own Exit handler does
-                // `close_all_windows() → cef::shutdown()`. Doing this in
-                // RunEvent::Exit instead races CEF's teardown and the
-                // `browser_count == 0` CHECK in `cef::shutdown` panics on
-                // macOS Cmd+Q (issue #920). The order matters:
-                //   1. close our child webviews so CEF processes the
-                //      close requests during the Exit-phase message pump
-                //      (gives them time to settle before cef::shutdown).
-                //   2. abort our long-lived tokio tasks so they're not
-                //      driving CDP traffic against CEF as it tears down.
-                //   3. SIGTERM the core sidecar (non-blocking). Tauri
-                //      spawned the child so we own its lifecycle, but we
-                //      do not wait — that would block the main thread
-                //      and starve CEF's UI loop. The kernel reaps the
-                //      child after Tauri exits.
+                // Run cleanup during ExitRequested so the embedded core and
+                // long-lived scanner tasks stop before the runtime exits.
+                // Teardown stays non-blocking on the main thread.
                 perform_early_teardown_sync_once(app_handle, "exit_requested");
             }
             RunEvent::Exit => {

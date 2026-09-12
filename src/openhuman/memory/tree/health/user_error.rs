@@ -69,6 +69,115 @@ pub(crate) fn store_corrupt_quarantined_user_error() -> WebChannelEvent {
 /// and `SQLITE_NOTADB` (code 26) and survive every flattening the wire
 /// applies. Mirrors the typed classifier inside `tinymemory-core` — the
 /// module side classifies before the error is stringified; this is the
+/// Host-owned `error_type` for "the memory module failed to load".
+///
+/// Host-owned (not a `tinymemory_api::host` constant) because the engine can
+/// never emit it: a module that failed to load has no code running to report
+/// anything. Only the host's loader observes this state, so the constant lives
+/// with the only producer.
+pub(crate) const MEMORY_MODULE_UNAVAILABLE_KIND: &str = "memory_module_unavailable";
+
+/// The metadata-only `user_error` payload for a memory module that failed to
+/// load. Same no-leak contract as its siblings: a stable kind plus the source,
+/// never the loader's raw reason (which can carry URLs and filesystem paths).
+pub(crate) fn memory_module_unavailable_user_error() -> WebChannelEvent {
+    WebChannelEvent {
+        event: "user_error".to_string(),
+        client_id: "system".to_string(),
+        error_type: Some(MEMORY_MODULE_UNAVAILABLE_KIND.to_string()),
+        error_source: Some(MEMORY_USER_ERROR_SOURCE.to_string()),
+        ..Default::default()
+    }
+}
+
+/// Broadcast the module-unavailable user error once per process.
+///
+/// Once-guarded like [`notice_corrupt_store_once`]: the loader caches a load
+/// failure as terminal, so every subsequent memory call re-observes the same
+/// state, and a per-call broadcast would be a banner storm. `reason` is the
+/// loader's raw message — logged for the operator, never sent.
+pub(crate) fn notice_memory_module_unavailable_once(reason: &str) {
+    static ONCE: std::sync::Once = std::sync::Once::new();
+    ONCE.call_once(|| {
+        log::error!(
+            "[memory::host] action=broadcast_user_error kind={MEMORY_MODULE_UNAVAILABLE_KIND}              source={MEMORY_USER_ERROR_SOURCE} reason={reason}"
+        );
+        crate::openhuman::web_chat::publish_web_channel_event(
+            memory_module_unavailable_user_error(),
+        );
+    });
+}
+
+/// Once-per-process notice for an archivist embedding failure that indicates the
+/// local model runtime is unavailable (openhuman#5867).
+///
+/// The archivist runs one embedding call per conversation segment; a broken
+/// local runtime produces one failure per segment. Bounding the notification to
+/// once-per-process matches the rationale of [`notice_corrupt_store_once`]:
+/// per-segment notices would be a banner storm. `origin` names the producing
+/// path — logged, never sent to the frontend.
+///
+/// Uses [`std::sync::Once::call_once_force`] so the latch is not set until
+/// after the publish runs: if `publish_web_channel_event` panics, the `Once`
+/// is left in the poisoned state and `call_once_force` lets the next call
+/// retry rather than re-panicking, so a transient panic does not permanently
+/// suppress the notification.
+pub(crate) fn notice_local_model_unavailable_once(origin: &str) {
+    static EMBED_UNAVAILABLE_NOTICED: std::sync::Once = std::sync::Once::new();
+    EMBED_UNAVAILABLE_NOTICED.call_once_force(|_| {
+        log::warn!(
+            "[archivist] action=broadcast_user_error kind={LOCAL_MODEL_UNAVAILABLE_KIND} \
+             source={MEMORY_USER_ERROR_SOURCE} origin={origin}"
+        );
+        crate::openhuman::web_chat::publish_web_channel_event(local_model_unavailable_user_error());
+    });
+}
+
+/// Text classifier for a local Ollama model failure, for errors that crossed
+/// the bus and only exist as strings.
+///
+/// Every literal below is quoted from the upstream source rather than from the
+/// error text as remembered — an earlier revision matched
+/// `"Ollama embedding model … is not installed at …"`, which reads plausibly
+/// and appears nowhere in `tinyinference`, so the model-not-pulled half of
+/// openhuman#5867 was never classified.
+///
+/// Three shapes, covering both models the archivist needs (the embedder and
+/// the summarisation model — #5867 names `bge-m3` *and* `gemma3:4b`):
+///
+/// 1. Daemon not listening —
+///    `"ollama embed request failed (is Ollama running at {base}?): {error}"`
+///    (`embeddings/ollama.rs:136`).
+/// 2. Embedding model not pulled — Ollama answers 404 and the embeddings path
+///    renders it through `ollama_http_error` as
+///    `"ollama embed failed with status {status}: {body}"`
+///    (`embeddings/ollama.rs:241`). Anchored on the status so the other six
+///    `"ollama embed …"` shapes in that file (NaN, count/dimension mismatch,
+///    empty vector, parse failure) keep their own non-notification path —
+///    those are data faults, not an absent runtime.
+/// 3. Chat model not pulled — `"Ollama model `{model}` is not installed at
+///    {base_url}. …"` (`providers/openai/local.rs:376`). Note the wording:
+///    `Ollama model`, with no `embedding`.
+///
+/// All three are Ollama-anchored, so a generic cloud-embedder transport
+/// failure ("error sending request for url …") does not match and keeps its
+/// own non-notification path. Mirrors `classify_embed_error_str` from
+/// `tinycortex` — the typed host-side classifier it maps to
+/// `FailureCode::LocalModelUnavailable` — but operates on the pre-stringified
+/// `MemoryError` rendering so it works across the module-bus boundary where the
+/// typed error is no longer available.
+pub(crate) fn is_local_embedding_error(message: &str) -> bool {
+    let msg = message.to_ascii_lowercase();
+    // 1. The daemon is not listening.
+    msg.contains("is ollama running at")
+        // 2. The embedding model was never pulled: Ollama answers 404.
+        || msg.contains("ollama embed failed with status 404")
+        // 3. The chat/summarisation model was never pulled. Matched on
+        //    "ollama" rather than the exact noun phrase so a future reword
+        //    between "Ollama model" and "Ollama embedding model" still lands.
+        || (msg.contains("is not installed at") && msg.contains("ollama"))
+}
+
 /// host-side fallback for paths that only ever see text.
 pub(crate) fn is_corrupt_store_error(message: &str) -> bool {
     let msg = message.to_ascii_lowercase();
@@ -122,105 +231,5 @@ pub(crate) fn publish_store_corrupt_user_error(origin: &str, quarantined_path: O
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    /// Pins the wire shape the frontend `socketService` handler reads, plus the
-    /// metadata-only no-leak contract.
-    #[test]
-    fn payload_is_metadata_only() {
-        let event = local_model_unavailable_user_error();
-
-        assert_eq!(event.event, "user_error");
-        // The "system" room is the one every socket auto-joins.
-        assert_eq!(event.client_id, "system");
-        assert_eq!(
-            event.error_type.as_deref(),
-            Some(LOCAL_MODEL_UNAVAILABLE_KIND)
-        );
-        assert_eq!(
-            event.error_source.as_deref(),
-            Some(MEMORY_USER_ERROR_SOURCE)
-        );
-
-        // Nothing that could carry the base URL, a model id, or raw provider
-        // prose may ride along.
-        assert!(event.message.is_none(), "must not carry raw error prose");
-        assert!(event.full_response.is_none());
-        assert!(event.thread_id.is_empty());
-    }
-
-    /// The kind token is a cross-language contract: `app/src/types/userError.ts`
-    /// declares this exact `UserErrorKind` discriminator and `classify.ts` keys
-    /// on it. A rename on either side drops the signal with no compile error on
-    /// either side, so pin the wire string.
-    #[test]
-    fn kind_matches_frontend_discriminator() {
-        assert_eq!(LOCAL_MODEL_UNAVAILABLE_KIND, "local_model_unavailable");
-    }
-
-    /// `socketService` only maps `error_source == "memory"` onto the `memory`
-    /// scope; anything else falls back to the historical `cron` default, which
-    /// would file this entry under the wrong heading.
-    #[test]
-    fn source_matches_frontend_scope_mapping() {
-        assert_eq!(MEMORY_USER_ERROR_SOURCE, "memory");
-    }
-
-    /// Same no-leak contract for the corrupt-store payload (openhuman#5820):
-    /// the stable kind token and the memory source, never the quarantined
-    /// path or SQLite prose.
-    #[test]
-    fn corrupt_store_payload_is_metadata_only() {
-        let event = store_corrupt_quarantined_user_error();
-
-        assert_eq!(event.event, "user_error");
-        assert_eq!(event.client_id, "system");
-        assert_eq!(event.error_type.as_deref(), Some(STORE_CORRUPT_KIND));
-        assert_eq!(
-            event.error_source.as_deref(),
-            Some(MEMORY_USER_ERROR_SOURCE)
-        );
-        assert!(event.message.is_none(), "must not carry raw error prose");
-        assert!(event.full_response.is_none());
-        assert!(event.thread_id.is_empty());
-    }
-
-    /// The corrupt kind token is the same cross-language contract as the
-    /// local-model one: `classify.ts` keys on exactly this string.
-    #[test]
-    fn corrupt_kind_matches_frontend_discriminator() {
-        assert_eq!(STORE_CORRUPT_KIND, "memory_store_corrupt");
-    }
-
-    /// The wire-text classifier matches SQLite's two corruption renderings —
-    /// the shapes a `MemoryError` string carries after crossing the bus — and
-    /// nothing else. Quarantine-adjacent decisions key on this, so a false
-    /// positive would raise a "memory quarantined" notice for a healthy store.
-    #[test]
-    fn corrupt_text_classifier_matches_sqlite_renderings_only() {
-        assert!(is_corrupt_store_error(
-            "memory-tree ingest failed for source `conversations:agent`: \
-             database disk image is malformed"
-        ));
-        assert!(is_corrupt_store_error(
-            "open failed: File is NOT a Database"
-        ));
-        assert!(!is_corrupt_store_error("database or disk is full"));
-        assert!(!is_corrupt_store_error("rate limited (429)"));
-        assert!(!is_corrupt_store_error(""));
-    }
-
-    /// The once-latch bounds the archivist's per-segment detection to one
-    /// notice per process — 747 failing segments in the incident must not
-    /// become 747 notices. (The engine's own quarantine event is un-latched
-    /// and stays the authoritative per-quarantine notice.)
-    #[test]
-    fn wire_notice_is_latched_once_per_process() {
-        // Publishing twice must be safe and quiet; the second call returns on
-        // the latch. There is no socket in unit tests, so the observable
-        // contract is "no panic, no double side effects on the latch path".
-        notice_corrupt_store_once("test detector");
-        notice_corrupt_store_once("test detector");
-    }
-}
+#[path = "user_error_tests.rs"]
+mod tests;
