@@ -57,6 +57,13 @@ fn offline_config() -> Config {
     // unrelated to this test's provider/session/concurrency contract and would
     // race the final ephemeral-workspace cleanup assertion.
     config.memory.auto_save = false;
+    // Session-store dual writes and shadow reads are also deliberately
+    // fire-and-forget. This test already verifies the authoritative session
+    // database; leaving the migration mirrors enabled makes their detached
+    // filesystem work race the harness's synchronous ephemeral cleanup after
+    // the 100-turn stress case.
+    config.agent.session_dual_write = false;
+    config.agent.session_shadow_reads = false;
     config.default_temperature = 0.0;
     config
 }
