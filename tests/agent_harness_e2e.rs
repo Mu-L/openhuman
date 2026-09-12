@@ -1027,31 +1027,22 @@ async fn subagent_delegation_happy_path_inner() {
 //
 //   The ArchetypeDelegationTool path (dispatch.rs).  scheduler_agent is delegated to
 //   via the synthesised `schedule_task` tool.  dispatch_subagent (dispatch.rs:113-130)
-//   calls run_subagent.  The scripted LLM returns ask_user_clarification for the
-//   scheduler_agent inner loop.  However, ask_user_clarification is NOT registered in
-//   all_tools_with_runtime (tools/ops.rs), so it is absent from the subagent's
-//   allowed_names (subagent_runner/ops/runner.rs:483-490).  SubagentToolSource
-//   (tool_source.rs:66-102) therefore returns success=false for the blocked call.
-//   The early-exit condition (engine/core.rs:676) requires outcome.success, so
-//   early-exit does NOT fire.  The scheduler_agent loops back for a second LLM call
-//   and returns its text output, which dispatch_subagent forwards as the
-//   schedule_task tool result.  The orchestrator surfaces this to the user.
-//   On turn 2 the user's reply and the full turn-1 context are present.
+//   calls run_subagent. The scripted scheduler_agent calls its registered
+//   ask_user_clarification tool, which pauses the child and lets dispatch_subagent
+//   surface the question to the orchestrator. On turn 2 the user's reply and the
+//   full turn-1 context are present.
 //
-// Actual LLM request ordering (4 upstream calls total):
+// Actual LLM request ordering (3 upstream calls total):
 //   request[0] = orchestrator turn 1 → schedule_task delegation tool call returned
-//   request[1] = scheduler_agent first iter → tries ask_user_clarification (blocked,
-//                success=false; early-exit does NOT fire; loop continues)
-//   request[2] = scheduler_agent second iter → returns text with clarification question
-//                (this becomes the schedule_task tool result and turn-1 response)
-//   request[3] = orchestrator turn 2 with "version 2" user reply in full context →
+//   request[1] = scheduler_agent → ask_user_clarification pauses the child and
+//                becomes the schedule_task result surfaced in turn 1
+//   request[2] = orchestrator turn 2 with "version 2" user reply in full context →
 //                synthesis; turn 2 ends (chat_done with ANSWER_CANARY_V2)
 
 /// Orchestrator delegates to scheduler_agent via `schedule_task` (delegate_name);
-/// scheduler_agent's ask_user_clarification call is blocked (not in parent's tool
-/// registry) so the subagent loops and returns the question as text instead;
-/// dispatch_subagent forwards this as the schedule_task tool result; the orchestrator
-/// surfaces the question (turn 1 ends with WHICH_VERSION_CANARY); the user replies
+/// scheduler_agent's ask_user_clarification call pauses the child; dispatch_subagent
+/// forwards the question as the schedule_task tool result; the orchestrator surfaces
+/// it (turn 1 ends with WHICH_VERSION_CANARY); the user replies
 /// "version 2"; the orchestrator synthesizes the final answer with full turn-1 context
 /// present (turn 2 ends with ANSWER_CANARY_V2).
 ///
@@ -1076,20 +1067,14 @@ async fn subagent_clarification_flow_inner() {
             "schedule_task",
             json!({ "prompt": "Schedule a weekly reminder", "blocking": true }),
         ),
-        // request[1]: scheduler_agent first iter → tries ask_user_clarification.
-        //   ask_user_clarification is NOT in all_tools_with_runtime (tools/ops.rs), so
-        //   SubagentToolSource returns success=false.  Early-exit requires success=true,
-        //   so it does NOT fire; the scheduler_agent loops back for a second LLM call.
+        // request[1]: scheduler_agent calls ask_user_clarification, which pauses
+        // the child and returns the question through schedule_task.
         tool_call_completion(
             "ask_user_clarification",
             json!({ "question": "WHICH_VERSION_CANARY?" }),
         ),
-        // request[2]: scheduler_agent second iter → text output with the clarification
-        //   question.  This becomes the schedule_task tool result forwarded to the
-        //   orchestrator by dispatch_subagent.
-        text_completion("I need clarification: WHICH_VERSION_CANARY?"),
         // ── turn 2 (user replied "version 2") ──
-        // request[3]: Orchestrator processes user reply with full turn-1 context →
+        // request[2]: Orchestrator processes user reply with full turn-1 context →
         //   synthesizes final answer; turn 2 ends here.
         text_completion("Final: ANSWER_CANARY_V2"),
     ]);
@@ -1161,14 +1146,13 @@ async fn subagent_clarification_flow_inner() {
         serde_json::to_string_pretty(&requests).unwrap_or_default()
     );
 
-    // ── scheduler_agent actually ran (≥4 upstream requests) ──
+    // ── scheduler_agent actually ran (≥3 upstream requests) ──
     // request[0] = orchestrator (schedule_task call),
-    // request[1] = scheduler_agent first iter (ask_user_clarification blocked),
-    // request[2] = scheduler_agent second iter (text output with question),
-    // request[3] = orchestrator turn-2 synthesis (turn-2 end).
+    // request[1] = scheduler_agent (ask_user_clarification pause),
+    // request[2] = orchestrator turn-2 synthesis (turn-2 end).
     assert!(
-        requests.len() >= 4,
-        "expected ≥4 upstream requests (orchestrator + scheduler_agent x2 + orchestrator turn-2 synthesis), \
+        requests.len() >= 3,
+        "expected ≥3 upstream requests (orchestrator + scheduler_agent + orchestrator turn-2 synthesis), \
          got {};\nall requests: {}",
         requests.len(),
         serde_json::to_string_pretty(&requests).unwrap_or_default()
