@@ -259,11 +259,11 @@ fn extract_provider_error_detail_preserves_unknown_escapes() {
     // `\uXXXX` is better shown to the user as visible literal text than
     // silently mangled into a character nobody asked for. `\"` and `\\`
     // keep their existing meaning.
-    let raw = r#"provider API error: {"error":{"message":"quote \" hi and slash \\ then unicode A and \q \s \&"}}"#;
+    let raw = r#"provider API error: {"error":{"message":"quote \" hi and slash \\ then unicode \u263A and \q \s \&"}}"#;
     let detail = extract_provider_error_detail(raw).expect("expected JSON message");
     assert!(detail.contains("quote \" hi"), "got: {detail:?}");
     assert!(detail.contains("slash \\ then"), "got: {detail:?}");
-    assert!(detail.contains(r"A"), "got: {detail:?}");
+    assert!(detail.contains(r"\u263A"), "got: {detail:?}");
     assert!(detail.contains(r"\q"), "got: {detail:?}");
     assert!(detail.contains(r"\s"), "got: {detail:?}");
     assert!(detail.contains(r"\&"), "got: {detail:?}");
