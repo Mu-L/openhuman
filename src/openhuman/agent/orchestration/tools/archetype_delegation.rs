@@ -227,7 +227,10 @@ pub(super) fn delegation_envelope_properties() -> Value {
         "constraints": {"type": "array", "items": {"type": "string"}},
         "must_not_assume": {"type": "array", "items": {"type": "string"}},
         "expected_output": {"type": "string"},
-        "citation_requirement": {"type": "string"},
+        "citation_requirement": {
+            "type": "string",
+            "enum": ["none", "file_paths", "urls", "retrieval_hits", "tool_outputs"]
+        },
         "model": {"type": "string"},
         "blocking": {"type": "boolean"}
     })

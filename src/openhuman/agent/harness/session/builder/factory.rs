@@ -954,6 +954,9 @@ impl Agent {
             Some(set) => set,
             None => delegation_tools
                 .iter()
+                .filter(|t| {
+                    t.exposure() != crate::openhuman::tools::traits::ToolExposure::Hidden
+                })
                 .map(|t| t.name().to_string())
                 .collect(),
         };
@@ -974,7 +977,15 @@ impl Agent {
                         visible = tools
                             .iter()
                             .map(|t| t.name().to_string())
-                            .chain(delegation_tools.iter().map(|t| t.name().to_string()))
+                            .chain(
+                                delegation_tools
+                                    .iter()
+                                    .filter(|t| {
+                                        t.exposure()
+                                            != crate::openhuman::tools::traits::ToolExposure::Hidden
+                                    })
+                                    .map(|t| t.name().to_string()),
+                            )
                             .filter(|name| !definition_disallows_tool(&def.disallowed_tools, name))
                             .collect();
                     }
