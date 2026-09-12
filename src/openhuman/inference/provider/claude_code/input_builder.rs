@@ -17,7 +17,7 @@ use std::io::Read;
 
 use crate::openhuman::agent::messages::ChatMessage;
 use crate::openhuman::agent::multimodal::{
-    is_managed_attachment_path, parse_image_markers, rehydrate_image_placeholders,
+    managed_attachment_path, parse_image_markers, rehydrate_image_placeholders,
 };
 
 const MAX_IMAGE_BYTES: usize = 5 * 1024 * 1024;
@@ -212,18 +212,27 @@ fn image_block(reference: &str, native_marker: bool) -> Option<Value> {
     let (media_type, data_b64) = if native_marker {
         let rest = reference.strip_prefix("data:")?;
         let (mime, data) = rest.split_once(";base64,")?;
-        (mime.to_string(), data.to_string())
-    } else {
-        if !is_managed_attachment_path(reference) {
+        let media_type = mime.to_ascii_lowercase();
+        if !matches!(
+            media_type.as_str(),
+            "image/png" | "image/jpeg" | "image/gif" | "image/webp"
+        ) {
             return None;
         }
-        let attachment_id = std::path::Path::new(reference)
+        let bytes = base64::engine::general_purpose::STANDARD.decode(data).ok()?;
+        if bytes.len() > MAX_IMAGE_BYTES {
+            return None;
+        }
+        (media_type, data.to_string())
+    } else {
+        let path = managed_attachment_path(reference)?;
+        let attachment_id = path
             .file_name()
             .and_then(|name| name.to_str())
             .and_then(|name| name.split('.').next())
             .filter(|id| !id.is_empty())
             .unwrap_or("unknown");
-        let mut file = match std::fs::File::open(reference) {
+        let mut file = match std::fs::File::open(&path) {
             Ok(file) => file,
             Err(error) => {
                 tracing::warn!(
@@ -259,7 +268,7 @@ fn image_block(reference: &str, native_marker: bool) -> Option<Value> {
             return None;
         }
         (
-            media_type_from_path(reference),
+            media_type_from_path(&path.to_string_lossy()),
             base64::engine::general_purpose::STANDARD.encode(bytes),
         )
     };

@@ -202,3 +202,16 @@ fn unterminated_image_marker_preserves_trailing_text() {
         "{s}"
     );
 }
+
+#[test]
+fn invalid_native_images_use_the_text_fallback() {
+    let s = String::from_utf8(build_stdin(
+        &[ChatMessage::user(
+            "bad [OH_IMAGE:data:image/svg+xml;base64,PHN2Zz4=] and [OH_IMAGE:data:image/png;base64,not-base64]",
+        )],
+        true,
+    ))
+    .unwrap();
+    assert!(!s.contains("\"type\":\"image\""), "{s}");
+    assert!(s.contains("an attached image could not be read"), "{s}");
+}
