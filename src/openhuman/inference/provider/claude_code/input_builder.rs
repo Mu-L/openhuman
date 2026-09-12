@@ -98,7 +98,7 @@ pub fn build_stdin(messages: &[ChatMessage], is_new_session: bool) -> Vec<u8> {
 /// pending attempt (e.g. a message that errored and was then re-asked), not part
 /// of the conversation. Replaying it would duplicate the re-asked current turn
 /// and make the message look like it "came through twice". Image markers are
-/// stripped (only the latest turn re-sends its images). Returns `None` when
+/// preserved so a recreated session retains the same multimodal context. Returns `None` when
 /// there is nothing to carry over (a genuinely fresh conversation).
 fn prior_conversation_preamble(non_system: &[&ChatMessage], end: usize) -> Option<String> {
     let mut turns = Vec::new();
@@ -125,11 +125,10 @@ fn prior_conversation_preamble(non_system: &[&ChatMessage], end: usize) -> Optio
                     .get(next)
                     .is_some_and(|message| message.role == "assistant");
                 if answered && !m.content.is_empty() {
-                    let (text, _images) = parse_image_markers(&m.content);
-                    let text = strip_native_image_markers(&text);
-                    if !text.is_empty() {
-                        turns.push(format!("User: {text}"));
-                    }
+                    // Keep native image markers in the labelled transcript.
+                    // `content_blocks` below will convert real markers into
+                    // image blocks while leaving literal marker text alone.
+                    turns.push(format!("User: {}", m.content));
                 }
             }
             _ => {}
@@ -142,21 +141,6 @@ fn prior_conversation_preamble(non_system: &[&ChatMessage], end: usize) -> Optio
         "[Earlier in this conversation]\n{}\n[End of earlier conversation]\n",
         turns.join("\n")
     ))
-}
-
-fn strip_native_image_markers(mut text: &str) -> String {
-    const PREFIX: &str = "[OH_IMAGE:";
-    let mut cleaned = String::with_capacity(text.len());
-    while let Some(start) = text.find(PREFIX) {
-        cleaned.push_str(&text[..start]);
-        let rest = &text[start + PREFIX.len()..];
-        let Some(end) = rest.find(']') else {
-            return cleaned;
-        };
-        text = &rest[end + 1..];
-    }
-    cleaned.push_str(text);
-    cleaned
 }
 
 /// Split a message's text into stream-json content blocks: the prose as a

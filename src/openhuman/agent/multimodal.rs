@@ -548,19 +548,6 @@ pub fn rehydrate_image_placeholders(messages: &[ChatMessage]) -> Vec<ChatMessage
         .collect()
 }
 
-/// Whether a path is an existing file inside the managed attachment stash.
-/// Provider input must never treat an arbitrary user-supplied marker as a
-/// filesystem read request.
-pub fn is_managed_attachment_path(path: &str) -> bool {
-    let Ok(candidate) = std::fs::canonicalize(path) else {
-        return false;
-    };
-    let Ok(root) = std::fs::canonicalize(attachments_dir()) else {
-        return false;
-    };
-    candidate.starts_with(root) && candidate.is_file()
-}
-
 // ── The on-disk attachment stash ─────────────────────────────────────────
 
 /// Soft cap on the on-disk attachments directory. After each write, oldest
@@ -597,6 +584,27 @@ fn attachments_dir() -> PathBuf {
         .get()
         .cloned()
         .unwrap_or_else(fallback_attachments_dir)
+}
+
+/// Whether a provider image reference points inside this process' managed
+/// attachment stash. Raw channel-supplied filesystem paths are never trusted.
+pub fn is_managed_attachment_path(path: &str) -> bool {
+    managed_attachment_path(path).is_some()
+}
+
+/// Return the canonical path when `path` resolves inside the managed stash.
+/// Callers should use this returned path for subsequent reads so the checked
+/// path, rather than an attacker-controlled spelling, is what gets opened.
+pub fn managed_attachment_path(path: &str) -> Option<PathBuf> {
+    let candidate = Path::new(path);
+    let candidate = candidate.canonicalize().ok()?;
+    let root = attachments_dir().canonicalize().ok()?;
+    candidate.starts_with(root).then_some(candidate)
+}
+
+#[cfg(test)]
+pub(crate) fn managed_attachments_dir_for_tests() -> PathBuf {
+    attachments_dir()
 }
 
 /// Per-user fallback attachments dir used only when [`init_attachments_dir`]
