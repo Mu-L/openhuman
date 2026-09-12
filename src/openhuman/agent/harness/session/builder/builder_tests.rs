@@ -332,7 +332,6 @@ fn use_skill_survives_a_ceiling_that_excludes_it_when_a_pack_is_still_reachable(
 
 #[tokio::test]
 async fn an_empty_named_scope_advertises_no_tools_at_all() {
-    crate::openhuman::memory::host_impls::install_for_tests();
     use crate::openhuman::agent::harness::session::types::Agent;
 
     // `summarizer` is a shipped definition with `named = []`. Using the real
@@ -368,7 +367,6 @@ async fn a_zero_tool_agent_does_not_gain_the_compaction_recovery_tool() {
     // first time. Without `is_empty_tool_scope` there, "no tools" would have
     // quietly become "one tool" — and there is nothing for it to recover,
     // because an agent with no tools produces no tool output to truncate.
-    crate::openhuman::memory::host_impls::install_for_tests();
     use crate::openhuman::agent::harness::session::types::Agent;
     use crate::openhuman::inference::tokenjuice::RETRIEVE_TOOL_NAME;
 
