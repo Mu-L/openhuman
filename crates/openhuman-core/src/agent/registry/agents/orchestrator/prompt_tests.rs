@@ -163,14 +163,30 @@ fn connected_mcp_block_empty_when_none() {
 #[test]
 fn mcp_prompt_instruction_requires_direct_tool_visibility() {
     let mut ctx = ctx_with(&[]);
+    let hidden = ["web_fetch".to_string()].into_iter().collect();
+    ctx.visible_tool_names = &hidden;
     let without = build(&ctx).unwrap();
     assert!(!without.contains("Before searching elsewhere, check **Connected MCP Servers**"));
+
+    let unfiltered = std::collections::HashSet::new();
+    ctx.visible_tool_names = &unfiltered;
+    let wildcard = build(&ctx).unwrap();
+    assert_eq!(
+        wildcard.contains("Before searching elsewhere, check **Connected MCP Servers**"),
+        cfg!(feature = "mcp")
+    );
 
     let visible = ["mcp_registry_tool_call".to_string()].into_iter().collect();
     ctx.visible_tool_names = &visible;
     let with = build(&ctx).unwrap();
-    assert!(with.contains("Before searching elsewhere, check **Connected MCP Servers**"));
-    assert!(with.contains("mcp_registry_list_tools"));
+    assert_eq!(
+        with.contains("Before searching elsewhere, check **Connected MCP Servers**"),
+        cfg!(feature = "mcp")
+    );
+    if cfg!(feature = "mcp") {
+        assert!(with.contains("`tool_search` for the action"));
+        assert!(with.contains("mcp_registry_list_tools"));
+    }
     assert!(!with.contains("use_mcp_server"));
 }
 
@@ -192,8 +208,8 @@ fn connected_mcp_block_lists_servers_and_direct_tool_route() {
         tools: vec![mk("search_docs"), mk("answer_how_to")],
     }]);
     assert!(block.contains("## Connected MCP Servers"));
-    assert!(block.contains("mcp_registry_list_tools"));
-    assert!(block.contains("mcp_registry_tool_call"));
+    assert!(block.contains("`tool_search`"));
+    assert!(block.contains("call the matching MCP tool"));
     assert!(!block.contains("use_mcp_server"));
     assert!(block.contains("Tandem Docs"));
     assert!(block.contains("ac.tandem/docs-mcp"));
@@ -662,7 +678,7 @@ fn connected_mcp_block_does_not_name_a_hand_off() {
         "the server is still listed: {block}"
     );
     assert!(
-        !block.contains("use_mcp_server") && block.contains("mcp_registry_tool_call"),
+        !block.contains("use_mcp_server") && block.contains("tool_search"),
         "the direct MCP route must be named: {block}"
     );
 }

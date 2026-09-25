@@ -4197,7 +4197,8 @@ async fn orchestrator_advertises_direct_mcp_tools_inner() {
     stack.shutdown();
 }
 
-/// The orchestrator calls a connected server's tool directly after discovery.
+/// Search discovers a connected MCP action with its schema, then `tool_call`
+/// invokes that action on the same orchestrator turn.
 #[cfg(feature = "mcp")]
 #[test]
 fn orchestrator_calls_a_connected_mcp_tool_directly() {
@@ -4221,18 +4222,18 @@ async fn orchestrator_calls_a_connected_mcp_tool_directly_inner() {
     reset_script(Vec::new());
     let stack = boot_stack().await;
     let server_id = declare_and_connect_registry_echo_server(&stack.rpc_base, 940).await;
+    let action = openhuman_core::mcp::registry::action_tool::searchable_name(&server_id, "echo");
 
     reset_script(vec![
         tool_call_completion(
-            "mcp_registry_list_tools",
-            json!({ "server_id": server_id.clone() }),
+            "tool_search",
+            json!({ "query": "echo message on my connected MCP server" }),
         ),
         tool_call_completion(
-            "mcp_registry_tool_call",
+            "tool_call",
             json!({
-                "server_id": server_id,
-                "tool_name": "echo",
-                "arguments": { "message": MCP_ECHO_CANARY }
+                "name": action.clone(),
+                "arguments": json!({ "message": MCP_ECHO_CANARY }).to_string()
             }),
         ),
         text_completion("The MCP tool answered."),
@@ -4251,16 +4252,54 @@ async fn orchestrator_calls_a_connected_mcp_tool_directly_inner() {
     )
     .await;
 
-    let done = wait_for_terminal(&mut events, Duration::from_secs(120)).await;
+    let deadline = tokio::time::Instant::now() + Duration::from_secs(120);
+    let done = loop {
+        let remaining = deadline.saturating_duration_since(tokio::time::Instant::now());
+        let event = tokio::time::timeout(remaining, events.recv())
+            .await
+            .expect("MCP turn timed out")
+            .expect("MCP event stream closed");
+        match event.get("event").and_then(Value::as_str) {
+            Some("approval_request") => {
+                let request_id = event
+                    .pointer("/data/request_id")
+                    .or_else(|| event.get("request_id"))
+                    .and_then(Value::as_str)
+                    .expect("MCP approval request id");
+                let decision = post_json_rpc(
+                    &stack.rpc_base,
+                    944,
+                    "openhuman.approval_decide",
+                    json!({ "request_id": request_id, "decision": "approve_once" }),
+                )
+                .await;
+                assert_no_jsonrpc_error(&decision, "MCP approval decision");
+            }
+            Some("chat_done") | Some("chat_error") => break event,
+            _ => {}
+        }
+    };
     let requests = with_captured(|c| c.clone());
     assert_eq!(
         done.get("event").and_then(Value::as_str),
         Some("chat_done"),
         "the direct MCP turn must finish: {done}"
     );
-    let result = tool_result_text(&requests, "mcp_registry_tool_call").unwrap_or_else(|| {
+    let search = tool_result_text(&requests, "tool_search").expect("search result");
+    assert!(
+        search.contains(&action),
+        "MCP action absent from search: {search}"
+    );
+    assert!(
+        search.contains("message"),
+        "MCP schema absent from search: {search}"
+    );
+    let belt = advertised_tool_names(requests.first().expect("first model request"));
+    assert!(belt.iter().any(|name| name == "tool_search"));
+    assert!(!belt.iter().any(|name| name == &action));
+    let result = tool_result_text(&requests, "tool_call").unwrap_or_else(|| {
         panic!(
-            "no tool result for mcp_registry_tool_call; requests: {}",
+            "no tool result for MCP tool_call; requests: {}",
             serde_json::to_string_pretty(&requests).unwrap_or_default()
         )
     });

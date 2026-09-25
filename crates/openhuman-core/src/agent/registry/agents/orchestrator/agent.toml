@@ -345,9 +345,10 @@ named = [
     # whether or not it is already connected. Validates against the backend
     # allowlist and raises the in-chat Connect card.
     "composio_connect",
-    # Discover and call tools on already-connected MCP servers directly. The
-    # server's full toolset stays out of the prompt; list its schemas only when
-    # a request needs that server. Installing servers remains a user action.
+    # Connected MCP actions are deferred registrations found through
+    # `tool_search`. These generic registry tools remain a direct fallback for
+    # status, reconnection, and schema-driven calls. Installing servers remains
+    # a user action.
     "mcp_registry_status",
     "mcp_registry_list_tools",
     "mcp_registry_connect",

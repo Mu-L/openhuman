@@ -39,6 +39,11 @@ pub fn build(ctx: &PromptContext<'_>) -> Result<String> {
     // and the generated sections further down, and they must agree (#6302).
     let skill_run = hand_off_route(ctx, "skill_executor");
     let skill_install = hand_off_route(ctx, "skill_setup");
+    // An empty visibility set is the builder's unfiltered sentinel. Preserve
+    // the MCP route for those sessions while suppressing it in gated-off builds.
+    let mcp_available = cfg!(feature = "mcp")
+        && (ctx.visible_tool_names.is_empty()
+            || ctx.visible_tool_names.contains("mcp_registry_tool_call"));
 
     // ── Stable tier: identical across sessions for a given build ─────────
     //
@@ -53,7 +58,7 @@ pub fn build(ctx: &PromptContext<'_>) -> Result<String> {
         &strip_route_lines(
             ARCHETYPE,
             skill_run.is_some() || skill_install.is_some(),
-            ctx.visible_tool_names.contains("mcp_registry_tool_call"),
+            mcp_available,
         ),
     );
     push(&mut out, &render_tools(ctx)?);
@@ -92,7 +97,7 @@ pub fn build(ctx: &PromptContext<'_>) -> Result<String> {
         &mut out,
         &render_connected_integrations(ctx.connected_integrations),
     );
-    if ctx.visible_tool_names.contains("mcp_registry_tool_call") {
+    if mcp_available {
         push(&mut out, &render_connected_mcp_servers());
     }
 
@@ -392,9 +397,9 @@ fn format_connected_mcp_block(
     // each server's actual tools on demand via `mcp_registry_list_tools`.
     let mut out = String::from(
         "## Connected MCP Servers\n\n\
-         These servers are available through `mcp_registry_list_tools` and \
-         `mcp_registry_tool_call`. Discover the chosen server's tool schema, \
-         then call the matching tool directly.\n\n",
+         Their actions are searchable through `tool_search`. Search for the \
+         action in plain words, then call the matching MCP tool with the \
+         schema the search returns.\n\n",
     );
     for s in servers {
         let name = if s.display_name.trim().is_empty() {
