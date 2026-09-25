@@ -22,6 +22,7 @@ Applies to every release, all platforms.
 
 ### Conversation resume
 
+- [ ] **Agent traces appear in Langfuse through the backend proxy** — With a signed-in staging test account and default telemetry settings, send a synthetic chat turn that calls a tool and a subagent. Expected: Langfuse shows the user input and final reply on the root observation, role-labeled messages on each model generation, one session across turns, a child-run trace grouped in that session, and no stream-delta or middleware event flood. Confirm a profile with `share_usage_data = false` sends no trace.
 - [ ] **An existing chat accepts another turn after restart** — Send a message and wait for its reply, fully quit OpenHuman, then reopen that conversation and send a second message. Expected: the second reply streams normally, retains the earlier context, and does not show a generic error. Repeat after the conversation has compacted if a long-running test profile is available (#6608).
 - [ ] **A failed chat turn does not offer an invalid regenerate action** — Trigger a provider failure in a test profile and inspect its error card. Expected: the diagnostic text remains visible, with no Retry or Refresh button on that failed message. A completed assistant reply still offers Refresh (#6613).
 
