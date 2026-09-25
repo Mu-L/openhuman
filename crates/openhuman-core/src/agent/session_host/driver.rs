@@ -303,7 +303,29 @@ impl SessionDriver<OpenHumanRunContext> for OpenHumanSessionDriver {
         history.extend(appended);
 
         let required_output = request.run_context.data.required_output.clone();
+        let classified_halt = outcome
+            .breaker_halt
+            .as_deref()
+            .is_some_and(|reason| reason.starts_with("Stopping after "));
         let required_repair = match required_output.as_ref() {
+            Some(contract) if classified_halt => {
+                if !crate::agent::harness::required_output::output_satisfies_contract(
+                    &output, contract,
+                ) {
+                    output.push_str("\n\n");
+                    output.push_str(&crate::agent::harness::required_output::synthesize_block(
+                        contract,
+                    ));
+                    if history
+                        .last()
+                        .is_some_and(|message| matches!(message, Message::Assistant(_)))
+                    {
+                        history.pop();
+                    }
+                    history.push(Message::assistant(output.clone()));
+                }
+                None
+            }
             Some(contract) => {
                 grounded_close::repair_required_output(
                     &self.turn_model_source,
@@ -512,9 +534,27 @@ fn driver_error_with_snapshot(
     let history = guard.messages[..accepted_end].to_vec();
     let unanswered =
         crate::agent::tinyagents::render_unanswered_steps(&guard.messages[accepted_end..]);
-    let display = match unanswered {
-        Some(steps) => format!("The turn stopped before completion: {error}.\n\n{steps}"),
-        None => format!("The turn stopped before completion: {error}."),
+    let display = if error
+        .contains(&tinyagents_harness::TinyAgentsError::GenerationStalled.to_string())
+    {
+        // The model's streamed narration was stopped before it could repeat
+        // indefinitely. Preserve the completed tools as a useful, bounded
+        // partial rather than showing only the failed model's process text.
+        let results = crate::agent::session_host::turn_checkpoint::results_from_tool_outcomes(
+            &guard.tool_outcomes,
+        );
+        let evidence = crate::agent::session_host::turn_checkpoint::render_tool_results(
+            &results,
+            crate::agent::session_host::turn_checkpoint::CHECKPOINT_TOTAL_CHARS,
+        );
+        format!(
+            "I stopped a repetitive model response before it could finish. Here are the completed tool results I can report:\n{evidence}"
+        )
+    } else {
+        match unanswered {
+            Some(steps) => format!("The turn stopped before completion: {error}.\n\n{steps}"),
+            None => format!("The turn stopped before completion: {error}."),
+        }
     };
     DriverFailure {
         error: RuntimeError::Driver(error),
