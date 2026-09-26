@@ -99,6 +99,15 @@ async fn committed_turn_completion_waits_for_a_full_progress_channel() {
             .expect("terminal progress event"),
         Some(AgentProgress::TurnCompleted { iterations: 2 })
     ));
+    assert!(matches!(
+        tokio::time::timeout(std::time::Duration::from_secs(1), rx.recv())
+            .await
+            .expect("content after terminal progress event"),
+        Some(AgentProgress::TurnContent {
+            input: Some(input),
+            output: Some(output),
+        }) if input == "question" && output == "answer"
+    ));
 }
 
 /// A receiver can remain alive while its bridge is stalled. Once the send
