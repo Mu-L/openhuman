@@ -22,9 +22,10 @@ Applies to every release, all platforms.
 
 ### Conversation resume
 
-- [ ] **Agent traces appear in Langfuse through the backend proxy** — With a signed-in staging test account and default telemetry settings, send a synthetic chat turn that calls a tool and a subagent. Expected: Langfuse shows the user input and final reply on the root observation, role-labeled messages on each model generation, one session across turns, a child-run trace grouped in that session, and no stream-delta or middleware event flood. Confirm a profile with `share_usage_data = false` sends no trace.
+- [ ] **Default agent traces reach Langfuse** — With a signed-in staging test account, send a synthetic chat turn that spawns a subagent. Expected: the parent and child traces share one conversation session, include the intended input/output and model usage, and carry the authenticated user. Confirm `share_usage_data = false` stops export.
 - [ ] **An existing chat accepts another turn after restart** — Send a message and wait for its reply, fully quit OpenHuman, then reopen that conversation and send a second message. Expected: the second reply streams normally, retains the earlier context, and does not show a generic error. Repeat after the conversation has compacted if a long-running test profile is available (#6608).
 - [ ] **A failed chat turn does not offer an invalid regenerate action** — Trigger a provider failure in a test profile and inspect its error card. Expected: the diagnostic text remains visible, with no Retry or Refresh button on that failed message. A completed assistant reply still offers Refresh (#6613).
+- [ ] **A failed turn leaves its thread usable** — In a test profile, get one successful reply, trigger a streamed provider failure on the next turn, then send another message in the same thread. Expected: the error card appears, the composer re-enables, the next reply streams normally, and the agent still has the first turn's context. If a queued follow-up starts as the failed turn ends, its stream and composer state stay active.
 
 ### Native desktop control
 
@@ -34,7 +35,7 @@ Applies to every release, all platforms.
 
 ### Browser module
 
-- [ ] **Browser readiness and setup** — Open Connections → Integrations → Browser Control on each desktop platform and verify the Early Alpha notice. Expected: the checksum-pinned TinyBrowser module downloads and passes TinyBus admission, module and Chrome readiness are reported separately, Test works, and saved viewport, profile, download folder, task limits, and allowed websites survive relaunch.
+- [ ] **Browser readiness and setup** — Open Connections → Integrations → Browser Control on each desktop platform and verify the Early Alpha notice. Expected: the checksum-pinned TinyBrowser module loads from the installer on Windows or the release cache on other platforms and passes TinyBus admission, module and Chrome readiness are reported separately, Test works, and saved viewport, profile, download folder, task limits, and allowed websites survive relaunch.
 - [ ] **Browser task and policy** — With an allowed Selenium test site, use a conversation to submit its web form and download File 1. Expected: `tool_search` discovers `browser`, consequential actions wait for the exact host approval, the submitted page shows “Received!”, and a completed download is verified on disk. Then restrict allowed websites and confirm a disallowed navigation is blocked.
 
 ### Wallet balances
@@ -67,6 +68,8 @@ Applies to every release, all platforms.
 
 ### Windows
 
+- [ ] **Bundled native modules work offline** — Install from the signed MSI or NSIS package on a fresh Windows account, disconnect the network, then open Desktop Control and Browser Control and load their modules. Expected: both modules reach Ready without a GitHub request, and the log records `[modules] loaded '<id>' from the installer bundle`. Reconnect before testing hosted features. Check both installer formats when both are shipped.
+- [ ] **Custom window frame and exit** — Launch with no saved window geometry. Expected: the window opens near 800 × 720 with compact rounded corners; the top-right controls minimize, maximize/restore, and close. Drag the window from the top strip on both the loading screen and main app. Closing exits the host and its embedded core (no lingering `OpenHuman.exe` or core listener).
 - [ ] **SmartScreen does not block install** — Run the installer from a fresh download. Expected: SmartScreen passes (signed binary). If `Windows protected your PC` appears, the EV signature is missing or the reputation has not built up — escalate before shipping.
 - [ ] **Installer creates Start Menu + Desktop shortcuts** — Defaults preserved. Expected: both shortcuts launch the app.
 - [ ] **Chat links preserve the desktop UI** — Click an HTTPS PR link in an assistant reply. Expected: the default browser opens the PR and OpenHuman stays on the same conversation. If the OS opener fails, the app must remain visible instead of navigating to the remote page. Check internal chat/settings navigation still works.

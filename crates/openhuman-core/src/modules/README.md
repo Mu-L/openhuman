@@ -68,6 +68,12 @@ layer.
    it against the digest pinned in `registry.rs`, hashes the archive, extracts,
    and `dlopen`s — on the module runtime's blocking pool so a cold download
    never stalls another task.
+   On Windows desktop installs, the installer contains the registry-pinned
+   `windows-2022-x86_64` archives and their extracted DLLs under
+   `bundled-modules/`. The host registers that read-only directory before
+   starting the core. The same archive digest and TinyBus admission checks run
+   against these local files first, so normal use needs no runtime download.
+   Headless and development hosts continue to use the release cache.
 6. tinybus's ABI descriptor, manifest, and dependency gates decide whether the
    artifact is *admitted*; a faulted or refused module is recorded as
    `Resolution::Failed` in the resolution table (surfaced as

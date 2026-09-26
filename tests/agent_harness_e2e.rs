@@ -5084,3 +5084,189 @@ async fn thread_goal_is_set_read_back_and_completed_across_turns_inner() {
 
     stack.shutdown();
 }
+
+/// Cancelling a running background sub-agent settles its card, end to end.
+///
+/// Cancel aborts the detached task, and an aborted future never reaches its own
+/// `Cancelled` branch — so before `AbortReport` the client got no terminal event
+/// and the delegation card spun forever. This drives the production path: a
+/// real `spawn_async_subagent` child held mid-model-call by the canary barrier,
+/// cancelled over the `openhuman.subagent_cancel` JSON-RPC, and observed on the
+/// same SSE stream the app renders from (`subagent_failed` is what settles the
+/// card's row). A second cancel then gets the RPC's "nothing running" answer
+/// with `outcome: "unknown"`, which the card settles on without claiming
+/// success.
+#[test]
+fn cancelling_a_running_background_subagent_settles_it() {
+    run_on_agent_stack(
+        "cancelling_a_running_background_subagent_settles_it",
+        cancelling_a_running_background_subagent_settles_it_inner,
+    );
+}
+
+async fn cancelling_a_running_background_subagent_settles_it_inner() {
+    let _lock = env_lock();
+    // The second canary never arrives, so the worker's model call is held for
+    // `CANARY_BARRIER_WAIT`: long enough to cancel it while it is running.
+    arm_canary_barrier(&["CANCEL_E2E_CANARY", "CANCEL_E2E_NEVER"]);
+    reset_script(vec![
+        tool_calls_completion(&[(
+            "spawn_async_subagent",
+            json!({ "agent_id": "researcher", "prompt": "Find CANCEL_E2E_CANARY" }),
+        )]),
+        text_completion("Spawned a worker; its result will arrive later."),
+        text_completion("worker would have finished here"),
+    ]);
+    let stack = boot_stack().await;
+    let mut events = spawn_sse_collector(format!(
+        "{}/events?client_id=harness-cancel",
+        stack.rpc_base
+    ))
+    .await;
+    send_web_chat(
+        &stack.rpc_base,
+        900,
+        "harness-cancel",
+        "thread-cancel",
+        "delegate, then cancel it",
+    )
+    .await;
+
+    let spawned = wait_for_event(&mut events, "subagent_spawned", Duration::from_secs(120)).await;
+    let task_id = spawned
+        .get("skill_id")
+        .and_then(Value::as_str)
+        .unwrap_or_else(|| panic!("subagent_spawned carries the task id: {spawned}"))
+        .to_string();
+
+    // Cancel only once the worker is really in flight (its own model request
+    // is parked on the barrier), so this is a live run, not a queued one.
+    let deadline = std::time::Instant::now() + Duration::from_secs(60);
+    while with_captured(|c| {
+        !c.iter()
+            .filter_map(|r| canary_worker_request(r.get("body")?))
+            .any(|canary| canary == "CANCEL_E2E_CANARY")
+    }) {
+        assert!(
+            std::time::Instant::now() < deadline,
+            "the worker never issued its request"
+        );
+        tokio::time::sleep(Duration::from_millis(50)).await;
+    }
+
+    let reply = post_json_rpc(
+        &stack.rpc_base,
+        901,
+        "openhuman.subagent_cancel",
+        json!({ "taskId": task_id }),
+    )
+    .await;
+    let result = assert_no_jsonrpc_error(&reply, "subagent_cancel");
+    let payload = result.get("data").unwrap_or(result);
+    assert_eq!(
+        payload.get("cancelled").and_then(Value::as_bool),
+        Some(true),
+        "a running child is really cancelled: {reply}"
+    );
+    assert!(
+        payload.get("outcome").is_none(),
+        "a real cancel carries no outcome: {reply}"
+    );
+
+    // The aborted child still reports: this is the event that settles the card.
+    let failed = wait_for_event(&mut events, "subagent_failed", Duration::from_secs(30)).await;
+    assert_eq!(
+        failed.get("skill_id").and_then(Value::as_str),
+        Some(task_id.as_str()),
+        "subagent_failed must name the cancelled task: {failed}"
+    );
+
+    // Nothing runs under that id any more: the card settles on this answer.
+    let again = post_json_rpc(
+        &stack.rpc_base,
+        902,
+        "openhuman.subagent_cancel",
+        json!({ "taskId": task_id }),
+    )
+    .await;
+    let result = assert_no_jsonrpc_error(&again, "second subagent_cancel");
+    let payload = result.get("data").unwrap_or(result);
+    assert_eq!(
+        payload.get("cancelled").and_then(Value::as_bool),
+        Some(false)
+    );
+    assert_eq!(
+        payload.get("outcome").and_then(Value::as_str),
+        Some("unknown"),
+        "a cancel that finds nothing reports the outcome, never success: {again}"
+    );
+
+    disarm_canary_barrier();
+    stack.shutdown();
+}
+
+/// A wrong tool guess is corrected, never mistaken for a credential blocker.
+///
+/// The unknown-tool answer echoes the guessed name, and the failure classifier
+/// used to keyword-sniff it: a guess named `forbidden_tool` read as an HTTP 403,
+/// was classed `authentication` (zero retries), and ended the turn with
+/// "failure class `authentication` still blocks operation …" before the model
+/// could pick a real tool. Through the real orchestrator turn, the guess must
+/// get its retry and the turn must finish with the model's own answer.
+#[test]
+fn a_wrong_tool_guess_is_retried_not_treated_as_an_auth_blocker() {
+    run_on_agent_stack(
+        "a_wrong_tool_guess_is_retried_not_treated_as_an_auth_blocker",
+        a_wrong_tool_guess_is_retried_not_treated_as_an_auth_blocker_inner,
+    );
+}
+
+async fn a_wrong_tool_guess_is_retried_not_treated_as_an_auth_blocker_inner() {
+    let _lock = env_lock();
+    reset_script(vec![
+        tool_calls_completion(&[("forbidden_tool", json!({}))]),
+        text_completion("CANARY_RECOVERED_AFTER_WRONG_TOOL"),
+    ]);
+    let stack = boot_stack().await;
+    let mut events = spawn_sse_collector(format!(
+        "{}/events?client_id=harness-wrong-tool",
+        stack.rpc_base
+    ))
+    .await;
+    send_web_chat(
+        &stack.rpc_base,
+        910,
+        "harness-wrong-tool",
+        "thread-wrong-tool",
+        "do the thing",
+    )
+    .await;
+
+    let done = wait_for_terminal(&mut events, Duration::from_secs(120)).await;
+    assert_eq!(
+        done.get("event").and_then(Value::as_str),
+        Some("chat_done"),
+        "a wrong tool guess must not end the turn: {done}"
+    );
+    let full_response = done
+        .get("full_response")
+        .and_then(Value::as_str)
+        .unwrap_or_default();
+    assert!(
+        full_response.contains("CANARY_RECOVERED_AFTER_WRONG_TOOL"),
+        "the model's recovery must be the reply, not a blocker halt: {done}"
+    );
+    assert!(
+        !full_response.contains("still blocks operation"),
+        "the wrong guess was classified as a blocker: {done}"
+    );
+    // The recovery ran as a second model call that saw the unknown-tool answer.
+    let requests = with_captured(|c| c.clone());
+    assert!(
+        captured_requests_reject_tool_as_unknown(&requests, "forbidden_tool"),
+        "the model should have been told `forbidden_tool` is unknown; requests: {}",
+        serde_json::to_string_pretty(&requests).unwrap_or_default()
+    );
+
+    stack.shutdown();
+}

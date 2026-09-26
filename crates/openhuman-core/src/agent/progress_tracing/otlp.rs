@@ -452,12 +452,12 @@ pub(super) async fn push_spans(config: &Config, spans: &[TraceSpan]) -> Result<(
     }
     let legacy_url = ingestion_url(config);
     let url = legacy_url.replace("/langfuse/ingestion", "/langfuse/otel/v1/traces");
-    if !url.starts_with("http") {
-        return Err("Langfuse backend proxy URL is unavailable".to_string());
-    }
     let environment = environment_for_base(&url);
     if skip_push(environment) {
         return Ok(());
+    }
+    if !url.starts_with("http") {
+        return Err("Langfuse backend proxy URL is unavailable".to_string());
     }
     let token = require_live_session_token(config)?;
     let (product_header, product_value) = crate::api::product::product_identity_header();
